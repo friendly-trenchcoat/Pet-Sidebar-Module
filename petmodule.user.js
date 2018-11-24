@@ -213,10 +213,11 @@ function QuickRef() {
     $('.contentModuleTable tbody').each(function(k,v) {
         if(k%2 === 0) { // even indexed elements are the relevant ones
             var names = $(v).find('th').first().text();
-            var regex = new RegExp('(.+) with (.+) the ([^ ]+)');
+            var regex = new RegExp('(.+) with (.+) the (.+) and its .+|(.+) with (.+) the (.+)|(.+)'); // allow for presence/absence of petpet/petpetpet
             var namesMatch = names.match(regex);
-            names = ((namesMatch) ? namesMatch : [0, names, "", ""]); // in case of no petpet
-            var petname = names[1];
+            console.log(namesMatch);
+            var petpet = [namesMatch[2] | namesMatch[5], namesMatch[3] | namesMatch[6]];
+            var petname = namesMatch[1] | namesMatch[4] | namesMatch[7];
             var newpet = 0;
             if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
                 PETS.push(petname);
@@ -240,9 +241,9 @@ function QuickRef() {
             STATS[9]  = $(lines).eq(9).text();  // defence
             STATS[10] = $(lines).eq(10).text(); // movement
             STATS[11] = $(lines).eq(11).text(); // intelligence
-            STATS[12] = names[2];               // petpet name
-            STATS[13] = names[3];               // petpet species
-            if(newpet) STATS[14] = '';          // petpet age (can't be found here)
+            STATS[12] = petpet[0];              // petpet name
+            STATS[13] = petpet[1];              // petpet species
+            if(newpet) STATS[14] = null;        // petpet age (can't be found here)
             STATS[15] = $(lines).eq(12).find('img').attr('src');             // petpet image
             STATS[16] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
             console.log(STATS);
