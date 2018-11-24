@@ -121,6 +121,7 @@ var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
 var STATS = [];
 var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
+var COLOR = $('.sidebarHeader').css('background-color');
 
 function main() {
     // update STATS data
@@ -177,35 +178,32 @@ function addElements(){
             <td valign="middle" class="sidebarHeader medText"><a href="/quickref.phtml"><b>Pets</b></a> </td> \
         </tr>'
     );
-    
 
     // add inactive pets 
     var petname;
     var c=0;
     for (var i=0; i<PETS.length; i++) {
         petname = PETS[i];
-        console.log(petname);
         c += 1;
         STATS = JSON.parse(localStorage.getItem(petname));
-        petModule.append('<tr id="inactive_'+petname+'"></tr>'); // for some reason this must be done seperately
+        petModule.append('<tr id="inactive_'+petname+'" ></tr> style="position: relative;"'); // for some reason this must be done seperately
         $('#inactive_'+petname).append(
-            '<div id="leftHover_'+petname+'" style="position: absolute; height: 150px; width: 50px; margin-left: 3px;"></div> \
-            <div id="rightHover_'+petname+'" style="position: absolute; height: 150px; width: 50px; margin-left: 103px;"></div> \
-            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a> \
-            '+createStatsHTML(petname, 215+(155*c)));
-        $('#leftHover_'+petname).hover(function(){ // hovering over left hover div exposes buttons menu
-            console.log('left hover');
-            }, function(){
-            console.log('left unhover');
-        });
-        $('#rightHover_'+petname).hover(function(){ // hovering over right hover div exposes stats menu
-            console.log('right hover');
-            $('#stats_'+petname).stop(true).animate({width: '500px'}, 800);
-            }, function(){
-            console.log('right unhover');
-            $('#stats_'+petname).stop(true).animate({width: '5px'}, 500);
-        });
+            '<div class="leftHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 3px;"></div> \
+            <div class="rightHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 103px;"></div> \
+            '+createStatsHTML(petname)+' \
+            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a>');
     }
+
+    $('.leftHover').hover(function(){ // hovering over left hover div exposes buttons menu
+        console.log('left hover');
+        }, function(){
+        console.log('left unhover');
+    });
+    $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
+        $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '500px'}, 800);
+        }, function(){
+        $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px'}, 500);
+    });
 
     // add CSS
     document.body.appendChild(CreateCSS());
@@ -382,12 +380,11 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     statsCSS.innerHTML = ' \
         .hover { \
             border-radius: 25px; \
-            background: url(http://i.imgur.com/Qtj8r6k.png); \
-            border: 3px solid #c879aa; \
+            background-color: #fffd; \
+            border: 3px solid '+COLOR+'; \
             padding: 20px;  \
             height: 104px; \
             width: 5px; \
-            margin-top: -152.5px; \
             margin-left: 95px; \
             overflow: hidden; \
             z-index: 98; \
@@ -412,8 +409,7 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     return statsCSS;
 }
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
-function createStatsHTML(petname, top) {
-    STATS = JSON.parse(localStorage.getItem(petname));
+function createStatsHTML(petname) {
     var petpetTD = ((STATS[15]) ? // column for petpet if there is one
         '<td align="center"> \
             <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
