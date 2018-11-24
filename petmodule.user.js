@@ -7,7 +7,7 @@
 // @include        http://www.neopets.com/*
 // @grant          GM_getValue
 // @grant          GM_setValue
-// @require	       http://code.jquery.com/jquery-latest.min.js
+// @require        http://code.jquery.com/jquery-latest.min.js
 // ==/UserScript==
 /*jshint multistr: true */
 
@@ -32,6 +32,11 @@ At top of module, add three buttons:
         > whether to put active pet at top or leave order
         > dropdown of removed pets, to add back
     - collapse: toggle inactive pets
+
+Options:
+order buttons literally change order of PETS list
+if (stickyActive) just disable ability to move there
+
 
 Default Display:
  >> customize
@@ -135,50 +140,71 @@ function main() {
     localStorage.setItem("pets", JSON.stringify(PETS));
 }
 function addElements(){
-    var activePet = $('.sidebarModule:first-child tbody');
-    var activePetName = activePet.children().eq(0).find('b').text();
+    // Add the created elements to the page.
+    var petModule = $('.sidebarModule:first-child tbody');
+    //var activePetName = petModule.children().eq(0).find('b').text();
 
-    // remove default stats
-    activePet.children().eq(3).remove();
-    activePet.children().eq(2).remove();
+    /*/ remove default stats
+    petModule.children().eq(3).remove();
+    petModule.children().eq(2).remove();
+
 
     STATS = JSON.parse(localStorage.getItem(activePetName));
 
     // replace image
-    activePet.children().eq(1).find('img').attr('src',STATS[16]);
+    petModule.children().eq(1).find('img').attr('src',STATS[16]);
 
     // over-module
-    var over = activePet.first().clone(true);
+    var over = petModule.first().clone(true);
     over.css({
         "position": "absolute",
         "top": "182px",
         "z-index": "99"
     });
-    activePet.first().append(over);
+    petModule.first().append(over);
+    
     // add active pet menu
-    activePet.first().append(CreateHTML(activePetName, 212));
+    petModule.first().append(CreateHTML(activePetName, 212));
     over.hover(function(){
         $('#hover_'+activePetName).stop(true).animate({width: '500px'}, 800);
         }, function(){
         $('#hover_'+activePetName).stop(true).animate({width: '5px'}, 500);
     });
+    */
 
-    // add inactive pets
+    petModule.html( // replace contents with only top bar
+        '<tr> \
+            <td valign="middle" class="sidebarHeader medText"><a href="/quickref.phtml"><b>Pets</b></a> </td> \
+        </tr>'
+    );
+    
+
+    // add inactive pets 
     var petname;
     var c=0;
     for (var i=0; i<PETS.length; i++) {
         petname = PETS[i];
-        if (petname !== activePetName) {
-            c += 1;
-            STATS = JSON.parse(localStorage.getItem(petname));
-            activePet.first().append('<tr id="inactive_'+petname+'"><td class="inactivePet" style="position: relative; z-index: 99;"><a href="/quickref.phtml"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a></td></tr>'); // add module
-            activePet.first().append(CreateHTML(petname, 215+(155*c))); // add menu
-            $('#inactive_'+petname).hover(function(){ // hovering over module exposes menu
-                $(this).next().stop(true).animate({width: '500px'}, 800);
-                }, function(){
-                $(this).next().stop(true).animate({width: '5px'}, 500);
-            });
-        }
+        console.log(petname);
+        c += 1;
+        STATS = JSON.parse(localStorage.getItem(petname));
+        petModule.append('<tr id="inactive_'+petname+'"></tr>'); // for some reason this must be done seperately
+        $('#inactive_'+petname).append(
+            '<div id="leftHover_'+petname+'" style="position: absolute; height: 150px; width: 50px; margin-left: 3px;"></div> \
+            <div id="rightHover_'+petname+'" style="position: absolute; height: 150px; width: 50px; margin-left: 103px;"></div> \
+            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a> \
+            '+createStatsHTML(petname, 215+(155*c)));
+        $('#leftHover_'+petname).hover(function(){ // hovering over left hover div exposes buttons menu
+            console.log('left hover');
+            }, function(){
+            console.log('left unhover');
+        });
+        $('#rightHover_'+petname).hover(function(){ // hovering over right hover div exposes stats menu
+            console.log('right hover');
+            $('#stats_'+petname).stop(true).animate({width: '500px'}, 800);
+            }, function(){
+            console.log('right unhover');
+            $('#stats_'+petname).stop(true).animate({width: '5px'}, 500);
+        });
     }
 
     // add CSS
@@ -386,80 +412,80 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     return statsCSS;
 }
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
-function CreateHTML(petname, top) {
+function createStatsHTML(petname, top) {
     STATS = JSON.parse(localStorage.getItem(petname));
     var petpetTD = ((STATS[15]) ? // column for petpet if there is one
         '<td align="center"> \
-        <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-        <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
+            <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
+            <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
         </td>'
         : '' );
-    var statsHTML = '\
-    <div id="hover_'+petname+'" class="hover" style="position: absolute; "> \
-    <div class="inner"> \
-     \
-    <table cellpadding="1" cellspacing="0" border="0"><tr> \
-     \
-    <td vertical-align="top"> \
-    <table cellpadding="1" cellspacing="0" border="0"> \
-    <tr> \
-    <td align="right">Species:</td> \
-    <td align="left"><b>'+STATS[1]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Color:</td> \
-    <td align="left"><b>'+STATS[2]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Mood:</td> \
-    <td align="left"><b>'+STATS[3]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Hunger:</td> \
-    <td align="left"><b>'+STATS[4]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Age:</td> \
-    <td align="left"><b>'+STATS[5]+'</b></td> \
-    </tr> \
-    </table> \
-    </td> \
-     \
-    <td> \
-    <table cellpadding="1" cellspacing="0" border="0"> \
-    <tr> \
-    <td align="right">Level:</td> \
-    <td align="left"><b>'+STATS[6]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Health:</td> \
-    <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Strength:</td> \
-    <td align="left"><b>'+STATS[8]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Defence:</td> \
-    <td align="left"><b>'+STATS[9]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Movement:</td> \
-    <td align="left"><b>'+STATS[10]+'</b></td> \
-    </tr> \
-    <tr> \
-    <td align="right">Intelligence:</td> \
-    <td align="left"><b>'+STATS[11]+'</b></td> \
-    </tr> \
-    </table> \
-    </td> \
-     \
-    '+petpetTD+' \
-     \
-    </tr></table> \
-     \
-    </div> \
-    </div>';
+    var statsHTML =
+        '<div id="stats_'+petname+'" class="hover stats" style="position: absolute; "> \
+        <div class="inner"> \
+        \
+        <table cellpadding="1" cellspacing="0" border="0"><tr> \
+        \
+        <td vertical-align="top"> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Species:</td> \
+        <td align="left"><b>'+STATS[1]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Color:</td> \
+        <td align="left"><b>'+STATS[2]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Mood:</td> \
+        <td align="left"><b>'+STATS[3]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Hunger:</td> \
+        <td align="left"><b>'+STATS[4]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Age:</td> \
+        <td align="left"><b>'+STATS[5]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        <td> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Level:</td> \
+        <td align="left"><b>'+STATS[6]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Health:</td> \
+        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Strength:</td> \
+        <td align="left"><b>'+STATS[8]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Defence:</td> \
+        <td align="left"><b>'+STATS[9]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Movement:</td> \
+        <td align="left"><b>'+STATS[10]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Intelligence:</td> \
+        <td align="left"><b>'+STATS[11]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        '+petpetTD+' \
+        \
+        </tr></table> \
+        \
+        </div> \
+        </div>';
     //    <i>'+STATS[14]+'</i><br> \
     return statsHTML;
 }
