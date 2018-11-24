@@ -215,9 +215,8 @@ function QuickRef() {
             var names = $(v).find('th').first().text();
             var regex = new RegExp('(.+) with (.+) the (.+) and its .+|(.+) with (.+) the (.+)|(.+)'); // allow for presence/absence of petpet/petpetpet
             var namesMatch = names.match(regex);
-            console.log(namesMatch);
-            var petpet = [namesMatch[2] | namesMatch[5], namesMatch[3] | namesMatch[6]];
-            var petname = namesMatch[1] | namesMatch[4] | namesMatch[7];
+            var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
+            var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
             var newpet = 0;
             if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
                 PETS.push(petname);
@@ -243,7 +242,7 @@ function QuickRef() {
             STATS[11] = $(lines).eq(11).text(); // intelligence
             STATS[12] = petpet[0];              // petpet name
             STATS[13] = petpet[1];              // petpet species
-            if(newpet) STATS[14] = null;        // petpet age (can't be found here)
+            if(newpet) STATS[14] = STATS[14] || null;                        // petpet age (can't be found here)... does anyone even care about this?
             STATS[15] = $(lines).eq(12).find('img').attr('src');             // petpet image
             STATS[16] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
             console.log(STATS);
@@ -391,7 +390,6 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
             z-index: 98; \
         } \
         .inner { \
-            margin-top: -15px; \
             height: 100%; \
             width: 90%; \
             float: right; \
@@ -411,15 +409,18 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
 }
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
 function createStatsHTML(petname) {
-    var petpetTD = ((STATS[15]) ? // column for petpet if there is one
-        '<td align="center"> \
-            <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-            <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
-        </td>'
-        : '' );
+    var petpetTD = '', petpetStyle='';
+    if (STATS[15]) {
+        petpetTD =
+            '<td align="center"> \
+                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
+                <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
+            </td>';
+        petpetStyle = ' style="margin-top: -15px;"';
+    }
     var statsHTML =
         '<div id="stats_'+petname+'" class="hover stats" style="position: absolute; "> \
-        <div class="inner"> \
+        <div class="inner"'+petpetStyle+'> \
         \
         <table cellpadding="1" cellspacing="0" border="0"><tr> \
         \
