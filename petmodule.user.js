@@ -122,6 +122,7 @@ var STATS = [];
 var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
 var COLOR = $('.sidebarHeader').css('background-color');
+var SUBCOLOR = getSubcolor();
 
 function main() {
     // update STATS data
@@ -140,46 +141,22 @@ function main() {
     // store final list of pets
     localStorage.setItem("pets", JSON.stringify(PETS));
 }
+function getSubcolor() {
+    var rgbs = COLOR.match(new RegExp('rgb\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)'));
+    return rgbs ? 'rbg('+(rgbs[1]-5)+','(rgbs[2]-5)+','(rgbs[3]-5)+')' : COLOR;
+}
 function addElements(){
     // Add the created elements to the page.
+
+    // clear module
     var petModule = $('.sidebarModule:first-child tbody');
-    //var activePetName = petModule.children().eq(0).find('b').text();
-
-    /*/ remove default stats
-    petModule.children().eq(3).remove();
-    petModule.children().eq(2).remove();
-
-
-    STATS = JSON.parse(localStorage.getItem(activePetName));
-
-    // replace image
-    petModule.children().eq(1).find('img').attr('src',STATS[16]);
-
-    // over-module
-    var over = petModule.first().clone(true);
-    over.css({
-        "position": "absolute",
-        "top": "182px",
-        "z-index": "99"
-    });
-    petModule.first().append(over);
-    
-    // add active pet menu
-    petModule.first().append(CreateHTML(activePetName, 212));
-    over.hover(function(){
-        $('#hover_'+activePetName).stop(true).animate({width: '500px'}, 800);
-        }, function(){
-        $('#hover_'+activePetName).stop(true).animate({width: '5px'}, 500);
-    });
-    */
-
     petModule.html( // replace contents with only top bar
         '<tr> \
             <td valign="middle" class="sidebarHeader medText"><a href="/quickref.phtml"><b>Pets</b></a> </td> \
         </tr>'
     );
 
-    // add inactive pets 
+    // add pets 
     var petname;
     var c=0;
     for (var i=0; i<PETS.length; i++) {
@@ -190,23 +167,219 @@ function addElements(){
         $('#inactive_'+petname).append(
             '<div class="leftHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 3px;"></div> \
             <div class="rightHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 103px;"></div> \
+            '+createButtonsHTML(petname)+' \
             '+createStatsHTML(petname)+' \
             <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a>');
     }
 
-    $('.leftHover').hover(function(){ // hovering over left hover div exposes buttons menu
-        console.log('left hover');
-        }, function(){
-        console.log('left unhover');
-    });
+    // functionality
+    $('.leftHover').hover(function(){  // hovering over left hover div exposes nav buttons
+        $('#nav_'+$(this).attr('petname')).stop(true).animate({marginLeft: '-30px'}, 800);
+    }, function(){
+        $('#nav_'+$(this).attr('petname')).stop(true).animate({marginLeft: '0px'}, 500);
+});
     $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
-        $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '500px'}, 800);
+            var pixels = (($(this).parent().find('.petpet').length) ? ['500px','95px'] : ['325px','115px']); // smaller when no petpet
+            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
         }, function(){
-        $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px'}, 500);
+            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
     });
 
     // add CSS
     document.body.appendChild(CreateCSS());
+}
+function createButtonsHTML(petname) {
+    /*
+        move up:
+            angle-up
+            caret-up
+            chevron-up
+
+        make active:
+            splotch
+            certificate
+            user-circle
+            sun
+
+        customize:
+            palette
+            mask
+            hat-wizard
+            gem
+
+        lookup:
+            id-card
+
+        petpage:
+            paw
+            window-maximize
+        
+        edit:
+            paint-brush
+            pencil-alt
+
+        remove:
+            times
+            sign-out-alt
+
+        trash:
+            trash-alt
+
+        settings:
+            cog
+
+        info:
+            question-circle
+            info-circle
+            info
+    */
+    var buttonsHTML = 
+        '<div id="nav_'+petname+'" class="petnav"> \
+            <a href=""><i class="fas fa-chevron-up"></i></a> \
+            <a href=""><i class="fas fa-sun"></i></a> \
+            <a href=""><i class="fas fa-mask"></i></a> \
+            <a href=""><i class="fas fa-id-card"></i></a> \
+            <a href=""><i class="fas fa-paw"></i></a> \
+            <a href=""><i class="fas fa-chevron-down"></i></a> \
+        </div>';
+    return buttonsHTML;
+}
+function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
+    var statsCSS = document.createElement("style");
+    statsCSS.type = "text/css";
+    statsCSS.innerHTML = ' \
+        .petnav { \
+            position: absolute; \
+            width: 32px; \
+            z-index: 98; \
+            background-color: '+COLOR+'; \
+            border-radius: 12px 0px 0px 12px; \
+        } \
+        .petnav a { \
+            position: relative; \
+            display: block; \
+            height: 25px; \
+            font-size: 18px; \
+            color: #fff; \
+            background-color: '+COLOR+'; \
+            border-radius: 12px 0px 0px 12px; \
+        } \
+        .petnav a:hover { \
+            background-color: '+SUBCOLOR+'; \
+            color: #ccc; \
+        } \
+        .petnav i { \
+            padding: 3px; \
+        } \
+        .hover { \
+            position: absolute; \
+            border-radius: 25px; \
+            background-color: #fffd; \
+            border: 3px solid '+COLOR+'; \
+            padding: 20px;  \
+            height: 104px; \
+            width: 5px; \
+            margin-left: 95px; \
+            overflow: hidden; \
+            z-index: 98; \
+        } \
+        .inner { \
+            height: 100%; \
+            width: 90%; \
+            float: right; \
+            display: inline; \
+        } \
+        .inner table { \
+            font: 7pt Verdana; \
+            vertical-align: top; \
+        } \
+        .inner img { \
+            border: 2px #ccc dashed; \
+        }  \
+        .inner i { \
+            font: 6.5pt Verdana; \
+        } ';
+    return statsCSS;
+}
+// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
+function createStatsHTML(petname) {
+    var petpetTD = '', petpetStyle='';
+    if (STATS[15]) {
+        petpetTD =
+            '<td align="center" class="petpet"> \
+                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
+                <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
+            </td>';
+        petpetStyle = ' style="margin-top: -15px;"';
+    }
+    var statsHTML =
+        '<div id="stats_'+petname+'" class="hover stats"> \
+        <div class="inner"'+petpetStyle+'> \
+        \
+        <table cellpadding="1" cellspacing="0" border="0"><tr> \
+        \
+        <td vertical-align="top"> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Species:</td> \
+        <td align="left"><b>'+STATS[1]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Color:</td> \
+        <td align="left"><b>'+STATS[2]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Mood:</td> \
+        <td align="left"><b>'+STATS[3]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Hunger:</td> \
+        <td align="left"><b>'+STATS[4]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Age:</td> \
+        <td align="left"><b>'+STATS[5]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        <td> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Level:</td> \
+        <td align="left"><b>'+STATS[6]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Health:</td> \
+        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Strength:</td> \
+        <td align="left"><b>'+STATS[8]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Defence:</td> \
+        <td align="left"><b>'+STATS[9]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Movement:</td> \
+        <td align="left"><b>'+STATS[10]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Intelligence:</td> \
+        <td align="left"><b>'+STATS[11]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        '+petpetTD+' \
+        \
+        </tr></table> \
+        \
+        </div> \
+        </div>';
+    //    <i>'+STATS[14]+'</i><br> \
+    return statsHTML;
 }
 function QuickRef() {
     // All data except age and exact stat numbers
@@ -374,119 +547,6 @@ function Sidebar() {
 function Age() {
     console.log("I'll get to it eventually.");
 }
-function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
-    var statsCSS = document.createElement("style");
-    statsCSS.type = "text/css";
-    statsCSS.innerHTML = ' \
-        .hover { \
-            border-radius: 25px; \
-            background-color: #fffd; \
-            border: 3px solid '+COLOR+'; \
-            padding: 20px;  \
-            height: 104px; \
-            width: 5px; \
-            margin-left: 95px; \
-            overflow: hidden; \
-            z-index: 98; \
-        } \
-        .inner { \
-            height: 100%; \
-            width: 90%; \
-            float: right; \
-            display: inline; \
-        } \
-        .inner table { \
-            font: 7pt Verdana; \
-            vertical-align: top; \
-        } \
-        .inner img { \
-            border: 2px #ccc dashed; \
-        }  \
-        .inner i { \
-            font: 6.5pt Verdana; \
-        } ';
-    return statsCSS;
-}
-// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
-function createStatsHTML(petname) {
-    var petpetTD = '', petpetStyle='';
-    if (STATS[15]) {
-        petpetTD =
-            '<td align="center"> \
-                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-                <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
-            </td>';
-        petpetStyle = ' style="margin-top: -15px;"';
-    }
-    var statsHTML =
-        '<div id="stats_'+petname+'" class="hover stats" style="position: absolute; "> \
-        <div class="inner"'+petpetStyle+'> \
-        \
-        <table cellpadding="1" cellspacing="0" border="0"><tr> \
-        \
-        <td vertical-align="top"> \
-        <table cellpadding="1" cellspacing="0" border="0"> \
-        <tr> \
-        <td align="right">Species:</td> \
-        <td align="left"><b>'+STATS[1]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Color:</td> \
-        <td align="left"><b>'+STATS[2]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Mood:</td> \
-        <td align="left"><b>'+STATS[3]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Hunger:</td> \
-        <td align="left"><b>'+STATS[4]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Age:</td> \
-        <td align="left"><b>'+STATS[5]+'</b></td> \
-        </tr> \
-        </table> \
-        </td> \
-        \
-        <td> \
-        <table cellpadding="1" cellspacing="0" border="0"> \
-        <tr> \
-        <td align="right">Level:</td> \
-        <td align="left"><b>'+STATS[6]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Health:</td> \
-        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Strength:</td> \
-        <td align="left"><b>'+STATS[8]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Defence:</td> \
-        <td align="left"><b>'+STATS[9]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Movement:</td> \
-        <td align="left"><b>'+STATS[10]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Intelligence:</td> \
-        <td align="left"><b>'+STATS[11]+'</b></td> \
-        </tr> \
-        </table> \
-        </td> \
-        \
-        '+petpetTD+' \
-        \
-        </tr></table> \
-        \
-        </div> \
-        </div>';
-    //    <i>'+STATS[14]+'</i><br> \
-    return statsHTML;
-}
 
 function _strengthString(word) {
     var low = {'Not Yet Born':'0', 'Pathetic':'1','Very Weak':'2','Weak':'3-4','Frail':'5','Average':'6','Quite Strong':'7-9','Strong':'10-11','Very Strong':'12-13','Great':'14','Immense':'15-16','Titanic':'17-19','Herculean':'20'}
@@ -550,5 +610,10 @@ function movementString(n) {
     word = word+' ('+n+')';
     return word;
 }
+$("head").append (
+    '<link '
+  + 'href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" '
+  + 'rel="stylesheet" type="text/css">'
+);
 
 main();
