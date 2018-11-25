@@ -86,36 +86,55 @@ Update data at pages:
   "<name> has suddenly gotten stronger"   gain 1 strength point
  Auto (all pets, age)
 
-
-Other Ideas:
-- Apply AnimatedPetImage script to all pets (use default if no other image specified)
-- Hover over pet image to show info; animate sliding out to side
-- Dropdown button for inactive pets
-- Options pannel where you can set:
-    > whether to show info by default for active and/or inactive pets, and whether it's to left or below
-    > which items to show
-    > which pets to show
-    > pet order
-    > animated: always off / on when supported / always on
-
-
-Gameplan:
-x copy page and play with css/html until active pet looks good with stats hover and links dropdown
-x incorporate inactive pets
-x convert to script
-x construct 'database'
-x construct update parameters and functions
-- create buttons (options and dropdown)
-- craft options menu
-- test
-
-
-Big Items Still To Do:
-- links
-
-.includes("(")
-.split("(")[1].split(")")[0]
 */
+var INFO = 
+    '<p>The Pet Sidebar Module is written and tested in Chrome.</p> \
+    <p>All data for the Pet Sidebar Module is gathered from the following pages when you visit them, and stored locally on your web browser.</p> \
+    <table> \
+        <tr> \
+            <td>Page</td> \
+            <td>Data Updated</td> \
+        </tr> \
+        <tr> \
+            <td>Quickref</td> \
+            <td>Everything except exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Petpage</td> \
+            <td>Everything except exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Training</td> \
+            <td>Exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Faerie Quest</td> \
+            <td>Affected stats numbers.</td> \
+        </tr> \
+        <tr> \
+            <td>Coincidence</td> \
+            <td>Affected stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Lab Ray</td> \
+            <td>Affected attributes and stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Petpet Lab Ray</td> \
+            <td>Affected petpet info</td> \
+        </tr> \
+        <tr> \
+            <td>Random Event</td> \
+            <td>Affected stats numbers</td> \
+        </tr> \
+        ';
+    /*<p>Browser Support:<p> \
+        Chrome 4.0 \
+        Firefox 3.5 \
+        IE 8.0 \
+        Safari 4.0 \
+        Opera 11.5 \
+     ';*/
 
 var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
 var STATS = [];
@@ -227,12 +246,25 @@ function addElements(){
     document.body.appendChild(CreateCSS());
 }
 function buildMenus() {
-    $('.content').prepend(
+    $('.content').first().prepend(
         '<div id="sidebar_menus"> \
             <div id="info_menu"></div> \
             <div id="settings_menu"></div> \
         </div>');
+    $('#info_menu').append(
+        '<div class="close_menu"><i class="fas fa-times"></i></div> \
+        <div class="innerMenu"> \
+            <h1>Info</h1><hr> \
+            '+INFO+' \
+        </div>');
+    $('#settings_menu').append(
+        '<div class="close_menu"><i class="fas fa-times"></i></div> \
+        <div class="innerMenu"> \
+            <h1>Settings</h1><hr> \
+            <p>words here</p> \
+        </div>');
 
+    // functionality
     $('#info_button i').click(function(){
         $('#info_menu').toggle();
         $('#settings_menu').hide();
@@ -241,10 +273,15 @@ function buildMenus() {
         $('#settings_menu').toggle();
         $('#info_menu').hide();
     });
-    $('#close_menu').click(function(){
+    $('.close_menu').click(function(){
         $(this).parent().hide();
     });
-    
+    $(document).keyup(function(e) {
+        if (e.key === "Escape") { // escape key maps to keycode `27`
+            $('#info_menu').hide();
+            $('#settings_menu').hide();
+       }
+   });
 }
 function createButtonsHTML(petname) {
     /*
@@ -274,7 +311,30 @@ function CreateCSS() {
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = 
-        '#sidebar_menus > div { \
+        '.innerMenu { \
+            padding: 0px 30px; \
+        } \
+        .innerMenu h1 { \
+            margin-bottom: -5px; \
+            color: '+SUBCOLOR+'; \
+            font-family: Verdana, Arial, Helvetica, sans-serif; \
+        } \
+        .innerMenu hr { \
+            background-color: '+COLOR+'; \
+            border: none; \
+            height: 1px; \
+        } \
+        .close_menu { \
+            float: right; \
+            cursor: pointer; \
+            font-size: 25px; \
+            color: '+COLOR+'; \
+            margin: 12px 13px; \
+        } \
+        .close_menu:hover { \
+            color: '+SUBCOLOR+'; \
+        } \
+        #sidebar_menus > div { \
             position: absolute; \
             display: none; \
             height: 400px; \
@@ -290,7 +350,7 @@ function CreateCSS() {
         } \
         #petsHeader span i { \
             cursor: pointer; \
-            padding: 4px; \
+            padding: 0px 4px; \
         } \
         .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav { \
             margin-left: -30px; \
