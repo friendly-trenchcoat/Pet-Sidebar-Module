@@ -14,15 +14,14 @@
 /*
 TODOS:
 Make stats number only.
-Make hover only work in CERTAIN AREA on right side.
 On left side, have smaller popout with these buttons, icon and title:
     - move pet up
     - make active
     - customize
     - see/edit lookup
     - see/edit homepage
-    - remove from sidebar
     - move down
+    <<HERE>>: make nav long, icon inside floatleftdiv, fix hover, animateout, edit buttons
 At top of module, add three buttons:
     - help: toggle div with instructions and bug report link
     - settings: toggle div with settings
@@ -30,7 +29,7 @@ At top of module, add three buttons:
         > what information to include in popout
         > color, maybe transparency
         > whether to put active pet at top or leave order
-        > dropdown of removed pets, to add back
+        > add/remove pets from sidebar
     - collapse: toggle inactive pets
 
 Options:
@@ -122,7 +121,8 @@ var STATS = [];
 var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
 var COLOR = $('.sidebarHeader').css('background-color');
-var SUBCOLOR = getSubcolor();
+var SUBCOLOR = getSubcolor(10);
+console.log(COLOR, SUBCOLOR);
 
 function main() {
     // update STATS data
@@ -141,9 +141,9 @@ function main() {
     // store final list of pets
     localStorage.setItem("pets", JSON.stringify(PETS));
 }
-function getSubcolor() {
+function getSubcolor(n) {
     var rgbs = COLOR.match(new RegExp('rgb\((\d{1,3}), ?(\d{1,3}), ?(\d{1,3})\)'));
-    return rgbs ? 'rbg('+(rgbs[1]-5)+','(rgbs[2]-5)+','(rgbs[3]-5)+')' : COLOR;
+    return rgbs ? 'rbg('+(rgbs[1]-n)+','(rgbs[2]-n)+','(rgbs[3]-n)+')' : COLOR;
 }
 function addElements(){
     // Add the created elements to the page.
@@ -173,11 +173,11 @@ function addElements(){
     }
 
     // functionality
-    $('.leftHover').hover(function(){  // hovering over left hover div exposes nav buttons
+    /*$('.leftHover').hover(function(){  // hovering over left hover div exposes nav buttons
         $('#nav_'+$(this).attr('petname')).stop(true).animate({marginLeft: '-30px'}, 800);
     }, function(){
         $('#nav_'+$(this).attr('petname')).stop(true).animate({marginLeft: '0px'}, 500);
-});
+    });*/
     $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
             var pixels = (($(this).parent().find('.petpet').length) ? ['500px','95px'] : ['325px','115px']); // smaller when no petpet
             $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
@@ -235,12 +235,12 @@ function createButtonsHTML(petname) {
     */
     var buttonsHTML = 
         '<div id="nav_'+petname+'" class="petnav"> \
-            <a href=""><i class="fas fa-chevron-up"></i></a> \
-            <a href=""><i class="fas fa-sun"></i></a> \
-            <a href=""><i class="fas fa-mask"></i></a> \
-            <a href=""><i class="fas fa-id-card"></i></a> \
-            <a href=""><i class="fas fa-paw"></i></a> \
-            <a href=""><i class="fas fa-chevron-down"></i></a> \
+            <a title="move up" href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><i class="fas fa-chevron-up"></i></a> \
+            <a title="make active" href="http://www.neopets.com/customise/?view='+petname+'"><i class="fas fa-sun"></i></a> \
+            <a title="customize" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><i class="fas fa-mask"></i></a> \
+            <a title="view lookup" href="http://www.neopets.com/~'+petname+'"><i class="fas fa-id-card"></i></a> \
+            <a title="view petpage" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><i class="fas fa-paw"></i></a> \
+            <a title="move down" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><i class="fas fa-chevron-down"></i></a> \
         </div>';
     return buttonsHTML;
 }
@@ -248,8 +248,13 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = ' \
+        .leftHover:hover ~ .petnav, .petnav:hover, .a:hover > .petnav { \
+            margin-left: -30px; \
+            background-color: #000; \
+        } \
         .petnav { \
             position: absolute; \
+            margin-left: -30px; \
             width: 32px; \
             z-index: 98; \
             background-color: '+COLOR+'; \
