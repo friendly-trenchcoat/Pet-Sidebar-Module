@@ -14,14 +14,15 @@
 /*
 TODOS:
 Make stats number only.
-On left side, have smaller popout with these buttons, icon and title:
-    - move pet up
-    - make active
-    - customize
-    - see/edit lookup
-    - see/edit homepage
-    - move down
-    <<HERE>>: make nav long, icon inside floatleftdiv, fix hover, animateout, edit buttons
+On left side, have smaller nav popout
+    x main nav
+    x sub nav
+    - hover transitions
+    - disable buttons:
+        > move up: when top
+        > active: when active
+        > customize: when UC
+        > move down: when bottom
 At top of module, add three buttons:
     - help: toggle div with instructions and bug report link
     - settings: toggle div with settings
@@ -35,7 +36,7 @@ At top of module, add three buttons:
 Options:
 order buttons literally change order of PETS list
 if (stickyActive) just disable ability to move there
-
+Whenever order is changed, run addElements()
 
 Default Display:
  >> customize
@@ -165,11 +166,11 @@ function addElements(){
         STATS = JSON.parse(localStorage.getItem(petname));
         petModule.append('<tr id="inactive_'+petname+'" ></tr> style="position: relative;"'); // for some reason this must be done seperately
         $('#inactive_'+petname).append(
-            '<div class="leftHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 3px;"></div> \
-            <div class="rightHover" petname="'+petname+'" style="position: absolute; z-index: 100; height: 150px; width: 50px; margin-left: 103px;"></div> \
+            '<div class="leftHover" petname="'+petname+'"></div> \
+            <div class="rightHover" petname="'+petname+'"></div> \
             '+createButtonsHTML(petname)+' \
             '+createStatsHTML(petname)+' \
-            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[16]+'" width="150" height="150" border="0" style=""></a>');
+            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[15]+'" width="150" height="150" border="0"></a>');
     }
 
     // functionality
@@ -201,27 +202,50 @@ function createButtonsHTML(petname) {
         settings: cog
         info: question-circle info-circle info
     */
-    var buttonsHTML = 
+    var buttonsHTML = // main, lookup, petpage
         '<div id="nav_'+petname+'" class="petnav main"> \
-            <a class="movedown"><span><i class="fas fa-chevron-up"></i></span></a> \
-            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-sun"></i></span></a> \
-            <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
-            <a href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
-            <a href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
-            <a class="moveup"><span><i class="fas fa-chevron-down"></i></span></a> \
+            <a class="m movedown"><span><i class="fas fa-chevron-up"></i></span></a> \
+            <a class="m" href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-sun"></i></span></a> \
+            <a class="m" href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
+            <a class="l" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
+            <a class="p" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
+            <a class="m moveup"><span><i class="fas fa-chevron-down"></i></span></a> \
         </div> \
         <div id="subnav_'+petname+'" class="petnav sub"> \
-            <a href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
-            <a href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
+            <a class="l" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
+            <a class="p" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
         </div>';
+
+    /**
+     * Hover Rules:
+     * 
+     * open if      hovering one of these
+     * .main        self, .main a, .sub, .sub a, .leftHover
+     * .main.m      self
+     * .main.l      self, .sub.l
+     * .main.p      self, .sub.p
+     * .sub.l       self, main.l
+     * .sub.p       self, main.p
+     */
     return buttonsHTML;
 }
 function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = ' \
-        .leftHover:hover ~ .main, .main:hover, .a:hover > .main { \
-            background-color: #000; \
+        .leftHover { \
+            position: absolute; \
+            z-index: 100; \
+            height: 150px; \
+            width: 50px; \
+            margin-left: 3px; \
+        } \
+        .rightHover { \
+            position: absolute; \
+            z-index: 100; \
+            height: 150px; \
+            width: 50px; \
+            margin-left: 103px; \
         } \
         .petnav { \
             position: absolute; \
@@ -292,14 +316,14 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
         } ';
     return statsCSS;
 }
-// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet age, 15 petpet image]
+// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
 function createStatsHTML(petname) {
     var petpetTD = '', petpetStyle='';
-    if (STATS[15]) {
+    if (STATS[14]) {
         petpetTD =
             '<td align="center" class="petpet"> \
                 <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-                <img src="'+STATS[15]+'" width="80" height="80"><br><br> \
+                <img src="'+STATS[14]+'" width="80" height="80"><br><br> \
             </td>';
         petpetStyle = ' style="margin-top: -15px;"';
     }
@@ -406,9 +430,9 @@ function QuickRef() {
             STATS[11] = $(lines).eq(11).text(); // intelligence
             STATS[12] = petpet[0];              // petpet name
             STATS[13] = petpet[1];              // petpet species
-            if(newpet) STATS[14] = STATS[14] || null;                        // petpet age (can't be found here)... does anyone even care about this?
-            STATS[15] = $(lines).eq(12).find('img').attr('src');             // petpet image
-            STATS[16] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
+            STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
+            STATS[15] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
+            STATS[16] = $(v).find('.pet_notices:contains(converted)').length ? "true" : "false"; // is UC
             console.log(STATS);
 
             localStorage.setItem(petname, JSON.stringify(STATS));
@@ -529,7 +553,7 @@ function Sidebar() {
     STATS[6]  = $(activePetStats).eq(5).text();  // level
     STATS[7]  = $(activePetStats).eq(1).text();  // hp
     if(newpet) for(var i=8; i<16; i++) STATS[i] = '';
-    STATS[16] = $('.activePet a img').attr('src').slice(0,-5)+'4.png'; // pet image (use larger version)
+    STATS[15] = $('.activePet a img').attr('src').slice(0,-5)+'4.png'; // pet image (use larger version)
     console.log(STATS);
 
     // store data
