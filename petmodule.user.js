@@ -164,13 +164,17 @@ function addElements(){
         petname = PETS[i];
         c += 1;
         STATS = JSON.parse(localStorage.getItem(petname));
-        petModule.append('<tr id="inactive_'+petname+'" ></tr> style="position: relative;"'); // for some reason this must be done seperately
+        petModule.append('<tr id="inactive_'+petname+'" ></tr> style="position: relative;"'); // for some reason children must be added seperately
         $('#inactive_'+petname).append(
             '<div class="leftHover" petname="'+petname+'"></div> \
             <div class="rightHover" petname="'+petname+'"></div> \
             '+createButtonsHTML(petname)+' \
             '+createStatsHTML(petname)+' \
             <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[15]+'" width="150" height="150" border="0"></a>');
+        $('#nav_'+petname).find('.lookup').append(
+            '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+        $('#nav_'+petname).find('.petpage').append(
+            '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
     }
 
     // functionality
@@ -198,63 +202,28 @@ function createButtonsHTML(petname) {
         info: question-circle info-circle info
     */
     var buttonsHTML = // main, lookup, petpage
-        '<div id="subnav_'+petname+'" class="petnav sub"> \
-            <a class="l" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
-            <a class="p" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a> \
-        </div> \
-        <div id="nav_'+petname+'" class="petnav main"> \
-            <a class="m movedown"><span><i class="fas fa-chevron-up"></i></span></a> \
-            <a class="m" href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-sun"></i></span></a> \
-            <a class="m" href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
-            <a class="l" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
-            <a class="p" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
-            <a class="m moveup"><span><i class="fas fa-chevron-down"></i></span></a> \
+        '<div id="nav_'+petname+'" class="petnav"> \
+            <a class="movedown"><span><i class="fas fa-chevron-up"></i></span></a> \
+            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-sun"></i></span></a> \
+            <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
+            <a class="lookup" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
+            <a class="petpage" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
+            <a class="moveup"><span><i class="fas fa-chevron-down"></i></span></a> \
         </div>';
-
-    $('.main .l').hover(function(){
-        $(this).parent().parent().find('.sub .l').stop(true).animate({marginLeft: '-60px'}, 300);
-    }, function(){
-        $(this).parent().parent().find('.sub .l').stop(true).animate({marginLeft: '0px'}, 100);
-    });
-    $('.main .p').hover(function(){  // hovering over left hover div exposes nav buttons
-        $(this).parent().parent().find('.sub .p').stop(true).animate({marginLeft: '-60px'}, 300);
-    }, function(){
-        $(this).parent().parent().find('.sub .p').stop(true).animate({marginLeft: '0px'}, 100);
-    });
-    /**
-     * Hover Rules:
-     * 
-     * open if      hovering one of these
-     * .main        self, .sub, .leftHover
-     * .main.m      self
-     * .main.l      self, .sub.l
-     * .main.p      self, .sub.p
-     * .sub.l       self, main.l
-     * .sub.p       self, main.p
-     * 
-     * .petnav:hover, .leftHover:hover ~ .main {
-     * margin-left: -30px;
-     * }
-     * 
-     * .main.m:hover {
-     * margin-left: -40px;
-     * }
-     * 
-     * $('.l').hover(function { 
-     * $('.sub.l').animate()
-     * })
-     */
     return buttonsHTML;
 }
 function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = ' \
-        .petnav:hover, .sub:hover ~ .main, .leftHover:hover ~ .main { \
+        .petnav:hover, .leftHover:hover ~ .petnav { \
             margin-left: -30px; \
         } \
         .petnav a:hover { \
             margin-left: -5px; \
+        } \
+        .petnav a:hover .sub { \
+            margin-left: -25px; \
         } \
         .leftHover { \
             position: absolute; \
@@ -272,19 +241,14 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
         } \
         .petnav { \
             position: absolute; \
-            transition-property: margin-left; \
-            transition-duration: .5s; \
-        } \
-        .petnav.main { \
             width: 42px; \
-            z-index: 98; \
+            z-index: 97; \
             background-color: '+COLOR+'; \
             border-radius: 12px 0px 0px 12px; \
-        } \
-        .petnav.sub { \
-            margin-top: 75px; \
-            width: 30px; \
-            z-index: 97; \
+            -webkit-transition-property: margin-left; \
+            -webkit-transition-duration: .5s; \
+            transition-property: margin-left; \
+            transition-duration: .5s; \
         } \
         .petnav a { \
             position: relative; \
@@ -294,6 +258,7 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
             color: #fff; \
             background-color: '+COLOR+'; \
             border-radius: 12px 0px 0px 12px; \
+            z-index: 98; \
         } \
         .petnav a:hover { \
             background-color: '+SUBCOLOR+'; \
@@ -301,13 +266,26 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
         .petnav span { \
             float: left; \
             width: 32px; \
+            background-color: inherit; \
+            border-radius: 12px 0px 0px 12px; \
         } \
-        .main i { \
+        .petnav i { \
             padding: 3px; \
+        } \
+        .sub { \
+            position: absolute !important; \
+            width: 30px; \
+            z-index: -1 !important; \
+            background-color: '+SUBCOLOR+'; \
+            -webkit-transition-property: margin-left; \
+            -webkit-transition-duration: .2s; \
+            transition-property: margin-left; \
+            transition-duration: .2s; \
         } \
         .sub i { \
             padding: 5.5px; \
         } \
+        \
         .hover { \
             position: absolute; \
             border-radius: 25px; \
