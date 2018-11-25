@@ -17,7 +17,7 @@ Make stats number only.
 On left side, have smaller nav popout
     x main nav
     x sub nav
-    - hover transitions
+    x hover transitions
     - disable buttons:
         > move up: when top
         > active: when active
@@ -32,11 +32,10 @@ At top of module, add three buttons:
         > whether to put active pet at top or leave order
         > add/remove pets from sidebar
     - collapse: toggle inactive pets
-
-Options:
-order buttons literally change order of PETS list
-if (stickyActive) just disable ability to move there
-Whenever order is changed, run addElements()
+Arrows:
+    order buttons literally change order of PETS list
+    if (stickyActive) just disable ability to move there
+    Whenever order is changed, run addElements()
 
 Default Display:
  >> customize
@@ -123,7 +122,6 @@ var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
 var COLOR = $('.sidebarHeader').css('background-color');
 var SUBCOLOR = getSubcolor(10);
-console.log(COLOR, SUBCOLOR);
 
 function main() {
     // update STATS data
@@ -146,6 +144,16 @@ function getSubcolor(n) {
     var rgbs = String(COLOR).match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
     return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : COLOR;
 }
+function array_move(arr, old_index, new_index) {
+    /*if (new_index >= arr.length) {
+        var k = new_index - arr.length + 1;
+        while (k--) {
+            arr.push(undefined);
+        }
+    }*/
+    arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+    return arr; // for testing
+};
 function addElements(){
     // Add the created elements to the page.
 
@@ -184,6 +192,12 @@ function addElements(){
         }, function(){
             $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
     });
+    $('.move').click(function(){
+        var i = PETS.indexOf($(this).attr('petname'));
+        array_move(PETS,i,i+Number($(this).attr('dir')));
+        addElements();
+        localStorage.setItem("pets", JSON.stringify(PETS));
+    }); 
 
     // add CSS
     document.body.appendChild(CreateCSS());
@@ -203,12 +217,12 @@ function createButtonsHTML(petname) {
     */
     var buttonsHTML = // main, lookup, petpage
         '<div id="nav_'+petname+'" class="petnav"> \
-            <a class="movedown"><span><i class="fas fa-chevron-up"></i></span></a> \
-            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-sun"></i></span></a> \
+            <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
+            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-splotch"></i></span></a> \
             <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
             <a class="lookup" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
             <a class="petpage" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
-            <a class="moveup"><span><i class="fas fa-chevron-down"></i></span></a> \
+            <a class="move" dir="1" petname="'+petname+'"><span><i class="fas fa-chevron-down"></i></span></a> \
         </div>';
     return buttonsHTML;
 }
