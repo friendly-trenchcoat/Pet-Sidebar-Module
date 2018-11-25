@@ -18,13 +18,9 @@ On left side, have smaller nav popout
     x main nav
     x sub nav
     x hover transitions
-    - disable buttons:
-        > move up: when top
-        > active: when active
-        > customize: when UC
-        > move down: when bottom
+    x disable buttons
 At top of module, add three buttons:
-    - help: toggle div with instructions and bug report link
+    - help/info: toggle div with instructions and bug report link
     - settings: toggle div with settings
         > pet name aliases
         > what information to include in popout
@@ -33,9 +29,14 @@ At top of module, add three buttons:
         > add/remove pets from sidebar
     - collapse: toggle inactive pets
 Arrows:
-    order buttons literally change order of PETS list
-    if (stickyActive) just disable ability to move there
-    Whenever order is changed, run addElements()
+    x order buttons literally change order of PETS list
+    - if (stickyActive) just disable ability to move there
+    x Whenever order is changed, run addElements()
+    - maybe steal that other collapser arrow thing, or maybe spin animate this one
+Animated image:
+    - pull in logic from that other script
+
+Data gathering:
 
 Default Display:
  >> customize
@@ -122,9 +123,13 @@ var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
 var COLOR = $('.sidebarHeader').css('background-color');
 var SUBCOLOR = getSubcolor(10);
+var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
+console.log('flash enabled: ',FLASH);
+// var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
+
 
 function main() {
-    // update STATS data
+    // update STATS data... right now they overwrite everything
     if (document.URL.indexOf("quickref") != -1) QuickRef();
     else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
@@ -159,22 +164,30 @@ function addElements(){
 
     // clear module
     var petModule = $('.sidebarModule:first-child tbody');
+    var activePetName = petModule.children().eq(0).find('b').text();
     petModule.html( // replace contents with only top bar
         '<tr> \
-            <td valign="middle" class="sidebarHeader medText"><a href="/quickref.phtml"><b>Pets</b></a> </td> \
+            <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
+                <a href="/quickref.phtml"><b>Pets</b></a> \
+                <span id="fold_button"><i class="fas fa-caret-down"></i></span> \
+                <span id="settings_button"><i class="fas fa-cog"></i></span> \
+                <span id="info_button"><i class="fas fa-info-circle"></i></span> \
+            </td> \
         </tr>'
     );
 
     // add pets 
     var petname;
-    var c=0;
     for (var i=0; i<PETS.length; i++) {
         petname = PETS[i];
-        c += 1;
         STATS = JSON.parse(localStorage.getItem(petname));
-        petModule.append('<tr id="inactive_'+petname+'" ></tr> style="position: relative;"'); // for some reason children must be added seperately
-        $('#inactive_'+petname).append(
+        var inactive = activePetName==petname ? '' : 'in';
+
+        // for some reason children must be added seperately
+        petModule.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
+        $('#'+inactive+'active_'+petname).append(
             '<div class="leftHover" petname="'+petname+'"></div> \
+            <div class="leftSubHover" petname="'+petname+'"></div> \
             <div class="rightHover" petname="'+petname+'"></div> \
             '+createButtonsHTML(petname)+' \
             '+createStatsHTML(petname)+' \
@@ -183,7 +196,13 @@ function addElements(){
             '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
         $('#nav_'+petname).find('.petpage').append(
             '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+        
+        // disable buttons
+        if (i==0)               $('#nav_'+petname).find('.move').eq(0).addClass('disabled');    // move up
+        if (i==(PETS.length-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');    // move down
+        if (STATS[16])          $('#nav_'+petname).find('a').eq(2).addClass('disabled');        // customize
     }
+    $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                              // make active
 
     // functionality
     $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
@@ -192,15 +211,40 @@ function addElements(){
         }, function(){
             $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
     });
-    $('.move').click(function(){
-        var i = PETS.indexOf($(this).attr('petname'));
-        array_move(PETS,i,i+Number($(this).attr('dir')));
-        addElements();
-        localStorage.setItem("pets", JSON.stringify(PETS));
+    $('.move').click(function(){ // arrow buttons
+        if (!$(this).hasClass('disabled')) {
+            var i = PETS.indexOf($(this).attr('petname'));
+            array_move(PETS,i,i+Number($(this).attr('dir')));
+            addElements();
+            localStorage.setItem("pets", JSON.stringify(PETS));
+        }
     }); 
+
+    // menus
+    buildMenus();
 
     // add CSS
     document.body.appendChild(CreateCSS());
+}
+function buildMenus() {
+    $('.content').prepend(
+        '<div id="sidebar_menus"> \
+            <div id="info_menu"></div> \
+            <div id="settings_menu"></div> \
+        </div>');
+
+    $('#info_button i').click(function(){
+        $('#info_menu').toggle();
+        $('#settings_menu').hide();
+    });
+    $('#settings_button i').click(function(){
+        $('#settings_menu').toggle();
+        $('#info_menu').hide();
+    });
+    $('#close_menu').click(function(){
+        $(this).parent().hide();
+    });
+    
 }
 function createButtonsHTML(petname) {
     /*
@@ -226,15 +270,35 @@ function createButtonsHTML(petname) {
         </div>';
     return buttonsHTML;
 }
-function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
+function CreateCSS() {
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
-    statsCSS.innerHTML = ' \
-        .petnav:hover, .leftHover:hover ~ .petnav { \
+    statsCSS.innerHTML = 
+        '#sidebar_menus > div { \
+            position: absolute; \
+            display: none; \
+            height: 400px; \
+            width: 700px; \
+            margin: 52px; \
+            background-color: #fffe; \
+            border: 4px solid '+COLOR+'; \
+            border-radius: 20px; \
+        } \
+        #petsHeader span { \
+            float: right; \
+            font-size: 12px; \
+        } \
+        #petsHeader span i { \
+            cursor: pointer; \
+            padding: 4px; \
+        } \
+        .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav { \
             margin-left: -30px; \
         } \
         .petnav a:hover { \
+            cursor: pointer; \
             margin-left: -5px; \
+            background-color: '+SUBCOLOR+'; \
         } \
         .petnav a:hover .sub { \
             margin-left: -25px; \
@@ -245,6 +309,13 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
             height: 150px; \
             width: 50px; \
             margin-left: 3px; \
+        } \
+        .leftSubHover { \
+            position: absolute; \
+            z-index: 80; \
+            height: 150px; \
+            width: 25px; \
+            margin-left: -22px; \
         } \
         .rightHover { \
             position: absolute; \
@@ -274,8 +345,12 @@ function CreateCSS() { // 155 | 212 > 367 > 522 > 677 > 832
             border-radius: 12px 0px 0px 12px; \
             z-index: 98; \
         } \
-        .petnav a:hover { \
-            background-color: '+SUBCOLOR+'; \
+        .disabled { \
+            color: #fffa !important; \
+        } \
+        .disabled:hover { \
+            margin-left: 0px !important; \
+            background-color: '+COLOR+' !important; \
         } \
         .petnav span { \
             float: left; \
@@ -446,8 +521,8 @@ function QuickRef() {
             STATS[13] = petpet[1];              // petpet species
             STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
             STATS[15] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
-            STATS[16] = $(v).find('.pet_notices:contains(converted)').length ? "true" : "false"; // is UC
-            console.log(STATS);
+            STATS[16] = $(v).find('.pet_notices:contains(converted)').length ? true : false; // is UC
+            //console.log(STATS);
 
             localStorage.setItem(petname, JSON.stringify(STATS));
         }
