@@ -137,6 +137,7 @@ var INFO =
      ';*/
 
 var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
+var UNCERTAIN = JSON.parse(localStorage.getItem("UNCERTAIN")) || [];
 var STATS = [];
 var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
@@ -148,7 +149,7 @@ console.log('flash enabled: ',FLASH);
 
 // MAIN
 function main() {
-    // update STATS data... right now they overwrite everything
+    // update STATS data
     if (document.URL.indexOf("quickref") != -1) QuickRef();
     else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
@@ -162,7 +163,7 @@ function main() {
     if ($(".sidebar")[0]) addElements();
 
     // store final list of pets
-    localStorage.setItem("pets", JSON.stringify(PETS));
+    localStorage.setItem("PETS", JSON.stringify(PETS));
 }
 
 // BUILDER FUNCTIONS
@@ -221,7 +222,7 @@ function addElements(){
             var i = PETS.indexOf($(this).attr('petname'));
             array_move(PETS,i,i+Number($(this).attr('dir')));
             addElements();
-            localStorage.setItem("pets", JSON.stringify(PETS));
+            localStorage.setItem("PETS", JSON.stringify(PETS));
         }
     }); 
 
@@ -772,33 +773,34 @@ function getSubcolor(n) {
 function array_move(arr, old_index, new_index) {
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
 };
-function _strengthString(word) {
-    var low = {'Not Yet Born':'0', 'Pathetic':'1','Very Weak':'2','Weak':'3-4','Frail':'5','Average':'6','Quite Strong':'7-9','Strong':'10-11','Very Strong':'12-13','Great':'14','Immense':'15-16','Titanic':'17-19','Herculean':'20'}
-    var n = ((word in low) ? low[word] : word.match(/\d+/g));
+
+var DEF = ['Not Yet Born','Defenceless','Naked','Vulnerable','Very Poor','Poor','Below Average','Below Average','Average','Armoured','Tough','Heavy','Heavy','Very Heavy','Very Heavy','Steel Plate','Bullet Proof','Semi Deadly Godly','Demi Godly','Godly','Beyond Godly'];
+var STR = ['Not Yet Born','Pathetic','Very Weak','Weak','Weak','Frail','Average','Quite Strong','Quite Strong','Quite Strong','Strong','Strong','Very Strong','Very Strong','Great','Immense','Immense','Titanic','Titanic','Titanic','Herculean'];
+var MOV = ['Not Yet Born','Barely Moves','Snail Pace','Lazy','Very Slow','Slow','Quite Slow','Average','Average','Fast','Speedy','Super Fast','Super Speedy','Breakneck','Cheetah','Lightening','Mach 1','Mach 1','Mach 2','Mach 3','Mach 4'];
+function str_toInt(word) {
+    var n = ((word.indexOf(STR) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
     console.log("strength: ",word,n);
     return n
 }
-function _defenceString(word) {
-    var low = {'Not Yet Born':'0','Defenceless':'1','Naked':'2','Vulnerable':'3','Very Poor':'4','Poor':'5','Below Average':'6-7','Average':'8','Armoured':'9','Tough':'10','Heavy':'11-12','Very Heavy':'13-14','Steel Plate':'15','Bullet Proof':'16','Semi Deadly Godly':'17','Demi Godly':'18','Godly':'19','Beyond Godly':'20'};
-    var n = ((word in low) ? low[word] : word.match(/\d+/g));
+function def_toInt(word) {
+    var n = ((word.indexOf(DEF) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
     console.log("defense: ",word,n);
     return n
 }
-function _movementString(word) {
-    var low = ['Not Yet Born','Barely Moves','Snail Pace','Lazy','Very Slow','Slow','Quite Slow','Average','Average','Fast','Speedy','Super Fast','Super Speedy','Breakneck','Cheetah','Lightening','Mach 1','Mach 1','Mach 2','Mach 3','Mach 4'];
-    var n = ((word.indexOf(low) < 0) ? word.match(/\d+/g) : word.indexOf(low));
-    n = ((n==7) ? '7-8' : n);
+function mov_toInt(word) {
+    var n = ((word.indexOf(MOV) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
     console.log("movement: ",word,n);
     return n
 }
-function _intelligenceString(word) {
-    var low = {'Dim Witted':'0-4','Dull':'5-9','Average':'10-14','Above Average':'15-19','Bright':'20-24','Clever':'25-29','Very Clever':'30-34','Brilliant':'35-39','Genius':'40-44','Super Genius':'45-49','Mega Genius':'50-54','Total Genius':'55-59','Master Genius':'60-94'}
-    var n = ((word in low) ? low[word] : word.match(/\d+/g));
+function int_toInt(word) {
+    var n = word.match(/\d+/g);
+    n = n ? n[1] : word;
+    console.log("intelligence: ",word,n);
+    return n;
 }
-function strengthString(n) {
+function str_toString(n) {
     var word;
-    var low = ['Not Yet Born','Pathetic','Very Weak','Weak','Weak','Frail','Average','Quite Strong','Quite Strong','Quite Strong','Strong','Strong','Very Strong','Very Strong','Great','Immense','Immense','Titanic','Titanic','Titanic','Herculean'];
-    if (n<21) word = low[n];
+    if (n<21) word = STR[n];
     else if (n<40) word = 'GREAT';
     else if (n<60) word = 'EXCELLENT';
     else if (n<80) word = 'AWESOME';
@@ -808,10 +810,9 @@ function strengthString(n) {
     word = word+' ('+n+')';
     return word;
 }
-function defenceString(n) {
+function def_toString(n) {
     var word;
-    var low = ['Not Yet Born','Defenceless','Naked','Vulnerable','Very Poor','Poor','Below Average','Below Average','Average','Armoured','Tough','Heavy','Heavy','Very Heavy','Very Heavy','Steel Plate','Bullet Proof','Semi Deadly Godly','Demi Godly','Godly','Beyond Godly'];
-    if (n<21) word = low[n];
+    if (n<21) word = DEF[n];
     else if (n<40) word = 'GREAT';
     else if (n<60) word = 'EXCELLENT';
     else if (n<80) word = 'AWESOME';
@@ -821,10 +822,9 @@ function defenceString(n) {
     word = word+' ('+n+')';
     return word;
 }
-function movementString(n) {
+function mov_toString(n) {
     var word;
-    var low = ['Not Yet Born','Barely Moves','Snail Pace','Lazy','Very Slow','Slow','Quite Slow','Average','Average','Fast','Speedy','Super Fast','Super Speedy','Breakneck','Cheetah','Lightening','Mach 1','Mach 1','Mach 2','Mach 3','Mach 4'];
-    if (n<21) word = low[n];
+    if (n<21) word = MOV[n];
     else if (n<40) word = 'GREAT';
     else if (n<60) word = 'EXCELLENT';
     else if (n<80) word = 'AWESOME';
