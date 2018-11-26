@@ -169,14 +169,7 @@ function getSubcolor(n) {
     return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : COLOR;
 }
 function array_move(arr, old_index, new_index) {
-    /*if (new_index >= arr.length) {
-        var k = new_index - arr.length + 1;
-        while (k--) {
-            arr.push(undefined);
-        }
-    }*/
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-    return arr; // for testing
 };
 function addElements(){
     // Add the created elements to the page.
@@ -659,7 +652,66 @@ function EndTraining() { // incomplete
     localStorage.setItem(petname, JSON.stringify(STATS));
 }
 function FaerieQuest() {
-    console.log("I'll get to it eventually.");
+    var petname = $('.pet-name').text().slice(0, -2);
+    var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
+    console.log(petname, faerie);
+    
+    if( PETS.indexOf(petname) >= 0 ) { // ignore pets not stored
+        STATS = JSON.parse(localStorage.getItem(petname));
+        if(STATS) { // ignore pets with no data
+            console.log('before: lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+            questSwitch(faerie);
+            console.log('after:  lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+            localStorage.setItem(petname, JSON.stringify(STATS));
+        }
+    }
+}
+function questSwitch(faerie) {
+    switch (faerie) {
+        case 'Air':
+            STATS[10] += 3;
+            break;
+        case 'Dark':
+            STATS[7] += 3;
+            break;
+        case 'Earth':
+            // 3 (mov OR def OR str)
+            break;
+        case 'Fire':
+            STATS[8] += 3;
+            break;
+        case 'Light':
+            STATS[6] += 1;
+            break;
+            case 'Water':
+            STATS[9] += 3;
+            break;
+        case 'Battle':
+            STATS[7] += 1;
+            STATS[8] += 3;
+            STATS[9] += 3;
+            break;
+        case 'Queen':
+            STATS[6] += 2;
+            STATS[7] += 5;
+            STATS[8] += 5;
+            break;
+        case 'Space':
+            STATS[6] += 5;
+            break;
+        case 'Soup':
+            // 2*2 (HP OR def OR str OR mov OR lv)
+            var blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+) .*and 2 (\w+)/));
+            var map = {'levels': 6, 'strength': 8, 'defense': 9, 'movement': 10};
+            STATS[map[blurb[1]]] += 2;
+            STATS[map[blurb[2]]] += 2;
+            break;
+        case 'Gray':
+            // leaches off of elemental or fountain faerie
+            var newFaeire = $('.pet-name').parent().text().match(new RegExp(/another faerie. (\w+) .aerie, come/));
+            if (newFaeire != "Earth") questSwitch(newFaeire);
+            break;
+    }
 }
 function HealingSprings() {
     // .content > All of your Neopets gain ([0-9]+) (.+)\. I hope that helps!
