@@ -146,7 +146,7 @@ var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -
 console.log('flash enabled: ',FLASH);
 // var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
 
-
+// MAIN
 function main() {
     // update STATS data... right now they overwrite everything
     if (document.URL.indexOf("quickref") != -1) QuickRef();
@@ -164,16 +164,9 @@ function main() {
     // store final list of pets
     localStorage.setItem("pets", JSON.stringify(PETS));
 }
-function getSubcolor(n) {
-    var rgbs = String(COLOR).match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
-    return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : COLOR;
-}
-function array_move(arr, old_index, new_index) {
-    arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-};
-function addElements(){
-    // Add the created elements to the page.
 
+// BUILDER FUNCTIONS
+function addElements(){
     // clear module
     var petModule = $('.sidebarModule:first-child tbody');
     var activePetName = petModule.children().eq(0).find('b').text();
@@ -238,6 +231,110 @@ function addElements(){
     // add CSS
     document.body.appendChild(CreateCSS());
 }
+// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
+function createStatsHTML(petname) {
+    var petpetTD = '', petpetStyle='';
+    if (STATS[14]) {
+        petpetTD =
+            '<td align="center" class="petpet"> \
+                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
+                <img src="'+STATS[14]+'" width="80" height="80"><br><br> \
+            </td>';
+        petpetStyle = ' style="margin-top: -15px;"';
+    }
+    var statsHTML =
+        '<div id="stats_'+petname+'" class="hover stats"> \
+        <div class="inner"'+petpetStyle+'> \
+        \
+        <table cellpadding="1" cellspacing="0" border="0"><tr> \
+        \
+        <td vertical-align="top"> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Species:</td> \
+        <td align="left"><b>'+STATS[1]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Color:</td> \
+        <td align="left"><b>'+STATS[2]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Mood:</td> \
+        <td align="left"><b>'+STATS[3]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Hunger:</td> \
+        <td align="left"><b>'+STATS[4]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Age:</td> \
+        <td align="left"><b>'+STATS[5]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        <td> \
+        <table cellpadding="1" cellspacing="0" border="0"> \
+        <tr> \
+        <td align="right">Level:</td> \
+        <td align="left"><b>'+STATS[6]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Health:</td> \
+        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Strength:</td> \
+        <td align="left"><b>'+STATS[8]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Defence:</td> \
+        <td align="left"><b>'+STATS[9]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Movement:</td> \
+        <td align="left"><b>'+STATS[10]+'</b></td> \
+        </tr> \
+        <tr> \
+        <td align="right">Intelligence:</td> \
+        <td align="left"><b>'+STATS[11]+'</b></td> \
+        </tr> \
+        </table> \
+        </td> \
+        \
+        '+petpetTD+' \
+        \
+        </tr></table> \
+        \
+        </div> \
+        </div>';
+    //    <i>'+STATS[14]+'</i><br> \
+    return statsHTML;
+}
+function createButtonsHTML(petname) {
+    /*
+        move up: angle-up caret-up chevron-up
+        make active: splotch certificate user-circle sun
+        customize: palette mask hat-wizard gem
+        lookup: id-card
+        petpage: paw window-maximize
+        edit: paint-brush pencil-alt
+        remove: times sign-out-alt
+        trash: trash-alt
+        settings: cog
+        info: question-circle info-circle info
+    */
+    var buttonsHTML = // main, lookup, petpage
+        '<div id="nav_'+petname+'" class="petnav"> \
+            <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
+            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-splotch"></i></span></a> \
+            <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
+            <a class="lookup" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
+            <a class="petpage" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
+            <a class="move" dir="1" petname="'+petname+'"><span><i class="fas fa-chevron-down"></i></span></a> \
+        </div>';
+    return buttonsHTML;
+}
 function buildMenus() {
     $('.content').first().prepend(
         '<div id="sidebar_menus"> \
@@ -275,30 +372,6 @@ function buildMenus() {
             $('#settings_menu').hide();
        }
    });
-}
-function createButtonsHTML(petname) {
-    /*
-        move up: angle-up caret-up chevron-up
-        make active: splotch certificate user-circle sun
-        customize: palette mask hat-wizard gem
-        lookup: id-card
-        petpage: paw window-maximize
-        edit: paint-brush pencil-alt
-        remove: times sign-out-alt
-        trash: trash-alt
-        settings: cog
-        info: question-circle info-circle info
-    */
-    var buttonsHTML = // main, lookup, petpage
-        '<div id="nav_'+petname+'" class="petnav"> \
-            <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
-            <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-splotch"></i></span></a> \
-            <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
-            <a class="lookup" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
-            <a class="petpage" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
-            <a class="move" dir="1" petname="'+petname+'"><span><i class="fas fa-chevron-down"></i></span></a> \
-        </div>';
-    return buttonsHTML;
 }
 function CreateCSS() {
     var statsCSS = document.createElement("style");
@@ -458,88 +531,10 @@ function CreateCSS() {
         } ';
     return statsCSS;
 }
-// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
-function createStatsHTML(petname) {
-    var petpetTD = '', petpetStyle='';
-    if (STATS[14]) {
-        petpetTD =
-            '<td align="center" class="petpet"> \
-                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-                <img src="'+STATS[14]+'" width="80" height="80"><br><br> \
-            </td>';
-        petpetStyle = ' style="margin-top: -15px;"';
-    }
-    var statsHTML =
-        '<div id="stats_'+petname+'" class="hover stats"> \
-        <div class="inner"'+petpetStyle+'> \
-        \
-        <table cellpadding="1" cellspacing="0" border="0"><tr> \
-        \
-        <td vertical-align="top"> \
-        <table cellpadding="1" cellspacing="0" border="0"> \
-        <tr> \
-        <td align="right">Species:</td> \
-        <td align="left"><b>'+STATS[1]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Color:</td> \
-        <td align="left"><b>'+STATS[2]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Mood:</td> \
-        <td align="left"><b>'+STATS[3]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Hunger:</td> \
-        <td align="left"><b>'+STATS[4]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Age:</td> \
-        <td align="left"><b>'+STATS[5]+'</b></td> \
-        </tr> \
-        </table> \
-        </td> \
-        \
-        <td> \
-        <table cellpadding="1" cellspacing="0" border="0"> \
-        <tr> \
-        <td align="right">Level:</td> \
-        <td align="left"><b>'+STATS[6]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Health:</td> \
-        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Strength:</td> \
-        <td align="left"><b>'+STATS[8]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Defence:</td> \
-        <td align="left"><b>'+STATS[9]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Movement:</td> \
-        <td align="left"><b>'+STATS[10]+'</b></td> \
-        </tr> \
-        <tr> \
-        <td align="right">Intelligence:</td> \
-        <td align="left"><b>'+STATS[11]+'</b></td> \
-        </tr> \
-        </table> \
-        </td> \
-        \
-        '+petpetTD+' \
-        \
-        </tr></table> \
-        \
-        </div> \
-        </div>';
-    //    <i>'+STATS[14]+'</i><br> \
-    return statsHTML;
-}
+
+// GATHERER FUNCTIONS
 function QuickRef() {
-    // All data except age and exact stat numbers
+    // All data except exact stat numbers
     $('.contentModuleTable tbody').each(function(k,v) {
         if(k%2 === 0) { // even indexed elements are the relevant ones
             var names = $(v).find('th').first().text();
@@ -566,20 +561,23 @@ function QuickRef() {
             STATS[5]  = $(lines).eq(3).text();  // age
             STATS[6]  = $(lines).eq(4).text();  // level
             STATS[7]  = $(lines).eq(5).text();  // hp
-            STATS[8]  = $(lines).eq(8).text();  // strength   // will need to add check for low-level (and for pet lookup too)
-            STATS[9]  = $(lines).eq(9).text();  // defence
-            STATS[10] = $(lines).eq(10).text(); // movement
-            STATS[11] = $(lines).eq(11).text(); // intelligence
+            STATS[8]  = getStat($(lines).eq(8).text(),8);   // strength
+            STATS[9]  = getStat($(lines).eq(9).text(),9);   // defence
+            STATS[10] = getStat($(lines).eq(10).text(),10); // movement
+            STATS[11] = getStat($(lines).eq(11).text(),11); // intelligence
             STATS[12] = petpet[0];              // petpet name
             STATS[13] = petpet[1];              // petpet species
             STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
             STATS[15] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
             STATS[16] = $(v).find('.pet_notices:contains(converted)').length ? true : false; // is UC
-            //console.log(STATS);
+            console.log(STATS);
 
             localStorage.setItem(petname, JSON.stringify(STATS));
         }
     });
+}
+function getStat(string, stat) {
+
 }
 function Training() {
     //Sidebar();
@@ -653,16 +651,18 @@ function EndTraining() { // incomplete
 }
 function FaerieQuest() {
     var petname = $('.pet-name').text().slice(0, -2);
-    var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
-    console.log(petname, faerie);
-    
-    if( PETS.indexOf(petname) >= 0 ) { // ignore pets not stored
-        STATS = JSON.parse(localStorage.getItem(petname));
-        if(STATS) { // ignore pets with no data
-            console.log('before: lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
-            questSwitch(faerie);
-            console.log('after:  lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
-            localStorage.setItem(petname, JSON.stringify(STATS));
+    if (petname.length) {                   // make sure on right page
+        var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
+        console.log(petname, faerie);
+        
+        if( PETS.indexOf(petname) >= 0 ) {  // ignore pets not stored
+            STATS = JSON.parse(localStorage.getItem(petname));
+            if(STATS) {                     // ignore pets with no data
+                console.log('before: lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+                questSwitch(faerie);
+                console.log('after:  lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+                localStorage.setItem(petname, JSON.stringify(STATS));
+            }
         }
     }
 }
@@ -764,6 +764,14 @@ function Age() {
     console.log("I'll get to it eventually.");
 }
 
+// MISC FUNCTIONS
+function getSubcolor(n) {
+    var rgbs = String(COLOR).match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
+    return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : COLOR;
+}
+function array_move(arr, old_index, new_index) {
+    arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+};
 function _strengthString(word) {
     var low = {'Not Yet Born':'0', 'Pathetic':'1','Very Weak':'2','Weak':'3-4','Frail':'5','Average':'6','Quite Strong':'7-9','Strong':'10-11','Very Strong':'12-13','Great':'14','Immense':'15-16','Titanic':'17-19','Herculean':'20'}
     var n = ((word in low) ? low[word] : word.match(/\d+/g));
@@ -826,6 +834,8 @@ function movementString(n) {
     word = word+' ('+n+')';
     return word;
 }
+
+// MISC
 $("head").append (
     '<link '
   + 'href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" '
