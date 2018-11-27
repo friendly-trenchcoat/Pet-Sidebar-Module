@@ -22,52 +22,14 @@ On left side, have smaller nav popout
 At top of module, add three buttons:
     - help/info: toggle div with instructions and bug report link
     - settings: toggle div with settings
-        > pet name aliases
-        > what information to include in popout
-        > color, maybe transparency
-        > whether to put active pet at top or leave order
-        > add/remove pets from sidebar
     - collapse: toggle inactive pets
+        > maybe steal that other collapser arrow thing, or maybe spin animate this one
 Arrows:
     x order buttons literally change order of PETS list
-    - if (stickyActive) just disable ability to move there
+    x if (stickyActive) just disable ability to move there
     x Whenever order is changed, run addElements()
-    - maybe steal that other collapser arrow thing, or maybe spin animate this one
 Animated image:
     - pull in logic from that other script
-
-Data gathering:
-
-Default Display:
- >> customize
- species
- health
- mood
- hunger
- age
- level
-
-New Display:
- species
- color
- *mood
- *hunger
- age
- level
- *health
- strength
- defence
- movement
- intelligence
- petpet
- >> relevant links:
-  make active  http://www.neopets.com/process_changepet.phtml?new_active_pet=<name>
-  customize    http://www.neopets.com/customise/?view=<name>
-  view lookup  http://www.neopets.com/petlookup.phtml?pet=<name>
-  view petpage http://www.neopets.com/~<name>
-  edit lookup  http://www.neopets.com/neopet_desc.phtml?edit_petname=<name>
-  edit petpage http://www.neopets.com/editpage.phtml?pet_name=<name>
-*Inacive pets will not display mood or hunger, and health will display max only.
 
 Update data at pages:
  Quick Ref (all pets; all info)
@@ -85,13 +47,12 @@ Update data at pages:
   "<name> loses <amount> <stat> and says" lose 1 or 2 of given stat
   "<name> has suddenly gotten stronger"   gain 1 strength point
  Auto (all pets, age)
-
 */
 
 /**
  * STATS: [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
  * 
- * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 HP bool, 9 BDStats int]
+ * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 fullHP bool, 9 BDStats int]
  *  BDStats options: 0 num only, 1 'str (num)' on all, 2 neo default, 3 str only
  * 
  * PETS: {'show':[names], 'hide':[names]}
@@ -107,7 +68,7 @@ var SUBCOLOR = getSubcolor(10);
 var BGCOLOR = SETTINGS[2] || '#fffd';
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
 console.log('flash enabled: ',FLASH);
-// var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
+// TODO: var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
 
 // MAIN
 function main() {
@@ -117,7 +78,7 @@ function main() {
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
     else if (document.URL.indexOf("quests") != -1) FaerieQuest();
     else if (document.URL.indexOf("coincidence") != -1) Coincidence();
-    else if (document.URL.indexOf("lab2") != -1) SecretLab();
+    else if (document.URL.indexOf("process_lab2") != -1) SecretLab();
     else if (document.URL.indexOf("petpetlab") != -1) PetpetLab();
     else if ($(".sidebar")[0]) Sidebar();
 
@@ -209,6 +170,7 @@ function createStatsHTML(petname) {
             </td>';
         petpetStyle = ' style="margin-top: -15px;"';
     }
+    var hp = (SETTINGS[8]) ? STATS[7] : STATS[7].match(new RegExp(/.+\/ (\d+)/))[1];
     var statsHTML =
         '<div id="stats_'+petname+'" class="hover stats"> \
         <div class="inner"'+petpetStyle+'> \
@@ -248,7 +210,7 @@ function createStatsHTML(petname) {
         </tr> \
         <tr> \
         <td align="right">Health:</td> \
-        <td align="left"><b><b>'+STATS[7]+'</b></b></td> \
+        <td align="left"><b><b>'+hp+'</b></b></td> \
         </tr> \
         <tr> \
         <td align="right">Strength:</td> \
@@ -772,10 +734,43 @@ function HealingSprings() {
 function Coincidence() {
     console.log("I'll get to it eventually.");
 }
+// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
+
 function SecretLab() {
     // name: ?
     // stat: <p>.eq(2).text()
-    console.log("I'll get to it eventually.");
+    var petname = $('p').eq(0).find('b').text();
+    STATS = JSON.parse(localStorage.getItem(petname));
+    if (STATS) { // ignore pets with no data
+        var blurb = $('p').eq(2).html();
+        var map = {'maximum':7, 'strength':8, 'defence':9, 'movement':10}; // and level?
+        var match = blurb.match(new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+) ([^!]+)/g));
+        switch (match[1]) {
+            case "changes":
+                if (match[2]=="color") { // color change
+                    // [4] is color
+                    STATS[2] = match[4];
+                } else { // species change
+                    // match [4] to /(.+) (.+)/g where [1] is color and [2] is species
+                    var morph = match[4].match(new RegExp(/(.+) (.+)/g));
+                    STATS[2] = morph[1];
+                    STATS[1] = morph[2];
+                }
+                break;
+            case "gains": // stat change
+                // [2] is quantity, [3] is stat
+                incStat(map[match[3]], match[2]);
+                break;
+            case "loses": // stat change
+                // [2] is quantity, [3] is stat
+                incStat(map[match[3]], match[2]*(-1));
+                break;
+            case "goes": // level 1
+                STATS[6] = 1;
+                break;
+            // else nothing happens or gender change
+        }
+    }
 }
 function PetpetLab() {
     // name: .content text > regex 'and (.+) are'
@@ -817,7 +812,7 @@ function Age() {
     console.log("I'll get to it eventually.");
 }
 function incStat(i,n) {
-    STATS[i] = Number(STATS[i])+n;
+    STATS[i] = Number(STATS[i])+Number(n);
 }
 
 // MISC FUNCTIONS
