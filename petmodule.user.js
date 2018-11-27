@@ -87,57 +87,18 @@ Update data at pages:
  Auto (all pets, age)
 
 */
-var INFO = 
-    '<p>The Pet Sidebar Module is written and tested in Chrome.</p> \
-    <p>All data for the Pet Sidebar Module is gathered from the following pages when you visit them, and stored locally on your web browser.</p> \
-    <table> \
-        <tr> \
-            <td>Page</td> \
-            <td>Data Updated</td> \
-        </tr> \
-        <tr> \
-            <td>Quickref</td> \
-            <td>Everything except exact stats numbers</td> \
-        </tr> \
-        <tr> \
-            <td>Petpage</td> \
-            <td>Everything except exact stats numbers</td> \
-        </tr> \
-        <tr> \
-            <td>Training</td> \
-            <td>Exact stats numbers</td> \
-        </tr> \
-        <tr> \
-            <td>Faerie Quest</td> \
-            <td>Affected stats numbers.</td> \
-        </tr> \
-        <tr> \
-            <td>Coincidence</td> \
-            <td>Affected stats numbers</td> \
-        </tr> \
-        <tr> \
-            <td>Lab Ray</td> \
-            <td>Affected attributes and stats numbers</td> \
-        </tr> \
-        <tr> \
-            <td>Petpet Lab Ray</td> \
-            <td>Affected petpet info</td> \
-        </tr> \
-        <tr> \
-            <td>Random Event</td> \
-            <td>Affected stats numbers</td> \
-        </tr> \
-        ';
-    /*<p>Browser Support:<p> \
-        Chrome 4.0 \
-        Firefox 3.5 \
-        IE 8.0 \
-        Safari 4.0 \
-        Opera 11.5 \
-     ';*/
+
+/**
+ * STATS: [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
+ * 
+ * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 statNames int]
+ * 
+ * PETS: array of pets => dictionary of pet:show pairs
+ * 
+ */
 
 var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
-var UNCERTAIN = JSON.parse(localStorage.getItem("UNCERTAIN")) || [];
+var UNCERTAIN = JSON.parse(localStorage.getItem("UNCERTAIN")) || true;
 var STATS = [];
 var SETTINGS = [];
 var TIMESTAMP = new Date().getTime();
@@ -187,6 +148,8 @@ function addElements(){
     for (var i=0; i<PETS.length; i++) {
         petname = PETS[i];
         STATS = JSON.parse(localStorage.getItem(petname));
+        console.log(STATS);
+        console.log('HEY',STATS[1]);
         var inactive = activePetName==petname ? '' : 'in';
 
         // for some reason children must be added seperately
@@ -346,7 +309,16 @@ function buildMenus() {
         '<div class="close_menu"><i class="fas fa-times"></i></div> \
         <div class="innerMenu"> \
             <h1>Info</h1><hr> \
-            '+INFO+' \
+            <div id="info_nav"> \
+                <span><a>usage</a></span> \
+                <span><a>legend</a></span> \
+                <span><a>contact</a></span> \
+            </div> \
+            <div id="info_pages"> \
+                <div id="info_gather" class="page">page 1</div> \
+                <div id="info_legend" class="page">page 2</div> \
+                <div id="info_contact" class="page">page 3</div> \
+            </div> \
         </div>');
     $('#settings_menu').append(
         '<div class="close_menu"><i class="fas fa-times"></i></div> \
@@ -374,11 +346,94 @@ function buildMenus() {
        }
    });
 }
+function getInfo() {
+    var info = 
+    '<p>The Pet Sidebar Module is written and tested in Chrome.</p> \
+    <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.</p> \
+    <table> \
+        <tr> \
+            <th>Page</th> \
+            <th>Data Updated</th> \
+        </tr> \
+        <tr> \
+            <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td> \
+            <td>All pets - Everything except exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td> \
+            <td>All pets - Exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td></td> \
+            <td></td> \
+        </tr> \
+        <tr> \
+            <td>Petpage</td> \
+            <td>Everything except exact stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Faerie Quest</td> \
+            <td>Affected stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Coincidence</td> \
+            <td>Affected stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Lab Ray</td> \
+            <td>Affected attributes and stats numbers</td> \
+        </tr> \
+        <tr> \
+            <td>Petpet Lab Ray</td> \
+            <td>Affected petpet info</td> \
+        </tr> \
+        <tr> \
+            <td>Random Event</td> \
+            <td>Affected stats numbers</td> \
+        </tr> \
+    </table> \
+    <p></p> \
+    <div> \
+        <span><b>Browser Support for local storage:</b></span> \
+        <table> \
+            <tr> \
+                <th>Chrome</th> \
+                <th>Firefox</th> \
+                <th>Safari</th> \
+                <th>IE</th> \
+                <th>Opera</th> \
+            </tr> \
+            <tr> \
+                <td>4.0</td> \
+                <td>3.5</td> \
+                <td>4.0</td> \
+                <td>8.0</td> \
+                <td>11.5</td> \
+            </tr> \
+        </table> \
+    </div>';
+    return info;
+}
 function CreateCSS() {
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = 
-        '.innerMenu { \
+        '#info_nav { \
+            padding-left: 1.5px; \
+        } \
+        #info_nav span { \
+            background-color: '+COLOR+'; \
+            padding: 4px 80px; \
+            color: #fff \
+        } \
+        #info_pages { \
+            position: relative; \
+        } \
+        .page { \
+            position: absolute; \
+            display: none; \
+        } \
+        .innerMenu { \
             padding: 0px 30px; \
         } \
         .innerMenu h1 { \
@@ -562,10 +617,10 @@ function QuickRef() {
             STATS[5]  = $(lines).eq(3).text();  // age
             STATS[6]  = $(lines).eq(4).text();  // level
             STATS[7]  = $(lines).eq(5).text();  // hp
-            STATS[8]  = getStat($(lines).eq(8).text(),8);   // strength
-            STATS[9]  = getStat($(lines).eq(9).text(),9);   // defence
-            STATS[10] = getStat($(lines).eq(10).text(),10); // movement
-            STATS[11] = getStat($(lines).eq(11).text(),11); // intelligence
+            STATS[8]  = str_toInt($(lines).eq(8).text());   // strength
+            STATS[9]  = def_toInt($(lines).eq(9).text());   // defence
+            STATS[10] = mov_toInt($(lines).eq(10).text());  // movement
+            STATS[11] = int_toInt($(lines).eq(11).text());  // intelligence
             STATS[12] = petpet[0];              // petpet name
             STATS[13] = petpet[1];              // petpet species
             STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
@@ -576,9 +631,6 @@ function QuickRef() {
             localStorage.setItem(petname, JSON.stringify(STATS));
         }
     });
-}
-function getStat(string, stat) {
-
 }
 function Training() {
     //Sidebar();
@@ -608,15 +660,16 @@ function Training() {
             }
             STATS[6]  = dStats[1]; // level
             STATS[7]  = dStats[5]; // hp
-            STATS[8]  = dStats[2]; //strengthString(dStats[2]); // strength
-            STATS[9]  = dStats[3]; //defenceString(dStats[3]);  // defence
-            STATS[10] = dStats[4]; //movementString(dStats[4]); // movement
+            STATS[8]  = dStats[2]; // strength
+            STATS[9]  = dStats[3]; // defence
+            STATS[10] = dStats[4]; // movement
             console.log(STATS);
 
             // store data
             localStorage.setItem(petname, JSON.stringify(STATS));
         }
     });
+    UNCERTAIN = false;
 }
 function EndTraining() { // incomplete
     var message = $('p').first().text();
@@ -659,9 +712,9 @@ function FaerieQuest() {
         if( PETS.indexOf(petname) >= 0 ) {  // ignore pets not stored
             STATS = JSON.parse(localStorage.getItem(petname));
             if(STATS) {                     // ignore pets with no data
-                console.log('before: lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+                console.log('before:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
                 questSwitch(faerie);
-                console.log('after:  lv',STATS[6],' HP',STATS[7],' str',STATS[8],' def',STATS[9],' mov',STATS[10])
+                console.log('\nafter:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
                 localStorage.setItem(petname, JSON.stringify(STATS));
             }
         }
@@ -670,45 +723,45 @@ function FaerieQuest() {
 function questSwitch(faerie) {
     switch (faerie) {
         case 'Air':
-            STATS[10] += 3;
+            incStat(10,3);
             break;
         case 'Dark':
-            STATS[7] += 3;
+            incStat(7,3);
             break;
         case 'Earth':
             // 3 (mov OR def OR str)
             break;
         case 'Fire':
-            STATS[8] += 3;
+            incStat(8,3);
             break;
         case 'Light':
-            STATS[6] += 1;
+            incStat(6,1);
             break;
-            case 'Water':
-            STATS[9] += 3;
+        case 'Water':
+            incStat(9,3);
             break;
         case 'Battle':
-            STATS[7] += 1;
-            STATS[8] += 3;
-            STATS[9] += 3;
+            incStat(7,1);
+            incStat(8,3);
+            incStat(9,3);
             break;
         case 'Queen':
-            STATS[6] += 2;
-            STATS[7] += 5;
-            STATS[8] += 5;
+            incStat(6,2);
+            incStat(7,5);
+            incStat(8,5);
             break;
         case 'Space':
-            STATS[6] += 5;
+            incStat(6,5);
             break;
         case 'Soup':
             // 2*2 (HP OR def OR str OR mov OR lv)
             var blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+) .*and 2 (\w+)/));
             var map = {'levels': 6, 'strength': 8, 'defense': 9, 'movement': 10};
-            STATS[map[blurb[1]]] += 2;
-            STATS[map[blurb[2]]] += 2;
+            incStat(map[blurb[1]],2);
+            incStat(map[blurb[2]],2);
             break;
         case 'Gray':
-            // leaches off of elemental or fountain faerie
+            // leaches off of elemental or fountain faerie. she's a poser.
             var newFaeire = $('.pet-name').parent().text().match(new RegExp(/another faerie. (\w+) .aerie, come/));
             if (newFaeire != "Earth") questSwitch(newFaeire);
             break;
@@ -764,6 +817,9 @@ function Sidebar() {
 function Age() {
     console.log("I'll get to it eventually.");
 }
+function incStat(i,n) {
+    STATS[i] = Number(STATS[i])+n;
+}
 
 // MISC FUNCTIONS
 function getSubcolor(n) {
@@ -774,57 +830,67 @@ function array_move(arr, old_index, new_index) {
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
 };
 
-var DEF = ['Not Yet Born','Defenceless','Naked','Vulnerable','Very Poor','Poor','Below Average','Below Average','Average','Armoured','Tough','Heavy','Heavy','Very Heavy','Very Heavy','Steel Plate','Bullet Proof','Semi Deadly Godly','Demi Godly','Godly','Beyond Godly'];
-var STR = ['Not Yet Born','Pathetic','Very Weak','Weak','Weak','Frail','Average','Quite Strong','Quite Strong','Quite Strong','Strong','Strong','Very Strong','Very Strong','Great','Immense','Immense','Titanic','Titanic','Titanic','Herculean'];
-var MOV = ['Not Yet Born','Barely Moves','Snail Pace','Lazy','Very Slow','Slow','Quite Slow','Average','Average','Fast','Speedy','Super Fast','Super Speedy','Breakneck','Cheetah','Lightening','Mach 1','Mach 1','Mach 2','Mach 3','Mach 4'];
+var DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bullet proof','semi deadly godly','demi godly','godly','beyond godly'];
+var U_DEF = ['below average','heavy','very heavy'];
+var STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
+var U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
+var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
+var U_MOV = ['average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
 function str_toInt(word) {
-    var n = ((word.indexOf(STR) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
+    var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
+    if (STR.indexOf(word) < 0) {
+        n = word.match(/\d+/g)[0];
+        if (U_STR.indexOf(word) < 0) {
+            n = (STATS[8]-n)>0 && (STATS[8]-n)<4 ? STATS[8] : n;
+            UNCERTAIN = true;
+        }
+    }
+    else
+        n = STR.indexOf(word);
     console.log("strength: ",word,n);
     return n
 }
 function def_toInt(word) {
-    var n = ((word.indexOf(DEF) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
+    var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
+    if (DEF.indexOf(word) < 0) {
+        n = word.match(/\d+/g)[0];
+        if (U_STR.indexOf(word) < 0) {
+            n = (STATS[9]-n)>0 && (STATS[9]-n)<4 ? STATS[9] : n;
+            UNCERTAIN = true;
+        }
+    }
+    else
+        n = DEF.indexOf(word);
     console.log("defense: ",word,n);
     return n
 }
 function mov_toInt(word) {
-    var n = ((word.indexOf(MOV) < 0) ? word.match(/\d+/g)[1] : word.indexOf(low));
+    var n = ((MOV.indexOf(word) < 0) ? word.match(/\d+/g)[0] : MOV.indexOf(word));
+    if (word == "average") {
+        n = (STATS[10]-n)>0 && (STATS[10]-n)<3 ? STATS[10] : n;
+        UNCERTAIN = true;
+    }
     console.log("movement: ",word,n);
     return n
 }
 function int_toInt(word) {
     var n = word.match(/\d+/g);
-    n = n ? n[1] : word;
+    n = n ? n[0] : word;
     console.log("intelligence: ",word,n);
     return n;
 }
 function str_toString(n) {
-    var word;
-    if (n<21) word = STR[n];
-    else if (n<40) word = 'GREAT';
-    else if (n<60) word = 'EXCELLENT';
-    else if (n<80) word = 'AWESOME';
-    else if (n<100) word = 'AMAZING';
-    else if (n<150) word = 'LEGENDARY';
-    else word = 'ULTIMATE';
-    word = word+' ('+n+')';
-    return word;
+    return toString(n, STR);
 }
 function def_toString(n) {
-    var word;
-    if (n<21) word = DEF[n];
-    else if (n<40) word = 'GREAT';
-    else if (n<60) word = 'EXCELLENT';
-    else if (n<80) word = 'AWESOME';
-    else if (n<100) word = 'AMAZING';
-    else if (n<150) word = 'LEGENDARY';
-    else word = 'ULTIMATE';
-    word = word+' ('+n+')';
-    return word;
+    return toString(n, DEF);
 }
 function mov_toString(n) {
+    return toString(n, MOV);
+}
+function toString(n, arr) {
     var word;
-    if (n<21) word = MOV[n];
+    if (n<21) word = arr[n];
     else if (n<40) word = 'GREAT';
     else if (n<60) word = 'EXCELLENT';
     else if (n<80) word = 'AWESOME';
