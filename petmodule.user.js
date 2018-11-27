@@ -91,19 +91,20 @@ Update data at pages:
 /**
  * STATS: [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
  * 
- * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 statNames int]
+ * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 HP bool, 9 BDStats int]
+ *  BDStats options: 0 num only, 1 'str (num)' on all, 2 neo default, 3 str only
  * 
- * PETS: array of pets => dictionary of pet:show pairs
- * 
+ * PETS: {'show':[names], 'hide':[names]}
  */
 
 var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
 var UNCERTAIN = JSON.parse(localStorage.getItem("UNCERTAIN")) || true;
 var STATS = [];
-var SETTINGS = [];
+var SETTINGS = [null,null,null,true,true,false,false,true,true,1];
 var TIMESTAMP = new Date().getTime();
-var COLOR = $('.sidebarHeader').css('background-color');
+var COLOR = SETTINGS[0] || $('.sidebarHeader').css('background-color');
 var SUBCOLOR = getSubcolor(10);
+var BGCOLOR = SETTINGS[2] || '#fffd';
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
 console.log('flash enabled: ',FLASH);
 // var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
@@ -144,12 +145,11 @@ function addElements(){
     );
 
     // add pets 
+    if (SETTINGS[6]) array_move(PETS.show,PETS.show.indexOf(activePetName),0); // stickyActive: put active pet at the top. TODO: put this in settings block
     var petname;
-    for (var i=0; i<PETS.length; i++) {
-        petname = PETS[i];
+    for (var i=0; i<PETS.show.length; i++) {
+        petname = PETS.show[i];
         STATS = JSON.parse(localStorage.getItem(petname));
-        console.log(STATS);
-        console.log('HEY',STATS[1]);
         var inactive = activePetName==petname ? '' : 'in';
 
         // for some reason children must be added seperately
@@ -158,7 +158,7 @@ function addElements(){
             '<div class="leftHover" petname="'+petname+'"></div> \
             <div class="leftSubHover" petname="'+petname+'"></div> \
             <div class="rightHover" petname="'+petname+'"></div> \
-            '+createButtonsHTML(petname)+' \
+            '+createNavHTML(petname)+' \
             '+createStatsHTML(petname)+' \
             <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[15]+'" width="150" height="150" border="0"></a>');
         $('#nav_'+petname).find('.lookup').append(
@@ -167,11 +167,13 @@ function addElements(){
             '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
         
         // disable buttons
-        if (i==0)               $('#nav_'+petname).find('.move').eq(0).addClass('disabled');    // move up
-        if (i==(PETS.length-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');    // move down
-        if (STATS[16])          $('#nav_'+petname).find('a').eq(2).addClass('disabled');        // customize
+        if (i==0)                    $('#nav_'+petname).find('.move').eq(0).addClass('disabled');    // move up
+        if (i==(PETS.show.length-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');    // move down
+        if (STATS[16])               $('#nav_'+petname).find('a').eq(2).addClass('disabled');        // customize
     }
-    $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                              // make active
+    $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                                  // make active
+    if (SETTINGS[6]) $('#nav_'+activePetName).find('.move').addClass('disabled');                   // stickyActive: move
+    
 
     // functionality
     $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
@@ -182,8 +184,8 @@ function addElements(){
     });
     $('.move').click(function(){ // arrow buttons
         if (!$(this).hasClass('disabled')) {
-            var i = PETS.indexOf($(this).attr('petname'));
-            array_move(PETS,i,i+Number($(this).attr('dir')));
+            var i = PETS.show.indexOf($(this).attr('petname'));
+            array_move(PETS.show,i,i+Number($(this).attr('dir')));
             addElements();
             localStorage.setItem("PETS", JSON.stringify(PETS));
         }
@@ -197,8 +199,9 @@ function addElements(){
 }
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
 function createStatsHTML(petname) {
+    if (!SETTINGS[4]) return '';    // if stats=false return empty
     var petpetTD = '', petpetStyle='';
-    if (STATS[14]) {
+    if (SETTINGS[7] && STATS[14]) { // if showPetpet=true and there is a petpet
         petpetTD =
             '<td align="center" class="petpet"> \
                 <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
@@ -249,15 +252,15 @@ function createStatsHTML(petname) {
         </tr> \
         <tr> \
         <td align="right">Strength:</td> \
-        <td align="left"><b>'+STATS[8]+'</b></td> \
+        <td align="left"><b>'+getBDStat(8)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Defence:</td> \
-        <td align="left"><b>'+STATS[9]+'</b></td> \
+        <td align="left"><b>'+getBDStat(9)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Movement:</td> \
-        <td align="left"><b>'+STATS[10]+'</b></td> \
+        <td align="left"><b>'+getBDStat(10)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Intelligence:</td> \
@@ -275,7 +278,7 @@ function createStatsHTML(petname) {
     //    <i>'+STATS[14]+'</i><br> \
     return statsHTML;
 }
-function createButtonsHTML(petname) {
+function createNavHTML(petname) {
     /*
         move up: angle-up caret-up chevron-up
         make active: splotch certificate user-circle sun
@@ -288,7 +291,8 @@ function createButtonsHTML(petname) {
         settings: cog
         info: question-circle info-circle info
     */
-    var buttonsHTML = // main, lookup, petpage
+    if (!SETTINGS[3]) return ''; // if nav=false return empty
+    var buttonsHTML =
         '<div id="nav_'+petname+'" class="petnav"> \
             <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
             <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-splotch"></i></span></a> \
@@ -465,6 +469,7 @@ function CreateCSS() {
             background-color: #fffe; \
             border: 4px solid '+COLOR+'; \
             border-radius: 20px; \
+            z-index: 100; \
         } \
         #petsHeader span { \
             float: right; \
@@ -560,7 +565,7 @@ function CreateCSS() {
         .hover { \
             position: absolute; \
             border-radius: 25px; \
-            background-color: #fffd; \
+            background-color: '+BGCOLOR+'; \
             border: 3px solid '+COLOR+'; \
             padding: 20px;  \
             height: 104px; \
@@ -599,14 +604,12 @@ function QuickRef() {
             var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
             var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
             var newpet = 0;
-            if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
-                PETS.push(petname);
+            if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
+                PETS.show.push(petname);
                 newpet = 1;
             }
-            else {
-                STATS = JSON.parse(localStorage.getItem(petname));
-                if(!STATS) STATS = [];
-            }
+            else
+                STATS = JSON.parse(localStorage.getItem(petname)) || [];
 
             var lines = $(v).find('.pet_stats td');
             STATS[0]  = TIMESTAMP;
@@ -620,7 +623,7 @@ function QuickRef() {
             STATS[8]  = str_toInt($(lines).eq(8).text());   // strength
             STATS[9]  = def_toInt($(lines).eq(9).text());   // defence
             STATS[10] = mov_toInt($(lines).eq(10).text());  // movement
-            STATS[11] = int_toInt($(lines).eq(11).text());  // intelligence
+            STATS[11] = $(lines).eq(11).text(); // intelligence
             STATS[12] = petpet[0];              // petpet name
             STATS[13] = petpet[1];              // petpet species
             STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
@@ -639,14 +642,12 @@ function Training() {
             // get name and retreive data (if any)
             var petname = $(v).children().first().text().split(" ")[0];
             var newpet = 0;
-            if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
-                PETS.push(petname);
+            if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
+                PETS.show.push(petname);
                 newpet = 1;
             }
-            else {
-                STATS = JSON.parse(localStorage.getItem(petname));
-                if(!STATS) STATS = [];
-            }
+            else
+                STATS = JSON.parse(localStorage.getItem(petname)) || [];
 
             // get stats
             var dStats = $(v).next().children().first().text();
@@ -678,14 +679,12 @@ function EndTraining() { // incomplete
 
     var petname = message[1];
     var newpet = 0;
-    if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
-        PETS.push(petname);
+    if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
+        PETS.show.push(petname);
         newpet = 1;
     }
-    else {
-        STATS = JSON.parse(localStorage.getItem(petname));
-        if(!STATS) STATS = [];
-    }
+    else
+        STATS = JSON.parse(localStorage.getItem(petname)) || [];
 
     // get stats
     STATS[0]  = TIMESTAMP;
@@ -705,13 +704,13 @@ function EndTraining() { // incomplete
 }
 function FaerieQuest() {
     var petname = $('.pet-name').text().slice(0, -2);
-    if (petname.length) {                   // make sure on right page
+    if (petname.length) { // make sure on right page
         var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
         console.log(petname, faerie);
         
-        if( PETS.indexOf(petname) >= 0 ) {  // ignore pets not stored
+        if( PETS.show.indexOf(petname) >= 0 || PETS.hide.indexOf(petname) >= 0 ) {  // ignore pets not stored
             STATS = JSON.parse(localStorage.getItem(petname));
-            if(STATS) {                     // ignore pets with no data
+            if(STATS) { // ignore pets with no data
                 console.log('before:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
                 questSwitch(faerie);
                 console.log('\nafter:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
@@ -788,8 +787,8 @@ function Sidebar() {
     // get name and retreive data (if any)
     var petname = $("a[href='/quickref.phtml']").first().text();
     var newpet = 0;
-    if( PETS.indexOf(petname) < 0 ) { // if pet isn't in list, add it
-        PETS.push(petname);
+    if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
+        PETS.show.push(petname);
         newpet = 1;
     }
     else {
@@ -801,13 +800,13 @@ function Sidebar() {
     var activePetStats = $("td[align='left']");
     STATS[0]  = TIMESTAMP;
     STATS[1]  = $(activePetStats).eq(0).text();  // species
-    if(newpet) STATS[2] = '';                    // color (can't be found here)
+    if(newpet) STATS[2] = null;                  // color (can't be found here)
     STATS[3]  = $(activePetStats).eq(2).text();  // mood
     STATS[4]  = $(activePetStats).eq(3).text();  // hunger
     STATS[5]  = $(activePetStats).eq(4).text();  // age
     STATS[6]  = $(activePetStats).eq(5).text();  // level
     STATS[7]  = $(activePetStats).eq(1).text();  // hp
-    if(newpet) for(var i=8; i<16; i++) STATS[i] = '';
+    if(newpet) for(var i=8; i<17; i++) STATS[i] = null;
     STATS[15] = $('.activePet a img').attr('src').slice(0,-5)+'4.png'; // pet image (use larger version)
     console.log(STATS);
 
@@ -873,31 +872,30 @@ function mov_toInt(word) {
     console.log("movement: ",word,n);
     return n
 }
-function int_toInt(word) {
+/*function int_toInt(word) {
     var n = word.match(/\d+/g);
     n = n ? n[0] : word;
     console.log("intelligence: ",word,n);
     return n;
-}
-function str_toString(n) {
-    return toString(n, STR);
-}
-function def_toString(n) {
-    return toString(n, DEF);
-}
-function mov_toString(n) {
-    return toString(n, MOV);
-}
-function toString(n, arr) {
+}*/
+function getBDStat(n) {
+    if (SETTINGS[9]==0 || n<8 || 10<n) return STATS[n]; // 'num' <default>
+    var arr = (n==8) ? STR : (n==9) ? DEF : MOV;
+    n = STATS[n];
     var word;
-    if (n<21) word = arr[n];
-    else if (n<40) word = 'GREAT';
-    else if (n<60) word = 'EXCELLENT';
-    else if (n<80) word = 'AWESOME';
-    else if (n<100) word = 'AMAZING';
-    else if (n<150) word = 'LEGENDARY';
-    else word = 'ULTIMATE';
-    word = word+' ('+n+')';
+    if (n<21) {
+        word = arr[n];
+        if (SETTINGS[9]==1) word = word+' ('+n+')';     // 'str (num)'
+    }
+    else {
+        if (n<40) word = 'GREAT';
+        else if (n<60) word = 'EXCELLENT';
+        else if (n<80) word = 'AWESOME';
+        else if (n<100) word = 'AMAZING';
+        else if (n<150) word = 'LEGENDARY';
+        else word = 'ULTIMATE';
+        if (SETTINGS[9]<3) word = word+' ('+n+')';      // 'str (num)'  OR  'str', 'str (num)' <neo default>
+    }
     return word;
 }
 
