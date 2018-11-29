@@ -20,8 +20,6 @@ At top of module, add three buttons:
     - settings: toggle div with settings
     - collapse: toggle inactive pets
         > maybe steal that other collapser arrow thing, or maybe spin animate this one
-Animated image:
-    - pull in logic from that other script
 */
 
 var DATA = JSON.parse(localStorage.getItem("DATA")) || {shown:[], hidden:[], pets:{}};
@@ -52,7 +50,7 @@ var SETTINGS = {
 var TIMESTAMP = new Date().getTime();
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
 console.log('flash enabled: ',FLASH);
-// TODO: var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
+var ANIM = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">';
 
 // MAIN
 function main() {
@@ -98,6 +96,8 @@ function addElements(){
             var petname = DATA.shown[i];
             var stats = DATA.pets[petname];
             var inactive = stats.isActive ? '' : 'in';
+            var image = (SETTINGS.showAnim && FLASH) ? ANIM.replace("%s", petname) : '<img src="'+stats.image+'" width="150" height="150" border="0">';
+            console.log
 
             // for some reason children must be added seperately
             petModule.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
@@ -107,7 +107,7 @@ function addElements(){
                 <div class="rightHover" petname="'+petname+'"></div> \
                 '+createNavHTML(petname)+' \
                 '+createStatsHTML(petname)+' \
-                <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+stats.image+'" width="150" height="150" border="0"></a>');
+                <a href="/quickref.phtml" style="position: relative; z-index: 99;">'+image+'</a>');
             $('#nav_'+petname).find('.lookup').append(
                 '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
             $('#nav_'+petname).find('.petpage').append(
@@ -145,7 +145,6 @@ function addElements(){
         document.body.appendChild(CreateCSS());
     }
 }
-// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
 function createStatsHTML(petname) {
     var stats = DATA.pets[petname];
     if (!SETTINGS.showStats) return '';
@@ -785,8 +784,6 @@ function healPet(petname,match,n) {
 function Coincidence() {
     console.log("I'll get to it eventually.");
 }
-// [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
-
 function SecretLab() {
     console.log('Lab Ray');
     var petname = $('p').eq(0).find('b').text();
