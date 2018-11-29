@@ -77,6 +77,7 @@ function main() {
     else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
     else if (document.URL.indexOf("quests") != -1) FaerieQuest();
+    else if (document.URL.indexOf("springs") != -1) HealingSprings();
     else if (document.URL.indexOf("coincidence") != -1) Coincidence();
     else if (document.URL.indexOf("process_lab2") != -1) SecretLab();
     else if (document.URL.indexOf("petpetlab") != -1) PetpetLab();
@@ -729,7 +730,43 @@ function questSwitch(faerie) {
     }
 }
 function HealingSprings() {
-    // .content > All of your Neopets gain ([0-9]+) (.+)\. I hope that helps!
+    /**
+     * All of your Neopets gain seven hit points.  I hope that helps! :)
+     * All your Neopets have their health completely restored
+     * _redfoot_ regains their hit points and is not hungry any more
+     * _redfoot_ is fully healed
+     * 
+     * 1 3 5
+     */
+    console.log('Healing Springs')
+    var map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
+    var blurb = $('center > p').eq(2).text();
+    console.log(blurb)
+    var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
+    if (match) {
+        console.log(match)
+        if (match[1]=="All") {
+            console.log('All');
+            // all pets
+        }
+        else {
+            var petname = match[1];
+            console.log('pet',petname);
+        }
+        if (match[3]==" gain") {
+            var n = map[match[5]];
+            console.log('gain',n)
+            // inc front of STATS[7] for every pet... ugh what a pain
+        }
+        else {
+            console.log('fully healed')
+        }
+        if (match[3]==" hungry") {
+            console.log('bloated')
+        }
+    }
+    else
+        console.log('No change.')
 }
 function Coincidence() {
     console.log("I'll get to it eventually.");
@@ -737,38 +774,42 @@ function Coincidence() {
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
 
 function SecretLab() {
-    // name: ?
-    // stat: <p>.eq(2).text()
+    console.log('Lab Ray');
     var petname = $('p').eq(0).find('b').text();
+    console.log(petname);
     STATS = JSON.parse(localStorage.getItem(petname));
     if (STATS) { // ignore pets with no data
-        var blurb = $('p').eq(2).html();
+        console.log('before',STATS);
         var map = {'maximum':7, 'strength':8, 'defence':9, 'movement':10}; // and level?
+        var blurb = $('p').eq(2).html();
         var match = blurb.match(new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+) ([^!]+)/g));
-        switch (match[1]) {
-            case "changes":
-                if (match[2]=="color") { // color change
-                    // [4] is color
-                    STATS[2] = match[4];
-                } else { // species change
-                    // match [4] to /(.+) (.+)/g where [1] is color and [2] is species
-                    var morph = match[4].match(new RegExp(/(.+) (.+)/g));
-                    STATS[2] = morph[1];
-                    STATS[1] = morph[2];
-                }
-                break;
-            case "gains": // stat change
-                // [2] is quantity, [3] is stat
-                incStat(map[match[3]], match[2]);
-                break;
-            case "loses": // stat change
-                // [2] is quantity, [3] is stat
-                incStat(map[match[3]], match[2]*(-1));
-                break;
-            case "goes": // level 1
-                STATS[6] = 1;
-                break;
-            // else nothing happens or gender change
+        if (match) {
+            switch (match[1]) {
+                case "changes":
+                    if (match[2]=="color") { // color change
+                        // [4] is color
+                        STATS[2] = match[4];
+                    } else { // species change
+                        // match [4] to /(.+) (.+)/g where [1] is color and [2] is species
+                        var morph = match[4].match(new RegExp(/(.+) (.+)/g));
+                        STATS[2] = morph[1];
+                        STATS[1] = morph[2];
+                    }
+                    break;
+                case "gains": // stat change
+                    // [2] is quantity, [3] is stat
+                    incStat(map[match[3]], match[2]);
+                    break;
+                case "loses": // stat change
+                    // [2] is quantity, [3] is stat
+                    incStat(map[match[3]], match[2]*(-1));
+                    break;
+                case "goes": // level 1
+                    STATS[6] = 1;
+                    break;
+                // else nothing happens or gender change
+            }
+            console.log('after',STATS);
         }
     }
 }
