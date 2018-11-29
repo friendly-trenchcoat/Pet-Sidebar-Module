@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.0
+// @version        1.2.0
 // @description    Displays more info for active pet, plus dropdown to show info for other pets.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -50,22 +50,74 @@ Update data at pages:
 */
 
 /**
- * STATS: [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
+ * stats: [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
  * 
- * SETTINGS: [0 color str, 1 subcolor str, 2 bgcolor str, 3 nav bool, 4 stats bool, 5 animation bool, 6 stickyActive bool, 7 petpet bool, 8 fullHP bool, 9 BDStats int]
- *  BDStats options: 0 num only, 1 'str (num)' on all, 2 neo default, 3 str only
- * 
- * PETS: {'show':[names], 'hide':[names]}
+ * /PETS: 
+ * {
+ *  show:{
+ *      petname: {timestamp: #, species: 'lupe', ...}
+ *  }, 
+ *  hide:...}
  */
 
-var PETS = JSON.parse(localStorage.getItem("PETS")) || [];
+var DATA = JSON.parse(localStorage.getItem("DATA")) || {shown:[], hidden:[], pets:{}};
 var UNCERTAIN = JSON.parse(localStorage.getItem("UNCERTAIN")) || true;
-var STATS = [];
-var SETTINGS = [null,null,null,true,true,false,false,true,true,1];
+//var STATS = [];
+var data = {
+    shown: [], // hacky
+    hidden: [],
+    pets: {
+        petname1: {
+            timestamp: null,
+            species: null,
+            color: null,
+            mood: null,
+            hunger: null,
+            age: null,
+            level: null,
+            health: null,
+            strength: null,
+            defence: null,
+            movement: null,
+            intelligence: null,
+            petpet_name: null,
+            petpet_species: null,
+            petpet_image: null,
+            image: null,
+            isUC: false,
+            isActive: false,
+            isUncertain: true
+        }
+    }
+}
+var SETTINGS = {
+    showNav:true,
+    showStats:true,
+    showAnim:false,
+    stickyActive:false,
+    showPetpet:true,
+    hpMode:2, // 0: max only | 1: current / max   | 2:  plus color
+    bdMode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
+    color:null,
+    subcolor:null,
+    bgcolor:null,
+    getColor: function() {
+        return String(this.color) || String($('.sidebarHeader').css('background-color'));
+    },
+    getSubcolor: function() {
+        if (this.subcolor) return String(this.subcolor);
+        var color = this.getColor();
+        var rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
+        return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : color;
+    },
+    getBgColor: function() {
+        return String(this.bgcolor) || '#fffd';
+    }
+}; //[null,null,null,true,true,false,false,true,true,1];
 var TIMESTAMP = new Date().getTime();
-var COLOR = SETTINGS[0] || $('.sidebarHeader').css('background-color');
-var SUBCOLOR = getSubcolor(10);
-var BGCOLOR = SETTINGS[2] || '#fffd';
+//var COLOR = SETTINGS.color || $('.sidebarHeader').css('background-color');
+//var SUBCOLOR = getSubcolor(10);
+//var BGCOLOR = SETTINGS.bgcolor || '#fffd';
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
 console.log('flash enabled: ',FLASH);
 // TODO: var anim = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name='+petname+'&amp;lang=en&amp;pet_slot=\">';
@@ -87,7 +139,7 @@ function main() {
     if ($(".sidebar")[0]) addElements();
 
     // store final list of pets
-    localStorage.setItem("PETS", JSON.stringify(PETS));
+    localStorage.setItem("DATA", JSON.stringify(DATA));
 }
 
 // BUILDER FUNCTIONS
@@ -107,12 +159,12 @@ function addElements(){
     );
 
     // add pets 
-    if (SETTINGS[6]) array_move(PETS.show,PETS.show.indexOf(activePetName),0); // stickyActive: put active pet at the top. TODO: put this in settings block
-    var petname;
-    for (var i=0; i<PETS.show.length; i++) {
-        petname = PETS.show[i];
-        STATS = JSON.parse(localStorage.getItem(petname));
-        var inactive = activePetName==petname ? '' : 'in';
+    if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(activePetName),0); // stickyActive: put active pet at the top. TODO: put this in settings block
+    var len = DATA.shown.length;
+    for (var i=0; i<len; i++) {
+        var petname = DATA.shown[i];
+        var stats = DATA.pets[petname];
+        var inactive = stats.isActive ? '' : 'in';
 
         // for some reason children must be added seperately
         petModule.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
@@ -122,34 +174,33 @@ function addElements(){
             <div class="rightHover" petname="'+petname+'"></div> \
             '+createNavHTML(petname)+' \
             '+createStatsHTML(petname)+' \
-            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+STATS[15]+'" width="150" height="150" border="0"></a>');
+            <a href="/quickref.phtml" style="position: relative; z-index: 99;"><img src="'+stats.image+'" width="150" height="150" border="0"></a>');
         $('#nav_'+petname).find('.lookup').append(
             '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
         $('#nav_'+petname).find('.petpage').append(
             '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
         
         // disable buttons
-        if (i==0)                    $('#nav_'+petname).find('.move').eq(0).addClass('disabled');    // move up
-        if (i==(PETS.show.length-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');    // move down
-        if (STATS[16])               $('#nav_'+petname).find('a').eq(2).addClass('disabled');        // customize
+        if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');        // move up
+        if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');        // move down
+        if (stats.isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
     }
-    $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                                  // make active
-    if (SETTINGS[6]) $('#nav_'+activePetName).find('.move').addClass('disabled');                   // stickyActive: move
+    $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                          // make active
+    if (SETTINGS.stickyActive) $('#nav_'+activePetName).find('.move').addClass('disabled'); // move up/down
     
 
     // functionality
     $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
-            var pixels = (($(this).parent().find('.petpet').length) ? ['500px','95px'] : ['325px','115px']); // smaller when no petpet
+            var pixels = (stats.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
             $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
         }, function(){
             $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
     });
     $('.move').click(function(){ // arrow buttons
         if (!$(this).hasClass('disabled')) {
-            var i = PETS.show.indexOf($(this).attr('petname'));
-            array_move(PETS.show,i,i+Number($(this).attr('dir')));
+            var i = DATA.shown.indexOf($(this).attr('petname'));
+            array_move(DATA.shown,i,i+Number($(this).attr('dir')));
             addElements();
-            localStorage.setItem("PETS", JSON.stringify(PETS));
         }
     }); 
 
@@ -161,17 +212,18 @@ function addElements(){
 }
 // [0 timestamp, 1 species, 2 color, 3 mood, 4 hunger, 5 age, 6 level, 7 health, 8 strength, 9 defence, 10 movement, 11 intelligence, 12 petpet name, 13 petpet species, 14 petpet image, 15 pet image, 16 is UC]
 function createStatsHTML(petname) {
-    if (!SETTINGS[4]) return '';    // if stats=false return empty
+    var stats = DATA.pets[petname];
+    if (!SETTINGS.showStats) return '';
     var petpetTD = '', petpetStyle='';
-    if (SETTINGS[7] && STATS[14]) { // if showPetpet=true and there is a petpet
+    if (SETTINGS.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
         petpetTD =
             '<td align="center" class="petpet"> \
-                <b>'+STATS[12]+'</b> the '+STATS[13]+'<br><br> \
-                <img src="'+STATS[14]+'" width="80" height="80"><br><br> \
+                <b>'+stats.petpet_name+'</b> the '+stats.petpet_species+'<br><br> \
+                <img src="'+stats.petpet_image+'" width="80" height="80"><br><br> \
             </td>';
         petpetStyle = ' style="margin-top: -15px;"';
     }
-    var hp = (SETTINGS[8]) ? STATS[7] : STATS[7].match(new RegExp(/.+\/ (\d+)/))[1];
+    var hp = getHP(stats.health);
     var statsHTML =
         '<div id="stats_'+petname+'" class="hover stats"> \
         <div class="inner"'+petpetStyle+'> \
@@ -182,23 +234,23 @@ function createStatsHTML(petname) {
         <table cellpadding="1" cellspacing="0" border="0"> \
         <tr> \
         <td align="right">Species:</td> \
-        <td align="left"><b>'+STATS[1]+'</b></td> \
+        <td align="left"><b>'+stats.species+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Color:</td> \
-        <td align="left"><b>'+STATS[2]+'</b></td> \
+        <td align="left"><b>'+stats.color+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Mood:</td> \
-        <td align="left"><b>'+STATS[3]+'</b></td> \
+        <td align="left"><b>'+stats.mood+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Hunger:</td> \
-        <td align="left"><b>'+STATS[4]+'</b></td> \
+        <td align="left"><b>'+stats.hunger+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Age:</td> \
-        <td align="left"><b>'+STATS[5]+'</b></td> \
+        <td align="left"><b>'+stats.age+'</b></td> \
         </tr> \
         </table> \
         </td> \
@@ -207,27 +259,27 @@ function createStatsHTML(petname) {
         <table cellpadding="1" cellspacing="0" border="0"> \
         <tr> \
         <td align="right">Level:</td> \
-        <td align="left"><b>'+STATS[6]+'</b></td> \
+        <td align="left"><b>'+stats.level+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Health:</td> \
-        <td align="left"><b><b>'+hp+'</b></b></td> \
+        <td align="left"><b>'+hp+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Strength:</td> \
-        <td align="left"><b>'+getBDStat(8)+'</b></td> \
+        <td align="left"><b>'+getBDStat(stats.strength,STR)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Defence:</td> \
-        <td align="left"><b>'+getBDStat(9)+'</b></td> \
+        <td align="left"><b>'+getBDStat(stats.defence,DEF)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Movement:</td> \
-        <td align="left"><b>'+getBDStat(10)+'</b></td> \
+        <td align="left"><b>'+getBDStat(stats.movement,MOV)+'</b></td> \
         </tr> \
         <tr> \
         <td align="right">Intelligence:</td> \
-        <td align="left"><b>'+STATS[11]+'</b></td> \
+        <td align="left"><b>'+stats.intelligence+'</b></td> \
         </tr> \
         </table> \
         </td> \
@@ -254,7 +306,7 @@ function createNavHTML(petname) {
         settings: cog
         info: question-circle info-circle info
     */
-    if (!SETTINGS[3]) return ''; // if nav=false return empty
+    if (!SETTINGS.showNav) return ''; // if nav=false return empty
     var buttonsHTML =
         '<div id="nav_'+petname+'" class="petnav"> \
             <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
@@ -382,6 +434,9 @@ function getInfo() {
     return info;
 }
 function CreateCSS() {
+    var color = SETTINGS.getColor();
+    var subcolor = SETTINGS.getSubcolor();
+    var bgcolor = SETTINGS.getBgColor();
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = 
@@ -389,7 +444,7 @@ function CreateCSS() {
             padding-left: 1.5px; \
         } \
         #info_nav span { \
-            background-color: '+COLOR+'; \
+            background-color: '+color+'; \
             padding: 4px 80px; \
             color: #fff \
         } \
@@ -405,11 +460,11 @@ function CreateCSS() {
         } \
         .innerMenu h1 { \
             margin-bottom: -5px; \
-            color: '+SUBCOLOR+'; \
+            color: '+subcolor+'; \
             font-family: Verdana, Arial, Helvetica, sans-serif; \
         } \
         .innerMenu hr { \
-            background-color: '+COLOR+'; \
+            background-color: '+color+'; \
             border: none; \
             height: 1px; \
         } \
@@ -417,11 +472,11 @@ function CreateCSS() {
             float: right; \
             cursor: pointer; \
             font-size: 25px; \
-            color: '+COLOR+'; \
+            color: '+color+'; \
             margin: 12px 13px; \
         } \
         .close_menu:hover { \
-            color: '+SUBCOLOR+'; \
+            color: '+subcolor+'; \
         } \
         #sidebar_menus > div { \
             position: absolute; \
@@ -430,7 +485,7 @@ function CreateCSS() {
             width: 700px; \
             margin: 52px; \
             background-color: #fffe; \
-            border: 4px solid '+COLOR+'; \
+            border: 4px solid '+color+'; \
             border-radius: 20px; \
             z-index: 100; \
         } \
@@ -448,7 +503,7 @@ function CreateCSS() {
         .petnav a:hover { \
             cursor: pointer; \
             margin-left: -5px; \
-            background-color: '+SUBCOLOR+'; \
+            background-color: '+subcolor+'; \
         } \
         .petnav a:hover .sub { \
             margin-left: -25px; \
@@ -478,7 +533,7 @@ function CreateCSS() {
             position: absolute; \
             width: 42px; \
             z-index: 97; \
-            background-color: '+COLOR+'; \
+            background-color: '+color+'; \
             border-radius: 12px 0px 0px 12px; \
             -webkit-transition-property: margin-left; \
             -webkit-transition-duration: .5s; \
@@ -491,7 +546,7 @@ function CreateCSS() {
             height: 25px; \
             font-size: 18px; \
             color: #fff; \
-            background-color: '+COLOR+'; \
+            background-color: '+color+'; \
             border-radius: 12px 0px 0px 12px; \
             z-index: 98; \
         } \
@@ -500,7 +555,7 @@ function CreateCSS() {
         } \
         .disabled:hover { \
             margin-left: 0px !important; \
-            background-color: '+COLOR+' !important; \
+            background-color: '+color+' !important; \
         } \
         .petnav span { \
             float: left; \
@@ -515,7 +570,7 @@ function CreateCSS() {
             position: absolute !important; \
             width: 30px; \
             z-index: -1 !important; \
-            background-color: '+SUBCOLOR+'; \
+            background-color: '+subcolor+'; \
             -webkit-transition-property: margin-left; \
             -webkit-transition-duration: .2s; \
             transition-property: margin-left; \
@@ -528,8 +583,8 @@ function CreateCSS() {
         .hover { \
             position: absolute; \
             border-radius: 25px; \
-            background-color: '+BGCOLOR+'; \
-            border: 3px solid '+COLOR+'; \
+            background-color: '+bgcolor+'; \
+            border: 3px solid '+color+'; \
             padding: 20px;  \
             height: 104px; \
             width: 5px; \
@@ -558,6 +613,7 @@ function CreateCSS() {
 
 // GATHERER FUNCTIONS
 function QuickRef() {
+    console.log('QuickRef');
     // All data except exact stat numbers
     $('.contentModuleTable tbody').each(function(k,v) {
         if(k%2 === 0) { // even indexed elements are the relevant ones
@@ -566,168 +622,179 @@ function QuickRef() {
             var namesMatch = names.match(regex);
             var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
             var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
-            var newpet = 0;
-            if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
-                PETS.show.push(petname);
-                newpet = 1;
+            if( !(petname in DATA.pets) ) { // if pet isn't recorded, add it to shown and pets
+                DATA.shown.push(petname);
+                DATA.pets[petname] = {isUncertain: false};
             }
-            else
-                STATS = JSON.parse(localStorage.getItem(petname)) || [];
+            else if ( !(DATA.pets[petname].species.length) ) { // add pets with only bd stats to shown
+                DATA.shown.push(petname);
+            }
+            stats = DATA.pets[petname];
 
             var lines = $(v).find('.pet_stats td');
-            STATS[0]  = TIMESTAMP;
-            STATS[1]  = $(lines).eq(0).text();  // species
-            STATS[2]  = $(lines).eq(1).text();  // color
-            STATS[3]  = $(lines).eq(6).text();  // mood
-            STATS[4]  = $(lines).eq(7).text();  // hunger
-            STATS[5]  = $(lines).eq(3).text();  // age
-            STATS[6]  = $(lines).eq(4).text();  // level
-            STATS[7]  = $(lines).eq(5).text();  // hp
-            STATS[8]  = str_toInt($(lines).eq(8).text());   // strength
-            STATS[9]  = def_toInt($(lines).eq(9).text());   // defence
-            STATS[10] = mov_toInt($(lines).eq(10).text());  // movement
-            STATS[11] = $(lines).eq(11).text(); // intelligence
-            STATS[12] = petpet[0];              // petpet name
-            STATS[13] = petpet[1];              // petpet species
-            STATS[14] = $(lines).eq(12).find('img').attr('src');             // petpet image
-            STATS[15] = $(v).find('.pet_image').attr('style').split("'")[1]; // pet image
-            STATS[16] = $(v).find('.pet_notices:contains(converted)').length ? true : false; // is UC
-            console.log(STATS);
+            stats.timestamp     = TIMESTAMP;
+            stats.species       = $(lines).eq(0).text();
+            stats.color         = $(lines).eq(1).text();
+            stats.age           = $(lines).eq(3).text();
+            stats.level         = Number($(lines).eq(4).text());
+            stats.health        = $(lines).eq(5).text();
+            stats.mood          = $(lines).eq(6).text();
+            stats.hunger        = $(lines).eq(7).text();
+            stats.intelligence  = $(lines).eq(11).text();
+            stats.petpet_name   = petpet[0];
+            stats.petpet_species= petpet[1];
+            stats.petpet_image  = $(lines).eq(12).find('img').attr('src');
+            stats.image         = $(v).find('.pet_image').attr('style').split("'")[1];
+            stats.isUC          = $(v).find('.pet_notices:contains(converted)').length ? true : false;
+            stats.isActive      = k==0;
+            setStrength($(lines).eq(8).text(),petname);
+            setDefence( $(lines).eq(9).text(),petname);
+            setMovement($(lines).eq(10).text(),petname);
+            console.log(stats);
 
-            localStorage.setItem(petname, JSON.stringify(STATS));
+            DATA.pets[petname] = stats;
         }
     });
 }
 function Training() {
+    console.log('Training');
     //Sidebar();
     $("table[width='500'] tbody tr").each(function(k,v) {
         if(k%2 === 0) {
             // get name and retreive data (if any)
             var petname = $(v).children().first().text().split(" ")[0];
-            var newpet = 0;
-            if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
-                PETS.show.push(petname);
-                newpet = 1;
+            if( !(petname in DATA.pets) ) { // if pet isn't recorded, add it only to pets (since no image)
+                DATA.pets[petname] = {
+                    species: null,
+                    color: null,
+                    mood: null,
+                    hunger: null,
+                    age: null,
+                    level: null,
+                    health: null,
+                    strength: null,
+                    defence: null,
+                    movement: null,
+                    intelligence: null,
+                    petpet_name: null,
+                    petpet_species: null,
+                    petpet_image: null,
+                    image: null,
+                    isUC: false,
+                    isActive: false,
+                    isUncertain: true
+                };
             }
-            else
-                STATS = JSON.parse(localStorage.getItem(petname)) || [];
+            stats = DATA.pets[petname];
 
             // get stats
             var dStats = $(v).next().children().first().text();
-            var regex = new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+)');
-            dStats = dStats.match(regex);
-
-            STATS[0]  = TIMESTAMP;
-            if(newpet) {
-                for(var i=1; i<6; i++) STATS[i] = '';
-                for(i=11; i<17; i++)   STATS[i] = ''; // can actually get pet image here, but meh
+            dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+)'));
+            
+            stats.timestamp = TIMESTAMP;
+            if (dStats) {
+                stats.level     = Number(dStats[1]);
+                stats.strength  = Number(dStats[2]);
+                stats.defence   = Number(dStats[3]);
+                stats.strength  = Number(dStats[4]);
+                stats.health    = dStats[5];
             }
-            STATS[6]  = dStats[1]; // level
-            STATS[7]  = dStats[5]; // hp
-            STATS[8]  = dStats[2]; // strength
-            STATS[9]  = dStats[3]; // defence
-            STATS[10] = dStats[4]; // movement
-            console.log(STATS);
+            console.log(stats);
 
-            // store data
-            localStorage.setItem(petname, JSON.stringify(STATS));
+            DATA.pets[petname] = stats;
         }
     });
     UNCERTAIN = false;
 }
 function EndTraining() { // incomplete
-    var message = $('p').first().text();
-    var regex = new RegExp(' (.+) now has increased (.+)!!!');
-    message = message.match(regex);
+    console.log('EndTraining');
+    var blurb = $('p').first().text();
+    blurb = blurb.match(new RegExp(' (.+) now has increased (.+)!!!'));
+    if (blurb) {
+        var petname = blurb[1];
+        if(petname in DATA.pets) { // ignore pets not stored
+            stats = DATA.pets[petname];
 
-    var petname = message[1];
-    var newpet = 0;
-    if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
-        PETS.show.push(petname);
-        newpet = 1;
+            // get stats
+            //var dStats = $(v).next().children().first().text();
+            //dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+)'));
+            
+            stats.timestamp = TIMESTAMP;
+            if (dStats) {
+                stats.level     = Number(dStats[1]);
+                stats.strength  = Number(dStats[2]);
+                stats.defence   = Number(dStats[3]);
+                stats.strength  = Number(dStats[4]);
+                stats.health    = dStats[5];
+            }
+            console.log(stats);
+
+            DATA.pets[petname] = stats;
+        }
     }
-    else
-        STATS = JSON.parse(localStorage.getItem(petname)) || [];
-
-    // get stats
-    STATS[0]  = TIMESTAMP;
-    if(newpet) {
-        for(var i=1; i<6; i++) STATS[i] = '';
-        for(i=11; i<17; i++)   STATS[i] = '';
-    }
-    STATS[6]  = dStats[1]; // level
-    STATS[7]  = dStats[5]; // hp
-    STATS[8]  = dStats[2]; //strengthString(dStats[2]); // strength
-    STATS[9]  = dStats[3]; //defenceString(dStats[3]);  // defence
-    STATS[10] = dStats[4]; //movementString(dStats[4]); // movement
-    console.log(STATS);
-
-    // store data
-    localStorage.setItem(petname, JSON.stringify(STATS));
+    else console.log('regex is incorrect');
 }
 function FaerieQuest() {
+    console.log('FaerieQuest');
     var petname = $('.pet-name').text().slice(0, -2);
     if (petname.length) { // make sure on right page
         var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
         console.log(petname, faerie);
         
-        if( PETS.show.indexOf(petname) >= 0 || PETS.hide.indexOf(petname) >= 0 ) {  // ignore pets not stored
-            STATS = JSON.parse(localStorage.getItem(petname));
-            if(STATS) { // ignore pets with no data
-                console.log('before:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
-                questSwitch(faerie);
-                console.log('\nafter:\nlv',STATS[6],'\nHP: ',STATS[7],'\nstr:',STATS[8],'\ndef:',STATS[9],'\nmov:',STATS[10])
-                localStorage.setItem(petname, JSON.stringify(STATS));
-            }
+        if(petname in DATA.pets) { // ignore pets not stored
+            stats = DATA.pets[petname];
+            console.log('before:\nlv',stats.level,'\nHP: ',stats.health,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
+            DATA.pets[petname] = questSwitch(faerie,stats);
+            console.log('\nafter:\nlv',stats.level,'\nHP: ',stats.health,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
         }
     }
 }
-function questSwitch(faerie) {
+function questSwitch(faerie,stats) {
     switch (faerie) {
         case 'Air':
-            incStat(10,3);
+            stats.movement += 3;
             break;
         case 'Dark':
-            incStat(7,3);
+            stats.health += 3;
             break;
         case 'Earth':
             // 3 (mov OR def OR str)
             break;
         case 'Fire':
-            incStat(8,3);
+            stats.strength += 3;
             break;
         case 'Light':
-            incStat(6,1);
+            stats.level += 1;
             break;
         case 'Water':
-            incStat(9,3);
+            stats.defence += 3;
             break;
         case 'Battle':
-            incStat(7,1);
-            incStat(8,3);
-            incStat(9,3);
+            stats.health += 3;
+            stats.strength += 3;
+            stats.defence += 3;
             break;
         case 'Queen':
-            incStat(6,2);
-            incStat(7,5);
-            incStat(8,5);
+            stats.level += 2;
+            stats.health += 5;
+            stats.strength += 5;
             break;
         case 'Space':
-            incStat(6,5);
+            stats.level += 5;
             break;
         case 'Soup':
             // 2*2 (HP OR def OR str OR mov OR lv)
-            var blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+) .*and 2 (\w+)/));
-            var map = {'levels': 6, 'strength': 8, 'defense': 9, 'movement': 10};
-            incStat(map[blurb[1]],2);
-            incStat(map[blurb[2]],2);
+            var blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+)s? .*and 2 (\w+)s?/));
+            stats[blurb[1]] += 2;
+            stats[blurb[2]] += 2;
             break;
         case 'Gray':
             // leaches off of elemental or fountain faerie. she's a poser.
             var newFaeire = $('.pet-name').parent().text().match(new RegExp(/another faerie. (\w+) .aerie, come/));
-            if (newFaeire != "Earth") questSwitch(newFaeire);
+            if (newFaeire != "Earth") questSwitch(newFaeire,stats);
             break;
     }
+    return stats;
 }
 function HealingSprings() {
     /**
@@ -747,16 +814,23 @@ function HealingSprings() {
         console.log(match)
         if (match[1]=="All") {
             console.log('All');
-            // all pets
+            for (var petname in DATA.pets) healPet(petname,match);
         }
         else {
             var petname = match[1];
             console.log('pet',petname);
+            healPet(petname,match);
         }
+    }
+    else
+        console.log('No change.');
+}
+function healPet(petname,match) {
+    if (petname in DATA.pets) {
         if (match[3]==" gain") {
             var n = map[match[5]];
             console.log('gain',n)
-            // inc front of STATS[7] for every pet... ugh what a pain
+            //DATA.pets[petname].health += Number(n);
         }
         else {
             console.log('fully healed')
@@ -765,8 +839,6 @@ function HealingSprings() {
             console.log('bloated')
         }
     }
-    else
-        console.log('No change.')
 }
 function Coincidence() {
     console.log("I'll get to it eventually.");
@@ -823,8 +895,8 @@ function Sidebar() {
     // get name and retreive data (if any)
     var petname = $("a[href='/quickref.phtml']").first().text();
     var newpet = 0;
-    if( PETS.show.indexOf(petname) < 0 && PETS.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
-        PETS.show.push(petname);
+    if( DATA.show.indexOf(petname) < 0 && DATA.hide.indexOf(petname) < 0 ) { // if pet isn't in either list, add it to shown pets
+        DATA.show.push(petname);
         newpet = 1;
     }
     else {
@@ -852,18 +924,25 @@ function Sidebar() {
 function Age() {
     console.log("I'll get to it eventually.");
 }
-function incStat(i,n) {
-    STATS[i] = Number(STATS[i])+Number(n);
-}
 
 // MISC FUNCTIONS
-function getSubcolor(n) {
-    var rgbs = String(COLOR).match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
-    return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : COLOR;
-}
 function array_move(arr, old_index, new_index) {
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
 };
+function getHP(hp) {
+    if (SETTINGS.hpMode==1) return hp;
+    var match = hp.match(new RegExp(/(\d+) \/ (\d+)/));
+    if (SETTINGS.hpMode==0) return match[2];
+    var p = match[1]/match[2];
+    var color = p<0.2 ? 'red' : p<0.4 ? 'orange' : p<0.6 ? 'yellow' : p<0.8 ? 'blue' : 'green';
+    return '<font color="'+color+'">'+hp+'</font>';
+}
+function getBDStat(n,arr) {
+    if (SETTINGS.bdMode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
+    if (n<21) return SETTINGS.bdMode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
+    var word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
+    return SETTINGS.bdMode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
+}
 
 var DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bullet proof','semi deadly godly','demi godly','godly','beyond godly'];
 var U_DEF = ['below average','heavy','very heavy'];
@@ -871,42 +950,45 @@ var STR = ['not yet born','pathetic','very weak','weak','weak','frail','average'
 var U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
 var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
 var U_MOV = ['average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
-function str_toInt(word) {
+function setStrength(word, petname) {
     var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
     if (STR.indexOf(word) < 0) {
         n = word.match(/\d+/g)[0];
         if (U_STR.indexOf(word) < 0) {
-            n = (STATS[8]-n)>0 && (STATS[8]-n)<4 ? STATS[8] : n;
-            UNCERTAIN = true;
+            var current = DATA.pets[petname].strength;
+            n = (current-n)>0 && (current-n)<4 ? current : n;
+            DATA.pets[petname].isUncertain = true;
         }
     }
     else
         n = STR.indexOf(word);
+    DATA.pets[petname].strength = Number(n);
     console.log("strength: ",word,n);
-    return n
 }
-function def_toInt(word) {
+function setDefence(word) {
     var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
     if (DEF.indexOf(word) < 0) {
         n = word.match(/\d+/g)[0];
         if (U_STR.indexOf(word) < 0) {
-            n = (STATS[9]-n)>0 && (STATS[9]-n)<4 ? STATS[9] : n;
-            UNCERTAIN = true;
+            var current = DATA.pets[petname].defence;
+            n = (current-n)>0 && (current-n)<4 ? current : n;
+            DATA.pets[petname].isUncertain = true;
         }
     }
     else
         n = DEF.indexOf(word);
-    console.log("defense: ",word,n);
-    return n
+    DATA.pets[petname].defence = Number(n);
+    console.log("defence: ",word,n);
 }
-function mov_toInt(word) {
+function setMovement(word) {
     var n = ((MOV.indexOf(word) < 0) ? word.match(/\d+/g)[0] : MOV.indexOf(word));
     if (word == "average") {
-        n = (STATS[10]-n)>0 && (STATS[10]-n)<3 ? STATS[10] : n;
-        UNCERTAIN = true;
+        var current = DATA.pets[petname].movement;
+        n = (current-n)>0 && (current-n)<3 ? current : n;
+        DATA.pets[petname].isUncertain = true;
     }
+    DATA.pets[petname].movement = Number(n);
     console.log("movement: ",word,n);
-    return n
 }
 /*function int_toInt(word) {
     var n = word.match(/\d+/g);
@@ -914,26 +996,6 @@ function mov_toInt(word) {
     console.log("intelligence: ",word,n);
     return n;
 }*/
-function getBDStat(n) {
-    if (SETTINGS[9]==0 || n<8 || 10<n) return STATS[n]; // 'num' <default>
-    var arr = (n==8) ? STR : (n==9) ? DEF : MOV;
-    n = STATS[n];
-    var word;
-    if (n<21) {
-        word = arr[n];
-        if (SETTINGS[9]==1) word = word+' ('+n+')';     // 'str (num)'
-    }
-    else {
-        if (n<40) word = 'GREAT';
-        else if (n<60) word = 'EXCELLENT';
-        else if (n<80) word = 'AWESOME';
-        else if (n<100) word = 'AMAZING';
-        else if (n<150) word = 'LEGENDARY';
-        else word = 'ULTIMATE';
-        if (SETTINGS[9]<3) word = word+' ('+n+')';      // 'str (num)'  OR  'str', 'str (num)' <neo default>
-    }
-    return word;
-}
 
 // MISC
 $("head").append (
