@@ -48,7 +48,7 @@ var SETTINGS = {
     }
 };
 var TIMESTAMP = new Date().getTime();
-var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1);
+var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1);
 console.log('flash enabled: ',FLASH);
 var ANIM = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">';
 
@@ -545,6 +545,7 @@ function CreateCSS() {
 }
 
 // GATHERER FUNCTIONS
+var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
 function QuickRef() {
     console.log('QuickRef');
     // All data except exact stat numbers
@@ -746,12 +747,11 @@ function HealingSprings() {
      * 1 3 5
      */
     console.log('Healing Springs')
-    var map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
     var blurb = $('center > p').eq(2).text();
     console.log(blurb)
     var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
     if (match) {
-        var n = map[match[5]];
+        var n = number_map[match[5]];
         var petname;
         if (match[1]=="All") {
             console.log('All');
@@ -789,11 +789,12 @@ function SecretLab() {
     var petname = $('p').eq(0).find('b').text();
     console.log(petname);
     if(petname in DATA.pets) { // ignore pets not stored
-        var blurb = $('p').eq(2).html();
-        var match = blurb.match(new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+) ([^!]+)/g));
+        var blurb = $('p').eq(2).text();
+        var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+[^s])s? ([^!]+)/g).exec(blurb);
         if (match) {
             var stats = DATA.pets[petname];
-            console.log('before',stats);
+            var n = Number(number_map[match[2]]) || Number(match[2]);
+            console.log('matches:',match[1],n,match[3],match[4])
             switch (match[1]) {
                 case "changes":
                     if (match[2]=="color") { // color change
@@ -801,7 +802,7 @@ function SecretLab() {
                         stats.color = match[4];
                     } else { // species change
                         // match [4] to /(.+) (.+)/g where [1] is color and [2] is species
-                        var morph = match[4].match(new RegExp(/(.+) (.+)/g));
+                        var morph = new RegExp(/(.+) (.+)/g).exec(match[4]);
                         stats.color = morph[1];
                         stats.species = morph[2];
                     }
@@ -809,25 +810,24 @@ function SecretLab() {
                 case "gains": // stat change
                     // [2] is quantity, [3] is stat
                     if (match[3]=='maximum') {
-                        stats.current_hp += Number(match[2]);
-                        stats.max_hp += Number(match[2]);
+                        stats.current_hp += n;
+                        stats.max_hp += n;
                     }
-                    else stats[match[3]] += Number(match[2]);
+                    else stats[match[3]] += n;
                     break;
                 case "loses": // stat change
                     // [2] is quantity, [3] is stat
                     if (match[3]=='maximum') {
-                        stats.current_hp -= Number(match[2]); // TODO: find out if this is right, find out if level possible
-                        stats.max_hp -= Number(match[2]);
+                        stats.current_hp -= n;
+                        stats.max_hp -= n;
                     }
-                    else stats[match[3]] -= Number(match[2]);
+                    else stats[match[3]] -= n;
                     break;
                 case "goes": // level 1
                     stats.level = 1;
                     break;
                 // else nothing happens or gender change
             }
-            console.log('after',stats);
             DATA.pets[petname] = stats;
         }
         else console.log('no regex match');
@@ -942,9 +942,10 @@ function setMovement(word, petname) {
 
 // MISC
 $("head").append (
-    '<link '
-  + 'href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" '
-  + 'rel="stylesheet" type="text/css">'
+    '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
+    '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
+    '<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>' +
+    '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">'
 );
 
 main();
