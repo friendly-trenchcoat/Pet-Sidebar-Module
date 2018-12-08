@@ -8,6 +8,7 @@
 // @grant          GM_getValue
 // @grant          GM_setValue
 // @require        http://code.jquery.com/jquery-latest.min.js
+// @require        http://bgrins.github.com/spectrum/spectrum.js
 // ==/UserScript==
 /*jshint multistr: true */
 
@@ -272,12 +273,7 @@ function buildMenus() {
                 <div id="info_contact" class="page">page 3</div> \
             </div> \
         </div>');
-    $('#settings_menu').append(
-        '<div class="close_menu"><i class="fas fa-times"></i></div> \
-        <div class="innerMenu"> \
-            <h1>Settings</h1><hr> \
-            <p>words here</p> \
-        </div>');
+    $('#settings_menu').append(settings_HTML());
 
     // functionality
     $('#info_button i').click(function(){
@@ -298,7 +294,7 @@ function buildMenus() {
        }
    });
 }
-function getInfo() {
+function info_HTML() {
     var info = 
     '<p>The Pet Sidebar Module is written and tested in Chrome.</p> \
     <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.</p> \
@@ -366,6 +362,86 @@ function getInfo() {
     </div>';
     return info;
 }
+function settings_HTML() {
+    return ' \
+    <div class="menu_header">  \
+        <div class="menu_close"><i class="fas fa-times"></i></div>  \
+        <h1>Settings</h1>  \
+    </div>  \
+    <div class="menu_inner">  \
+        <div class="section"> \
+            <table id="color_settings">  \
+            <tr> \
+                <td> \
+                    <div>Color:</div> \
+                    <input class="picker" id="colorpicker"> \
+                </td> \
+                <td> \
+                    <div>Accent<br>Color:</div> \
+                    <input class="picker" id="subcolorpicker"> \
+                </td> \
+                <td> \
+                    <div>Background<br>Color:</div> \
+                    <input class="picker" id="bgcolorpicker"> \
+                </td> \
+            </tr>  \
+            </table>  \
+        </div>  \
+        <div class="section">  \
+            <table>  \
+            <tr>  \
+                <td>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
+					</span>  \
+                </td>  \
+                <td>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
+					</span>  \
+                    <span> \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
+					</span>  \
+                </td>  \
+            </tr>  \
+            </table>  \
+        </div>  \
+        <div class="section">  \
+            <table>  \
+            <tr>  \
+                <td>  \
+                    <select name="removed">  \
+                        <option value="volvo">Volvo</option>  \
+                        <option value="saab">Saab</option>  \
+                        <option value="fiat">Fiat</option>  \
+                        <option value="audi">Audi</option>  \
+                    </select>  \
+                    <button>add back</button>  \
+                    <button>deleete</button>  \
+                </td>  \
+                <td>  \
+                    <button>revert to defaults</button>  \
+                </td>  \
+            </tr>  \
+            </table>  \
+        </div>  \
+    </div'
+}
 function CreateCSS() {
     var color = SETTINGS.getColor();
     var subcolor = SETTINGS.getSubcolor(10);
@@ -373,7 +449,72 @@ function CreateCSS() {
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
     statsCSS.innerHTML = 
-        '#info_nav { \
+        '/* menus - general */ \
+        #sidebar_menus > div { \
+            position: absolute; \
+            display: none; \
+            height: 400px; \
+            width: 700px; \
+            margin: 52px; \
+            background-color: #fffe; \
+            border: 4px solid '+color+'; \
+            border-radius: 20px; \
+            z-index: 100; \
+        } \
+        .menu_header { \
+            background-color: '+color+'; \
+            padding: 1px; \
+            border-radius: 10px 10px 0px 0px; \
+        } \
+        .menu_header h1 { \
+            color: #fff; \
+            font-family: Verdana, Arial, Helvetica, sans-serif; \
+            font-size: 35px; \
+            margin: 1px 5px; \
+            letter-spacing: -1px; \
+        } \
+        .menu_close { \
+            float: right; \
+            cursor: pointer; \
+            font-size: 30px; \
+            color: #fff; \
+            margin: 5.5px 14px; \
+        } \
+        .menu_close:hover { \
+            font-size: 31px; \
+            margin: 5.25px 13.5px; \
+        } \
+        .menu_inner { \
+            width: 90%; \
+            height: 70%; \
+            margin: 20px auto; \
+        } \
+        .section { \
+            width: 100%; \
+            min-height: 20%; \
+            background-color: #fda5; \
+            margin: 14px auto; \
+            text-align: center; \
+        } \
+        .section > span { \
+            display: inline-block; \
+            text-align: left; \
+            padding: 5px 15px 0px; \
+        } \
+        .section > table { \
+            margin: auto; \
+            width: 100%; \
+            text-align: left; \
+            padding: 20px 10px; \
+        } \
+        .section td span { \
+            padding: 8px 50px; \
+            display: block; \
+        } \
+         \
+         \
+        /* menus - info */ \
+        #info_nav { \
             padding-left: 1.5px; \
         } \
         #info_nav span { \
@@ -388,40 +529,41 @@ function CreateCSS() {
             position: absolute; \
             display: none; \
         } \
-        .innerMenu { \
-            padding: 0px 30px; \
+         \
+         \
+        /* menus - settings */ \
+        #color_settings { \
+            table-layout: fixed; \
+            border-spacing: 45px 0px; \
+            padding: 0px; \
         } \
-        .innerMenu h1 { \
-            margin-bottom: -5px; \
-            color: '+subcolor+'; \
-            font-family: Verdana, Arial, Helvetica, sans-serif; \
-        } \
-        .innerMenu hr { \
-            background-color: '+color+'; \
-            border: none; \
-            height: 1px; \
-        } \
-        .close_menu { \
-            float: right; \
-            cursor: pointer; \
-            font-size: 25px; \
+        #color_settings div, #color_settings input { \
+            display: inline-block !important; \
+            margin-bottom: 2px; \
+            letter-spacing: -1px; \
+            font-weight: 600; \
+            font-size: 14; \
             color: '+color+'; \
-            margin: 12px 13px; \
         } \
-        .close_menu:hover { \
-            color: '+subcolor+'; \
+        #color_settings td:first-child>div:first-child { \
+            font-size: 24; \
         } \
-        #sidebar_menus > div { \
-            position: absolute; \
-            display: none; \
-            height: 400px; \
-            width: 700px; \
-            margin: 52px; \
-            background-color: #fffe; \
-            border: 4px solid '+color+'; \
-            border-radius: 20px; \
-            z-index: 100; \
+        #color_settings input { \
+            width: 100%; \
+            text-align: center; \
         } \
+        .picker_button { \
+            background: none; \
+            border: none; \
+            float: right; \
+        } \
+        .picker_popup { \
+            background: '+bgcolor+'; \
+            border-color: '+color+'; \
+        } \
+         \
+         \
+        /* nav bar */ \
         #petsHeader span { \
             float: right; \
             font-size: 12px; \
@@ -454,13 +596,6 @@ function CreateCSS() {
             height: 150px; \
             width: 25px; \
             margin-left: -22px; \
-        } \
-        .rightHover { \
-            position: absolute; \
-            z-index: 100; \
-            height: 150px; \
-            width: 50px; \
-            margin-left: 103px; \
         } \
         .petnav { \
             position: absolute; \
@@ -512,8 +647,16 @@ function CreateCSS() {
         .sub i { \
             padding: 5.5px; \
         } \
-        \
-        .hover { \
+         \
+         \
+        /* stats slider */ \
+        .rightHover { \
+            position: absolute; \
+            z-index: 100; \
+            height: 150px; \
+            width: 50px; \
+            margin-left: 103px; \
+        }.hover { \
             position: absolute; \
             border-radius: 25px; \
             background-color: '+bgcolor+'; \
@@ -540,7 +683,23 @@ function CreateCSS() {
         }  \
         .inner i { \
             font: 6.5pt Verdana; \
-        } ';
+        } \
+         \
+        /* checkboxes \
+        .pretty.p-switch.p-slim input:checked~.state.p-info:before { \
+            border-color: <on slim bar>; \
+            background-color: <on slim bar>; \
+        } \
+        .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after { \
+            background-color: <on slim knob> !important; \
+        } \
+        .pretty.p-switch.p-slim .state:before { \
+            background: <off slim bar> !important; \
+        } \
+        .pretty.p-switch .state label:after { \
+            background-color: <off slim knob> !important; \
+        }  \
+        */ ';
     return statsCSS;
 }
 
@@ -769,7 +928,7 @@ function healPet(petname,match,n) {
     if (petname in DATA.pets) {
         if (match==" gain") {
             console.log('gain',n);
-            DATA.pets[petname].current_hp += Number(n);
+            DATA.pets[petname].current_hp = Number(DATA.pets[petname].current_hp) + Number(n);
         }
         else {
             console.log('fully healed')
@@ -941,11 +1100,66 @@ function setMovement(word, petname) {
 }*/
 
 // MISC
-$("head").append (
-    '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
-    '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
-    '<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>' +
-    '<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">'
-);
+$( document ).ready(function() {
+    $("head").append (
+        '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
+        '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
+        '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'
+    );
 
-main();
+    main();
+});
+
+$( window ).on( "load", function() {
+
+    /*$(".picker").spectrum({ // must wait for this external function to load
+        //clickoutFiresChange: true,
+        //showInitial: true, // nice comparison
+        containerClassName: 'picker_popup',
+        replacerClassName: 'picker_button',
+        preferredFormat: "hex3",
+        showButtons: false,
+        allowEmpty:true,
+        move: function(color) {
+            color.toHexString();
+        }
+    });*/
+    $("#colorpicker").spectrum({
+        color: SETTINGS.getColor(),
+        containerClassName: 'picker_popup',
+        replacerClassName: 'picker_button',
+        preferredFormat: "hex3",
+        showButtons: false,
+        allowEmpty:true,
+        move: function(color) {
+            color.toHexString();
+        }
+    });
+    $("#subcolorpicker").spectrum({
+        color: SETTINGS.getSubcolor(),
+        containerClassName: 'picker_popup',
+        replacerClassName: 'picker_button',
+        preferredFormat: "hex3",
+        showButtons: false,
+        allowEmpty:true,
+        move: function(color) {
+            color.toHexString();
+        }
+    });
+    $("#bgcolorpicker").spectrum({
+        color: SETTINGS.getBgColor(),
+        showAlpha: true,
+        containerClassName: 'picker_popup',
+        replacerClassName: 'picker_button',
+        preferredFormat: "hex3",
+        showButtons: false,
+        allowEmpty:true,
+        move: function(color) {
+            color.toHexString();
+        }
+    });
+    $(".picker").each(function() { // put text field after picker button
+        var $item = $(this);
+        $item.insertAfter($item.next());
+    });
+});
