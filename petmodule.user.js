@@ -35,19 +35,26 @@ var SETTINGS = {
     color:'',
     subcolor:'',
     bgcolor:'',
-    getColor: function() {
-        return String(this.color) || String($('.sidebarHeader').css('background-color'));
+    getColor: function(set) {
+        if (set) this.color = set;
+        return String(this.color) || THEME;
     },
-    getSubcolor: function(n) {
+    getSubcolor: function(set, n=15) {
+        // set  the new value to set subcolor to
+        // n    the difference between color and subcolor
+        if (set) this.subcolor = set;
         if (this.subcolor) return String(this.subcolor);
         var color = this.getColor();
         var rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
-        return rgbs ? 'rgb('+(Number(rgbs[1])+n)+', '+(Number(rgbs[2])+n)+', '+(Number(rgbs[3])+n)+')' : color;
+        return rgbs ? 'rgb('+(rgbs[1]*1+n)+', '+(rgbs[2]*1+n)+', '+(rgbs[3]*1+n)+')' : THEME;
     },
-    getBgColor: function() {
-        return String(this.bgcolor) || '#fffd';
+    getBgColor: function(set) {
+        if (set) this.bgcolor = set;
+        return String(this.bgcolor) || '#fffe';
     }
 };
+var THEME = String($('.sidebarHeader').css('background-color'));
+var ACTIVE = $('.sidebarModule:first-child tbody').children().eq(0).find('b').text() || "";
 var TIMESTAMP = new Date().getTime();
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1);
 console.log('flash enabled: ',FLASH);
@@ -62,8 +69,9 @@ function main() {
     else if (document.URL.indexOf("quests") != -1) FaerieQuest();
     else if (document.URL.indexOf("springs") != -1) HealingSprings();
     else if (document.URL.indexOf("coincidence") != -1) Coincidence();
+    else if (document.URL.indexOf("kitchen2") != -1) Kitchen();
     else if (document.URL.indexOf("process_lab2") != -1) SecretLab();
-    else if (document.URL.indexOf("petpetlab") != -1) PetpetLab();
+    else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();
     else if ($(".sidebar")[0]) Sidebar();
 
     // actually add stuff now
@@ -79,7 +87,6 @@ function addElements(){
     if (len>0) {
         // clear module
         var petModule = $('.sidebarModule:first-child tbody');
-        var activePetName = petModule.children().eq(0).find('b').text();
         petModule.html( // replace contents with only top bar
             '<tr> \
                 <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
@@ -92,11 +99,11 @@ function addElements(){
         );
 
         // add pets 
-        if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(activePetName),0); // stickyActive: put active pet at the top. TODO: put this in settings block
+        if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(ACTIVE),0); // stickyActive: put active pet at the top. TODO: put this in settings block
         for (var i=0; i<len; i++) {
             var petname = DATA.shown[i];
             var stats = DATA.pets[petname];
-            var inactive = stats.isActive ? '' : 'in';
+            var inactive = petname == ACTIVE ? '' : 'in';
             var image = (SETTINGS.showAnim && FLASH) ? ANIM.replace("%s", petname) : '<img src="'+stats.image+'" width="150" height="150" border="0">';
             console.log
 
@@ -119,25 +126,10 @@ function addElements(){
             if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');        // move down
             if (stats.isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
         }
-        $('#nav_'+activePetName).find('a').eq(1).addClass('disabled');                          // make active
-        if (SETTINGS.stickyActive) $('#nav_'+activePetName).find('.move').addClass('disabled'); // move up/down
+        $('#nav_'+ACTIVE).find('a').eq(1).addClass('disabled');                          // make active
+        if (SETTINGS.stickyActive) $('#nav_'+ACTIVE).find('.move').addClass('disabled'); // move up/down
         
 
-        // functionality
-        $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
-                var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
-                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
-            }, function(){
-                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
-        });
-        $('.move').click(function(){ // arrow buttons
-            if (!$(this).hasClass('disabled')) {
-                var i = DATA.shown.indexOf($(this).attr('petname'));
-                array_move(DATA.shown,i,i+Number($(this).attr('dir')));
-                addElements();
-                localStorage.setItem("DATA", JSON.stringify(DATA));
-            }
-        }); 
 
         // menus
         buildMenus();
@@ -274,25 +266,6 @@ function buildMenus() {
             </div> \
         </div>');
     $('#settings_menu').append(settings_HTML());
-
-    // functionality
-    $('#info_button i').click(function(){
-        $('#info_menu').toggle();
-        $('#settings_menu').hide();
-    });
-    $('#settings_button i').click(function(){
-        $('#settings_menu').toggle();
-        $('#info_menu').hide();
-    });
-    $('.close_menu').click(function(){
-        $(this).parent().hide();
-    });
-    $(document).keyup(function(e) {
-        if (e.key === "Escape") { // escape key maps to keycode `27`
-            $('#info_menu').hide();
-            $('#settings_menu').hide();
-       }
-   });
 }
 function info_HTML() {
     var info = 
@@ -375,14 +348,17 @@ function settings_HTML() {
                 <td> \
                     <div>Color:</div> \
                     <input class="picker" id="colorpicker"> \
+                    <input class="picker_text" id="colorpicker_text"> \
                 </td> \
                 <td> \
                     <div>Accent<br>Color:</div> \
                     <input class="picker" id="subcolorpicker"> \
+                    <input class="picker_text" id="subcolorpicker_text"> \
                 </td> \
                 <td> \
                     <div>Background<br>Color:</div> \
                     <input class="picker" id="bgcolorpicker"> \
+                    <input class="picker_text" id="bgcolorpicker_text"> \
                 </td> \
             </tr>  \
             </table>  \
@@ -392,31 +368,31 @@ function settings_HTML() {
             <tr>  \
                 <td>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
+                    </span>  \
                 </td>  \
                 <td>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
+                    </span>  \
                     <span> \
-						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
-					</span>  \
+                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
+                    </span>  \
                 </td>  \
             </tr>  \
             </table>  \
@@ -440,11 +416,11 @@ function settings_HTML() {
             </tr>  \
             </table>  \
         </div>  \
-    </div'
+    </div>'
 }
 function CreateCSS() {
     var color = SETTINGS.getColor();
-    var subcolor = SETTINGS.getSubcolor(10);
+    var subcolor = SETTINGS.getSubcolor();
     var bgcolor = SETTINGS.getBgColor();
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
@@ -456,7 +432,7 @@ function CreateCSS() {
             height: 400px; \
             width: 700px; \
             margin: 52px; \
-            background-color: #fffe; \
+            background-color: '+bgcolor+'; \
             border: 4px solid '+color+'; \
             border-radius: 20px; \
             z-index: 100; \
@@ -520,7 +496,7 @@ function CreateCSS() {
         #info_nav span { \
             background-color: '+color+'; \
             padding: 4px 80px; \
-            color: #fff \
+            color: #fff; \
         } \
         #info_pages { \
             position: relative; \
@@ -537,20 +513,25 @@ function CreateCSS() {
             border-spacing: 45px 0px; \
             padding: 0px; \
         } \
+        #color_settings td:first-child>div:first-child { \
+            font-size: 24; \
+        } \
         #color_settings div, #color_settings input { \
-            display: inline-block !important; \
             margin-bottom: 2px; \
             letter-spacing: -1px; \
             font-weight: 600; \
             font-size: 14; \
             color: '+color+'; \
         } \
-        #color_settings td:first-child>div:first-child { \
-            font-size: 24; \
+        #color_settings div { \
+            display: inline-block !important; \
         } \
         #color_settings input { \
             width: 100%; \
             text-align: center; \
+            font-size: 12; \
+            letter-spacing: -1.5px; \
+            padding: 2px 0px; \
         } \
         .picker_button { \
             background: none; \
@@ -578,7 +559,6 @@ function CreateCSS() {
         .petnav a:hover { \
             cursor: pointer; \
             margin-left: -5px; \
-            background-color: '+subcolor+'; \
         } \
         .petnav a:hover .sub { \
             margin-left: -25px; \
@@ -623,7 +603,6 @@ function CreateCSS() {
         } \
         .disabled:hover { \
             margin-left: 0px !important; \
-            background-color: '+color+' !important; \
         } \
         .petnav span { \
             float: left; \
@@ -638,7 +617,6 @@ function CreateCSS() {
             position: absolute !important; \
             width: 30px; \
             z-index: -1 !important; \
-            background-color: '+subcolor+'; \
             -webkit-transition-property: margin-left; \
             -webkit-transition-duration: .2s; \
             transition-property: margin-left; \
@@ -656,7 +634,8 @@ function CreateCSS() {
             height: 150px; \
             width: 50px; \
             margin-left: 103px; \
-        }.hover { \
+        } \
+        .hover { \
             position: absolute; \
             border-radius: 25px; \
             background-color: '+bgcolor+'; \
@@ -741,7 +720,6 @@ function QuickRef() {
             stats.petpet_image  = $(lines).eq(12).find('img').attr('src');
             stats.image         = $(v).find('.pet_image').attr('style').split("'")[1];
             stats.isUC          = $(v).find('.pet_notices:contains(converted)').length ? true : false;
-            stats.isActive      = k==0;
             setStrength($(lines).eq(8).text(),petname);
             setDefence( $(lines).eq(9).text(),petname);
             setMovement($(lines).eq(10).text(),petname);
@@ -776,7 +754,6 @@ function Training() {
                     petpet_image: '',
                     image: '',
                     isUC: false,
-                    isActive: false,
                     isUncertain: true
                 };
             }
@@ -941,7 +918,49 @@ function healPet(petname,match,n) {
     }
 }
 function Coincidence() {
-    console.log("I'll get to it eventually.");
+    console.log('Coincidence');
+    var blurb = $('.randomEvent > .copy').text();
+    if (blurb.length) {
+        /**
+         *  stats:
+         *      level
+         *      hit
+         *      defence
+         *      attack
+         *      intelligence
+         * 
+         *  + 1 to 10 stat:
+         *      An electric current seems to fill the room. When everything has settled, you see that there is something different about ACTIVE NEOPET NAME. It looks like their STAT NAME have gone up by X!
+         *      A strong electric current fills the room, crackling with powerful energy. When everything has settled, you see that there is something quite different about ACTIVE NEOPET NAME. It looks like their STAT NAME have gone up by X! Wow!
+         * 
+         *  - 1 to 3 stat:
+         *      An electric current starts to fill the room, but quickly leads to smoke. When everything has settled, you see that there is something different about ACTIVE PET NAME. Oh, no... It looks like their STAT NAME has gone down by X!
+         */
+        var match = new RegExp(/about ([^\.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
+        if (match) {
+            console.log('matches:',match[1],match[2],match[3],match[4]);
+            var stats = DATA.pets[match[1]];
+            var n = (match == 'up') ? match[4]*1 : match[4]*(-1);
+            if (match[2] == 'hit') {
+                stats.current_hp += n;
+                stats.max_hp += n;
+            }
+            else if (match[2] == 'intelligence') continue; // uhh
+            else stats[match[2]] += n;
+        }
+    }
+}
+function Kitchen() {
+    console.log('Kitchen Quest');
+    /**
+     *  +1 hp:          PETNAME has gained a hit point!!!
+     *  +1 def:         PETNAME has become better at Defence!!!
+     */
+    var blurb = $('p>b').eq(1).text();
+    var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
+    if (match) {
+        console.log('matches:',match[1],match[2]);
+    }
 }
 function SecretLab() {
     console.log('Lab Ray');
@@ -993,10 +1012,16 @@ function SecretLab() {
     }
 }
 function PetpetLab() {
-    // name: .content text > regex 'and (.+) are'
-    // img:  .coontent div.eq(1) img src
-    // name: ?
-    console.log("I'll get to it eventually.");
+    console.log("Petpet Lab");
+    /**
+     *  name change:    b/Bobo shall now be known as b/OMGROFL. How nice.       $('div[align="center"]').find('b').eq(1).text();
+     *  color change:   ?
+     *  species change: ?
+     *  soot:           ?
+     *  disappear:      ?
+     */
+    var newname = $('div[align="center"]').find('b').eq(1).text();
+    console.log('new name:',newname);
 }
 function Sidebar() {
     // get name and retreive data (if any)
@@ -1099,40 +1124,36 @@ function setMovement(word, petname) {
     return n;
 }*/
 
-// MISC
+
 $( document ).ready(function() {
     $("head").append (
         '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
         '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
         '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'
     );
-
     main();
 });
 
+// FUNCTIONALITY
 $( window ).on( "load", function() {
 
-    /*$(".picker").spectrum({ // must wait for this external function to load
-        //clickoutFiresChange: true,
-        //showInitial: true, // nice comparison
-        containerClassName: 'picker_popup',
-        replacerClassName: 'picker_button',
-        preferredFormat: "hex3",
-        showButtons: false,
-        allowEmpty:true,
-        move: function(color) {
-            color.toHexString();
-        }
-    });*/
+    // COLOR PICKERS
     $("#colorpicker").spectrum({
+        //clickoutFiresChange: true,
         color: SETTINGS.getColor(),
         containerClassName: 'picker_popup',
         replacerClassName: 'picker_button',
         preferredFormat: "hex3",
         showButtons: false,
         allowEmpty:true,
-        move: function(color) {
-            color.toHexString();
+        move: function(selection) { // messy
+            // if none selected, return to theme color
+            console.log('s',selection,'\n current color',SETTINGS.getColor());
+            var color = selection ? SETTINGS.getColor(set=selection.toRgbString()) : SETTINGS.getColor(set=THEME);
+            console.log('new color',color);
+            $('#color_settings div, #color_settings input').css('color',color);
+            $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
+            $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
         }
     });
     $("#subcolorpicker").spectrum({
@@ -1142,8 +1163,11 @@ $( window ).on( "load", function() {
         preferredFormat: "hex3",
         showButtons: false,
         allowEmpty:true,
-        move: function(color) {
-            color.toHexString();
+        move: function(selection) {
+            console.log('s',selection,'\n current sub',SETTINGS.getSubcolor());
+            if (!selection) SETTINGS.subcolor = ''; // if none selected, make it relative to color
+            var color = selection ? SETTINGS.getSubcolor(set=selection.toRgbString()) : SETTINGS.getSubcolor();
+            console.log('new sub',color);
         }
     });
     $("#bgcolorpicker").spectrum({
@@ -1151,15 +1175,62 @@ $( window ).on( "load", function() {
         showAlpha: true,
         containerClassName: 'picker_popup',
         replacerClassName: 'picker_button',
-        preferredFormat: "hex3",
+        preferredFormat: "rgb",
         showButtons: false,
         allowEmpty:true,
-        move: function(color) {
-            color.toHexString();
+        move: function(selection) {
+            console.log('s',selection,'\n current bg',SETTINGS.getBgColor());
+            var color = selection ? SETTINGS.getBgColor(set=selection.toRgbString()) : SETTINGS.getBgColor(set="#fffe"); // if none selected, return to theme color
+            console.log('new bg',color);
+            $('#sidebar_menus > div, .hover, .picker_popup').css('background-color',color);
         }
     });
     $(".picker").each(function() { // put text field after picker button
         var $item = $(this);
         $item.insertAfter($item.next());
     });
+    $('.petnav a:not(.disabled)').hover( // here rather than in css because hover can't be changed in 'move'
+        function() {
+            $(this).css("background-color",SETTINGS.getSubcolor());
+        },
+        function() {
+            $(this).css("background-color",SETTINGS.getColor());
+        });
+    
+
+    // MENU BUTTONS
+    $('#info_button i').click(function(){
+        $('#info_menu').toggle();
+        $('#settings_menu').hide();
+    });
+    $('#settings_button i').click(function(){
+        $('#settings_menu').toggle();
+        $('#info_menu').hide();
+    });
+    $('.close_menu').click(function(){
+        $(this).parent().hide();
+    });
+    $(document).keyup(function(e) {
+        if (e.key === "Escape") { // escape key maps to keycode `27`
+            $('#info_menu').hide();
+            $('#settings_menu').hide();
+        }
+    });
+
+
+    // HOVER SLIDERS
+    $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
+            var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
+            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
+        }, function(){
+            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
+    });
+    $('.move').click(function(){ // arrow buttons
+        if (!$(this).hasClass('disabled')) {
+            var i = DATA.shown.indexOf($(this).attr('petname'));
+            array_move(DATA.shown,i,i+Number($(this).attr('dir')));
+            addElements();
+            localStorage.setItem("DATA", JSON.stringify(DATA));
+        }
+    }); 
 });
