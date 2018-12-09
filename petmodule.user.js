@@ -6,13 +6,14 @@
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
 // @grant          none
-// @require        http://code.jquery.com/jquery-latest.min.js
 // @require        http://bgrins.github.com/spectrum/spectrum.js
 // ==/UserScript==
 /*jshint multistr: true */
 
 /** TODOs:
- *  
+ *  ? @require        http://code.jquery.com/jquery-latest.min.js
+ *  ^ causes conflicts, will address later
+ * 
  *  settings menu:
  *      - tooltips
  *      - colors:
@@ -48,6 +49,7 @@ var SETTINGS = {
     showPetpet:true,
     hpMode:2, // 0: max only | 1: current / max   | 2:  plus color
     bdMode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
+    i:10,     // increment for subcolor when it's relative to color
     color:'',
     subcolor:'',
     bgcolor:'',
@@ -55,20 +57,20 @@ var SETTINGS = {
         if (set) this.color = set;
         return String(this.color) || THEME;
     },
-    getSubcolor: function(set, n=15) {
+    getSubcolor: function(set) {
         if (set) this.subcolor = set;
         if (this.subcolor) return String(this.subcolor);
         var color = this.getColor();
         var rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
-        return rgbs ? 'rgb('+(rgbs[1]*1+n)+', '+(rgbs[2]*1+n)+', '+(rgbs[3]*1+n)+')' : THEME;
+        return rgbs ? 'rgb('+color_inc(rgbs[1])+', '+color_inc(rgbs[2])+', '+color_inc(rgbs[3])+')' : THEME;
     },
     getBgColor: function(set) {
         if (set) this.bgcolor = set;
         return String(this.bgcolor) || BG;
     }
 };
-var THEME = String($('.sidebarHeader').css('background-color'));
-var BG = "rgba(255, 255, 255, 0.93)"
+var THEME = String($('.sidebarHeader').css('background-color')) || "#000";
+var BG = "rgba(255, 255, 255, 0.93)";
 var ACTIVE = $('.sidebarModule:first-child tbody').children().eq(0).find('b').text() || "";
 var TIMESTAMP = new Date().getTime();
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1);
@@ -77,22 +79,31 @@ var ANIM = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.ne
 
 // MAIN
 function main() {
-    // update data
+    // UPDATE DATA
+    // primary sources
     if (document.URL.indexOf("quickref") != -1) QuickRef();
     else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
+    
+    // permanent changes
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
-    else if (document.URL.indexOf("quests") != -1) FaerieQuest();
+    else if (document.URL.indexOf("quests") != -1) FaerieQuest();           // BD stats
+    else if (document.URL.indexOf("coincidence") != -1) Coincidence();      // BD stats, int
+    else if (document.URL.indexOf("kitchen2") != -1) Kitchen();             // BD stats
+    else if (document.URL.indexOf("process_lab2") != -1) SecretLab();       // BD stats, color, species, gender
+    else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies
+
+    // HP gain/loss
     else if (document.URL.indexOf("springs") != -1) HealingSprings();
-    else if (document.URL.indexOf("coincidence") != -1) Coincidence();
-    else if (document.URL.indexOf("kitchen2") != -1) Kitchen();
-    else if (document.URL.indexOf("process_lab2") != -1) SecretLab();
-    else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();
+    else if (document.URL.indexOf("snowager2") != -1) Snowager();
+
+    // default
     else if ($(".sidebar")[0]) Sidebar();
 
-    // actually add stuff now
+
+    // ADD ELEMENTS
     if ($(".sidebar")[0]) addElements();
 
-    // store final list of pets
+    // STORE DATA
     localStorage.setItem("DATA", JSON.stringify(DATA));
 }
 
@@ -100,6 +111,12 @@ function main() {
 function addElements(){
     var len = DATA.shown.length;
     if (len>0) {
+        // add assets
+        $("head").append (
+            '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' + // icon images
+            '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' + // checkboxes
+            '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">' ); // color pickers
+
         // clear module
         var petModule = $('.sidebarModule:first-child tbody');
         petModule.html( // replace contents with only top bar
@@ -266,7 +283,7 @@ function buildMenus() {
             <div id="settings_menu"></div> \
         </div>');
     $('#info_menu').append(
-        '<div class="close_menu"><i class="fas fa-times"></i></div> \
+        '<div class="menu_close"><i class="fas fa-times"></i></div> \
         <div class="innerMenu"> \
             <h1>Info</h1><hr> \
             <div id="info_nav"> \
@@ -369,6 +386,10 @@ function settings_HTML() {
                     <div>Accent<br>Color:</div> \
                     <input class="picker" id="subcolorpicker"> \
                     <input class="picker_text" id="subcolorpicker_text"> \
+                    <div id="increment"> \
+                        <i class="fas fa-caret-up"></i> \
+                        <i class="fas fa-caret-down"></i> \
+                    </div> \
                 </td> \
                 <td> \
                     <div>Background<br>Color:</div> \
@@ -483,9 +504,12 @@ function CreateCSS() {
         .section { \
             width: 100%; \
             min-height: 20%; \
-            background-color: #fda5; \
             margin: 14px auto; \
             text-align: center; \
+        } \
+        .section:nth-child(2) { \
+            border: 5px dotted #0003; \
+            margin-top: 20px; \
         } \
         .section > span { \
             display: inline-block; \
@@ -523,6 +547,7 @@ function CreateCSS() {
          \
          \
         /* menus - settings */ \
+        /* color */ \
         #color_settings { \
             table-layout: fixed; \
             border-spacing: 45px 0px; \
@@ -530,16 +555,17 @@ function CreateCSS() {
         } \
         #color_settings td:first-child>div:first-child { \
             font-size: 24; \
+            margin-bottom: 6.75px; \
         } \
         #color_settings div, #color_settings input { \
             margin-bottom: 2px; \
             letter-spacing: -1px; \
             font-weight: 600; \
             font-size: 14; \
-            color: '+color+'; \
         } \
-        #color_settings div { \
+        #color_settings div:not(#increment) { \
             display: inline-block !important; \
+            color: '+color+'; \
         } \
         #color_settings input { \
             width: 100%; \
@@ -547,6 +573,7 @@ function CreateCSS() {
             font-size: 12; \
             letter-spacing: -1.5px; \
             padding: 2px 0px; \
+            color: '+subcolor+'; \
         } \
         .picker_button { \
             background: none; \
@@ -557,6 +584,19 @@ function CreateCSS() {
             background: '+bgcolor+'; \
             border-color: '+color+'; \
         } \
+        #increment { \
+            position: absolute; \
+            margin: -21px 0px 0px 153px; \
+        } \
+        #increment i { \
+            display: block; \
+            margin: -6px auto; \
+            font-size: 16px; \
+            cursor: pointer; \
+            color: '+color+'; \
+        } \
+        /* toggles */ \
+        /* other */ \
          \
          \
         /* nav bar */ \
@@ -888,50 +928,6 @@ function questSwitch(faerie,stats) {
     }
     return stats;
 }
-function HealingSprings() {
-    /**
-     * All of your Neopets gain seven hit points.  I hope that helps! :)
-     * All your Neopets have their health completely restored
-     * petname regains their hit points and is not hungry any more
-     * petname is fully healed
-     * 
-     * 1 3 5
-     */
-    console.log('Healing Springs')
-    var blurb = $('center > p').eq(2).text();
-    console.log(blurb)
-    var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
-    if (match) {
-        var n = number_map[match[5]];
-        var petname;
-        if (match[1]=="All") {
-            console.log('All');
-            for (petname in DATA.pets) healPet(petname,match[3],n);
-        }
-        else {
-            petname = match[1];
-            console.log('pet',petname);
-            healPet(petname,match[3],n);
-        }
-    }
-    else console.log('No change.');
-}
-function healPet(petname,match,n) {
-    if (petname in DATA.pets) {
-        if (match==" gain") {
-            console.log('gain',n);
-            DATA.pets[petname].current_hp = Number(DATA.pets[petname].current_hp) + Number(n);
-        }
-        else {
-            console.log('fully healed')
-            DATA.pets[petname].current_hp = DATA.pets[petname].max_hp;
-        }
-        if (match==" hungry") {
-            console.log('bloated');
-            DATA.pets[petname].hunger = 'bloated';
-        }
-    }
-}
 function Coincidence() {
     console.log('Coincidence');
     var blurb = $('.randomEvent > .copy').text();
@@ -960,7 +956,7 @@ function Coincidence() {
                 stats.current_hp += n;
                 stats.max_hp += n;
             }
-            else if (match[2] == 'intelligence') continue; // uhh
+            else if (match[2] == 'intelligence') console.log('not recording this I guess.'); // uhh
             else stats[match[2]] += n;
         }
     }
@@ -975,6 +971,19 @@ function Kitchen() {
     var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
     if (match) {
         console.log('matches:',match[1],match[2]);
+        if (match[1] in DATA.pets) {
+            switch (match[2]){
+                case 'point':
+                    DATA.pets[match[1]].current_hp += 1;
+                    DATA.pets[match[1]].max_hp += 1;
+                    break;
+                case 'Defence':
+                    DATA.pets[match[1]].defence += 1;
+                    break;
+                default:
+                    console.log('unknown');
+            }
+        }
     }
 }
 function SecretLab() {
@@ -1036,7 +1045,7 @@ function PetpetLab() {
      *  disappear:      ?
      */
     var newname = $('div[align="center"]').find('b').eq(1).text();
-    console.log('new name:',newname);
+    if (newname) console.log('new name:',newname);
 }
 function Sidebar() {
     // get name and retreive data (if any)
@@ -1069,11 +1078,70 @@ function Anywhere() {
 function Age() {
     console.log("I'll get to it eventually.");
 }
+function HealingSprings() {
+    /**
+     * All of your Neopets gain seven hit points.  I hope that helps! :)
+     * All your Neopets have their health completely restored
+     * petname regains their hit points and is not hungry any more
+     * petname is fully healed
+     * 
+     * 1 3 5
+     */
+    console.log('Healing Springs')
+    var blurb = $('center > p').eq(2).text();
+    console.log(blurb)
+    var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
+    if (match) {
+        var n = number_map[match[5]];
+        var petname;
+        if (match[1]=="All") {
+            console.log('All');
+            for (petname in DATA.pets) healPet(petname,match[3],n);
+        }
+        else {
+            petname = match[1];
+            console.log('pet',petname);
+            healPet(petname,match[3],n);
+        }
+    }
+    else console.log('No change.');
+}
+function healPet(petname,match,n) {
+    if (petname in DATA.pets) {
+        if (match==" gain") {
+            console.log('gain',n);
+            DATA.pets[petname].current_hp = Number(DATA.pets[petname].current_hp) + Number(n);
+        }
+        else {
+            console.log('fully healed')
+            DATA.pets[petname].current_hp = DATA.pets[petname].max_hp;
+        }
+        if (match==" hungry") {
+            console.log('bloated');
+            DATA.pets[petname].hunger = 'bloated';
+        }
+    }
+}
+function Snowager() {
+    console.log('Snowager');
+}
+
 
 // MISC FUNCTIONS
 function array_move(arr, old_index, new_index) {
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
 };
+function color_inc(value) {
+    var result = value*1+SETTINGS.i
+    return result < 0 ? 0 : result > 255 ? 255 : result;
+}
+
+// STAT FUNCTIONS
+var STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
+var U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
+var DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bullet proof','semi deadly godly','demi godly','godly','beyond godly'];
+var U_DEF = ['below average','heavy','very heavy'];
+var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
 function getHP(current, max) {
     if (SETTINGS.hpMode==0) return max;
     if (SETTINGS.hpMode==1) return current+' / '+max;
@@ -1087,13 +1155,6 @@ function getBDStat(n,arr) {
     var word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
     return SETTINGS.bdMode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
 }
-
-var DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bullet proof','semi deadly godly','demi godly','godly','beyond godly'];
-var U_DEF = ['below average','heavy','very heavy'];
-var STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
-var U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
-var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
-var U_MOV = ['average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightening','mach 1','mach 1','mach 2','mach 3','mach 4'];
 function setStrength(word, petname) {
     var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
     if (STR.indexOf(word) < 0) {
@@ -1112,7 +1173,7 @@ function setDefence(word, petname) {
     var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
     if (DEF.indexOf(word) < 0) {
         n = word.match(/\d+/g)[0];
-        if (U_STR.indexOf(word) < 0) {
+        if (U_DEF.indexOf(word) < 0) {
             var current = DATA.pets[petname].defence;
             n = (current-n)>0 && (current-n)<4 ? current : n;
             DATA.pets[petname].isUncertain = true;
@@ -1138,6 +1199,9 @@ function setMovement(word, petname) {
     console.log("intelligence: ",word,n);
     return n;
 }*/
+
+
+// COLOR FUNCTIONS
 function changeColor(tinycolor) {
     var color;
     if (tinycolor)
@@ -1146,21 +1210,26 @@ function changeColor(tinycolor) {
         color = SETTINGS.getColor(set=THEME);
         $("#colorpicker").spectrum('set',color); // update the picker too
     }
+    if (!SETTINGS.subcolor) changeSubcolor(); // maintain relative color 
     $('#colorpicker_text').val(color);
-    $('#color_settings div, #color_settings input').css('color',color);
+    $('#color_settings div').css('color',color);
     $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
     $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
 }
 function changeSubcolor(tinycolor) {
     var color;
-    if (tinycolor)
+    if (tinycolor) {
         color = SETTINGS.getSubcolor(set=tinycolor.toRgbString());
+        $('#increment').hide();
+    }
     else { // if none selected, make it relative to color
         SETTINGS.subcolor = '';
+        $('#increment').show();
         color = SETTINGS.getSubcolor();
         $("#subcolorpicker").spectrum('set',color); // update the picker too
     }
     $('#subcolorpicker_text').val(color);
+    $('#color_settings input').css('color',color);
 }
 function changeBgColor(tinycolor) {
     var color;
@@ -1177,104 +1246,102 @@ function changeBgColor(tinycolor) {
 
 // FUNCTIONALITY
 $( window ).on( "load", function() {
+    if ($(".sidebar")[0]) {
+        console.log('adding functionality.');
 
-    // COLOR PICKERS
-    $("#colorpicker").spectrum({
-        color: SETTINGS.getColor(),
-        containerClassName: 'picker_popup',
-        replacerClassName: 'picker_button',
-        preferredFormat: "hex3",
-        showButtons: false,
-        allowEmpty:true,
-        move: function(tinycolor) { changeColor(tinycolor); }
-    });
-    $("#subcolorpicker").spectrum({
-        color: SETTINGS.getSubcolor(),
-        containerClassName: 'picker_popup',
-        replacerClassName: 'picker_button',
-        preferredFormat: "hex3",
-        showButtons: false,
-        allowEmpty:true,
-        move: function(tinycolor) { changeSubcolor(tinycolor); }
-    });
-    $("#bgcolorpicker").spectrum({
-        color: SETTINGS.getBgColor(),
-        showAlpha: true,
-        containerClassName: 'picker_popup',
-        replacerClassName: 'picker_button',
-        preferredFormat: "rgb",
-        showButtons: false,
-        allowEmpty:true,
-        move: function(tinycolor) { changeBgColor(tinycolor) }
-    });
-    $(".picker").each(function() { $(this).next().next().val($(this).spectrum('get').toRgbString()); }); // initial fill text fields
-    $('.petnav a:not(.disabled)').hover( // here rather than in css because hover can't be changed in 'move'
-        function() {
-            $(this).css("background-color",SETTINGS.getSubcolor());
-        },
-        function() {
-            $(this).css("background-color",SETTINGS.getColor());
+        // COLOR PICKERS
+        $("#colorpicker").spectrum({
+            color: SETTINGS.getColor(),
+            containerClassName: 'picker_popup',
+            replacerClassName: 'picker_button',
+            preferredFormat: "hex3",
+            showButtons: false,
+            allowEmpty:true,
+            move: function(tinycolor) { changeColor(tinycolor); }
         });
-    $('#colorpicker_text').blur(function() {
-        var $picker = $('#colorpicker');
-        $picker.spectrum('set', $(this).val()); // doesn't fire event due to infinite loops
-        changeColor($picker.spectrum('get'));   // use the picker's' color validation
-    });
-    $('#subcolorpicker_text').blur(function() {
-        var $picker = $('#subcolorpicker');
-        $picker.spectrum('set', $(this).val());
-        changeSubcolor($picker.spectrum('get'));
-    });
-    $('#bgcolorpicker_text').blur(function() {
-        var $picker = $('#bgcolorpicker');
-        $picker.spectrum('set', $(this).val());
-        changeBGColor($picker.spectrum('get'));
-    });
+        $("#subcolorpicker").spectrum({
+            color: SETTINGS.getSubcolor(),
+            containerClassName: 'picker_popup',
+            replacerClassName: 'picker_button',
+            preferredFormat: "hex3",
+            showButtons: false,
+            allowEmpty:true,
+            move: function(tinycolor) { changeSubcolor(tinycolor); }
+        });
+        $("#bgcolorpicker").spectrum({
+            color: SETTINGS.getBgColor(),
+            showAlpha: true,
+            containerClassName: 'picker_popup',
+            replacerClassName: 'picker_button',
+            preferredFormat: "rgb",
+            showButtons: false,
+            allowEmpty:true,
+            move: function(tinycolor) { changeBgColor(tinycolor) }
+        });
+        $(".picker").each(function() { $(this).next().next().val($(this).spectrum('get').toRgbString()); }); // initial fill text fields
+        $('.petnav a:not(.disabled)').hover( // here rather than in css because hover can't be changed in 'move'
+            function() { $(this).css("background-color",SETTINGS.getSubcolor()); },
+            function() { $(this).css("background-color",SETTINGS.getColor()); }
+        );
+        $('#colorpicker_text').blur(function() {
+            var $picker = $('#colorpicker');
+            $picker.spectrum('set', $(this).val()); // doesn't fire event due to infinite loops
+            changeColor($picker.spectrum('get'));   // use the picker's' color validation
+        });
+        $('#subcolorpicker_text').blur(function() {
+            var $picker = $('#subcolorpicker');
+            $picker.spectrum('set', $(this).val());
+            changeSubcolor($picker.spectrum('get'));
+        });
+        $('#bgcolorpicker_text').blur(function() {
+            var $picker = $('#bgcolorpicker');
+            $picker.spectrum('set', $(this).val());
+            changeBGColor($picker.spectrum('get'));
+        });
+        $('#increment .fa-caret-up').click(function()   { SETTINGS.i += 5; changeSubcolor(); console.log('up'); });
+        $('#increment .fa-caret-down').click(function() { SETTINGS.i -= 5; changeSubcolor(); console.log('down'); });
 
 
-    // MENU BUTTONS
-    $('#info_button i').click(function(){
-        $('#info_menu').toggle();
-        $('#settings_menu').hide();
-    });
-    $('#settings_button i').click(function(){
-        $('#settings_menu').toggle();
-        $('#info_menu').hide();
-    });
-    $('.close_menu').click(function(){
-        $(this).parent().hide();
-    });
-    $(document).keyup(function(e) {
-        if (e.key === "Escape") { // escape key maps to keycode `27`
-            $('#info_menu').hide();
+        // MENU BUTTONS
+        $('#info_button i').click(function(){
+            $('#info_menu').toggle();
             $('#settings_menu').hide();
-        }
-    });
+        });
+        $('#settings_button i').click(function(){
+            $('#settings_menu').toggle();
+            $('#info_menu').hide();
+        });
+        $('.menu_close').click(function(){
+            $(this).parent().hide();
+        });
+        $(document).keyup(function(e) {
+            if (e.key === "Escape") { // escape key maps to keycode `27`
+                $('#info_menu').hide();
+                $('#settings_menu').hide();
+            }
+        });
 
 
-    // HOVER SLIDERS
-    $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
-            var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
-            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
-        }, function(){
-            $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
-    });
-    $('.move').click(function(){ // arrow buttons
-        if (!$(this).hasClass('disabled')) {
-            var i = DATA.shown.indexOf($(this).attr('petname'));
-            array_move(DATA.shown,i,i+Number($(this).attr('dir')));
-            addElements();
-            localStorage.setItem("DATA", JSON.stringify(DATA));
-        }
-    }); 
+        // HOVER SLIDERS
+        $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
+                var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
+                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
+            }, function(){
+                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
+        });
+        $('.move').click(function(){ // arrow buttons
+            if (!$(this).hasClass('disabled')) {
+                var i = DATA.shown.indexOf($(this).attr('petname'));
+                array_move(DATA.shown,i,i+Number($(this).attr('dir')));
+                addElements();
+                localStorage.setItem("DATA", JSON.stringify(DATA));
+            }
+        }); 
+    }
 });
 
-$( document ).ready(function() {
-    $("head").append (
-        '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
-        '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
-        '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'
-    );
+
+$( document ).ready(function() {        
     main();
 });
 
