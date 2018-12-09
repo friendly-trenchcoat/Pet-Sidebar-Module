@@ -1,27 +1,43 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.2.1
-// @description    Displays more info for active pet, plus dropdown to show info for other pets.
+// @version        1.2.2
+// @description    Display any number of pets. Moves stats to div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
-// @grant          GM_getValue
-// @grant          GM_setValue
+// @grant          none
 // @require        http://code.jquery.com/jquery-latest.min.js
 // @require        http://bgrins.github.com/spectrum/spectrum.js
 // ==/UserScript==
 /*jshint multistr: true */
 
-/*
-TODOS:
-Make stats number only.
-On left side, have smaller nav popout
-At top of module, add three buttons:
-    - help/info: toggle div with instructions and bug report link
-    - settings: toggle div with settings
-    - collapse: toggle inactive pets
-        > maybe steal that other collapser arrow thing, or maybe spin animate this one
-*/
+/** TODOs:
+ *  
+ *  settings menu:
+ *      - tooltips
+ *      - colors:
+ *          > make text input change picker value, and vice versa
+ *          > make bg picker take init value
+ *      - main settings:
+ *          > put switches on right side
+ *          > add propper input method for modes
+ *          > functionality
+ *          > styling
+ *      - remove pet:
+ *          > add overlay to pet images, make it functional
+ *      - petlist:
+ *          > populate dropdown with removed pets
+ *          > styling
+ *      - buttons:
+ *          > fix 'X'
+ *          > functionality and styling for the rest
+ * 
+ *  info menu
+ *  multiple accounts
+ *  collapse sidebar
+ *  do something about the hidden hovers showing before the images load
+ * 
+ */
 
 var DATA = JSON.parse(localStorage.getItem("DATA")) || {shown:[], hidden:[], pets:{}};
 var SETTINGS = {
@@ -40,8 +56,6 @@ var SETTINGS = {
         return String(this.color) || THEME;
     },
     getSubcolor: function(set, n=15) {
-        // set  the new value to set subcolor to
-        // n    the difference between color and subcolor
         if (set) this.subcolor = set;
         if (this.subcolor) return String(this.subcolor);
         var color = this.getColor();
@@ -50,10 +64,11 @@ var SETTINGS = {
     },
     getBgColor: function(set) {
         if (set) this.bgcolor = set;
-        return String(this.bgcolor) || '#fffe';
+        return String(this.bgcolor) || BG;
     }
 };
 var THEME = String($('.sidebarHeader').css('background-color'));
+var BG = "rgba(255, 255, 255, 0.93)"
 var ACTIVE = $('.sidebarModule:first-child tbody').children().eq(0).find('b').text() || "";
 var TIMESTAMP = new Date().getTime();
 var FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1);
@@ -424,7 +439,7 @@ function CreateCSS() {
     var bgcolor = SETTINGS.getBgColor();
     var statsCSS = document.createElement("style");
     statsCSS.type = "text/css";
-    statsCSS.innerHTML = 
+    statsCSS.innerHTML = // shut up.
         '/* menus - general */ \
         #sidebar_menus > div { \
             position: absolute; \
@@ -1123,38 +1138,55 @@ function setMovement(word, petname) {
     console.log("intelligence: ",word,n);
     return n;
 }*/
+function changeColor(tinycolor) {
+    var color;
+    if (tinycolor)
+        color = SETTINGS.getColor(set=tinycolor.toRgbString());
+    else { // if none selected, return to theme color
+        color = SETTINGS.getColor(set=THEME);
+        $("#colorpicker").spectrum('set',color); // update the picker too
+    }
+    $('#colorpicker_text').val(color);
+    $('#color_settings div, #color_settings input').css('color',color);
+    $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
+    $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
+}
+function changeSubcolor(tinycolor) {
+    var color;
+    if (tinycolor)
+        color = SETTINGS.getSubcolor(set=tinycolor.toRgbString());
+    else { // if none selected, make it relative to color
+        SETTINGS.subcolor = '';
+        color = SETTINGS.getSubcolor();
+        $("#subcolorpicker").spectrum('set',color); // update the picker too
+    }
+    $('#subcolorpicker_text').val(color);
+}
+function changeBgColor(tinycolor) {
+    var color;
+    if (tinycolor)
+        color = SETTINGS.getBgColor(set=tinycolor.toRgbString());
+    else { // if none selected, return to theme color
+        color = SETTINGS.getBgColor(set=BG);
+        $("#bgcolorpicker").spectrum('set',color); // update the picker too
+    }
+    $('#bgcolorpicker_text').val(color);
+    $('#sidebar_menus > div, .hover, .picker_popup').css('background-color',color);
+}
 
-
-$( document ).ready(function() {
-    $("head").append (
-        '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
-        '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
-        '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'
-    );
-    main();
-});
 
 // FUNCTIONALITY
 $( window ).on( "load", function() {
 
     // COLOR PICKERS
     $("#colorpicker").spectrum({
-        //clickoutFiresChange: true,
         color: SETTINGS.getColor(),
         containerClassName: 'picker_popup',
         replacerClassName: 'picker_button',
         preferredFormat: "hex3",
         showButtons: false,
         allowEmpty:true,
-        move: function(selection) { // messy
-            // if none selected, return to theme color
-            console.log('s',selection,'\n current color',SETTINGS.getColor());
-            var color = selection ? SETTINGS.getColor(set=selection.toRgbString()) : SETTINGS.getColor(set=THEME);
-            console.log('new color',color);
-            $('#color_settings div, #color_settings input').css('color',color);
-            $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
-            $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
-        }
+        move: function(tinycolor) { changeColor(tinycolor); }
     });
     $("#subcolorpicker").spectrum({
         color: SETTINGS.getSubcolor(),
@@ -1163,12 +1195,7 @@ $( window ).on( "load", function() {
         preferredFormat: "hex3",
         showButtons: false,
         allowEmpty:true,
-        move: function(selection) {
-            console.log('s',selection,'\n current sub',SETTINGS.getSubcolor());
-            if (!selection) SETTINGS.subcolor = ''; // if none selected, make it relative to color
-            var color = selection ? SETTINGS.getSubcolor(set=selection.toRgbString()) : SETTINGS.getSubcolor();
-            console.log('new sub',color);
-        }
+        move: function(tinycolor) { changeSubcolor(tinycolor); }
     });
     $("#bgcolorpicker").spectrum({
         color: SETTINGS.getBgColor(),
@@ -1178,17 +1205,9 @@ $( window ).on( "load", function() {
         preferredFormat: "rgb",
         showButtons: false,
         allowEmpty:true,
-        move: function(selection) {
-            console.log('s',selection,'\n current bg',SETTINGS.getBgColor());
-            var color = selection ? SETTINGS.getBgColor(set=selection.toRgbString()) : SETTINGS.getBgColor(set="#fffe"); // if none selected, return to theme color
-            console.log('new bg',color);
-            $('#sidebar_menus > div, .hover, .picker_popup').css('background-color',color);
-        }
+        move: function(tinycolor) { changeBgColor(tinycolor) }
     });
-    $(".picker").each(function() { // put text field after picker button
-        var $item = $(this);
-        $item.insertAfter($item.next());
-    });
+    $(".picker").each(function() { $(this).next().next().val($(this).spectrum('get').toRgbString()); }); // initial fill text fields
     $('.petnav a:not(.disabled)').hover( // here rather than in css because hover can't be changed in 'move'
         function() {
             $(this).css("background-color",SETTINGS.getSubcolor());
@@ -1196,7 +1215,22 @@ $( window ).on( "load", function() {
         function() {
             $(this).css("background-color",SETTINGS.getColor());
         });
-    
+    $('#colorpicker_text').blur(function() {
+        var $picker = $('#colorpicker');
+        $picker.spectrum('set', $(this).val()); // doesn't fire event due to infinite loops
+        changeColor($picker.spectrum('get'));   // use the picker's' color validation
+    });
+    $('#subcolorpicker_text').blur(function() {
+        var $picker = $('#subcolorpicker');
+        $picker.spectrum('set', $(this).val());
+        changeSubcolor($picker.spectrum('get'));
+    });
+    $('#bgcolorpicker_text').blur(function() {
+        var $picker = $('#bgcolorpicker');
+        $picker.spectrum('set', $(this).val());
+        changeBGColor($picker.spectrum('get'));
+    });
+
 
     // MENU BUTTONS
     $('#info_button i').click(function(){
@@ -1234,3 +1268,13 @@ $( window ).on( "load", function() {
         }
     }); 
 });
+
+$( document ).ready(function() {
+    $("head").append (
+        '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' +
+        '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' +
+        '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'
+    );
+    main();
+});
+
