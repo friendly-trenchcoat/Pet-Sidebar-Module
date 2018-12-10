@@ -16,16 +16,13 @@
  * 
  *  settings menu:
  *      - tooltips
- *      - colors:
- *          > make text input change picker value, and vice versa
- *          > make bg picker take init value
  *      - main settings:
  *          > put switches on right side
  *          > add propper input method for modes
  *          > functionality
  *          > styling
  *      - remove pet:
- *          > add overlay to pet images, make it functional
+ *          > styling
  *      - petlist:
  *          > populate dropdown with removed pets
  *          > styling
@@ -37,7 +34,32 @@
  *  multiple accounts
  *  collapse sidebar
  *  do something about the hidden hovers showing before the images load
+ *  don't let grave danger image overwrite petpet image
  * 
+ * 
+ *  Things I will not gather data from:
+ *      flash elements (battledome, wheels, etc.)
+ *      items with obscure effects... maybe someday
+ *      pound (it sends you to quick ref after)
+ *      anything that will reflect change on the original module
+ * 
+ *  Things that i should totally gather from:
+ *      rainbow pool/fountain? does it go to quick ref after?
+ *      petpet pool
+ *      items with standard, rexable output
+ *          food
+ *          health potions
+ *      coltzan
+ *          active or all pets
+ *          bd stats and int
+ *      
+ * 
+ *  Things I may one day gather from:
+ *      apple bobbing, for "Blurred Vision" if I ever track wellness
+ *      books, tdmbgpop, if I ever track int
+ *      time, for age/hunger/mood, if i ever care that much
+ *      turmaculus, for pet str and petpet... existance, if i ever care that much
+ *      
  */
 
 var DATA = JSON.parse(localStorage.getItem("DATA")) || {shown:[], hidden:[], pets:{}};
@@ -69,6 +91,7 @@ var SETTINGS = {
         return String(this.bgcolor) || BG;
     }
 };
+var $MODULE = $('.sidebarModule:first-child tbody');
 var THEME = String($('.sidebarHeader').css('background-color')) || "#000";
 var BG = "rgba(255, 255, 255, 0.93)";
 var ACTIVE = $('.sidebarModule:first-child tbody').children().eq(0).find('b').text() || "";
@@ -88,38 +111,41 @@ function main() {
     //else if (document.URL.indexOf("process_training") != -1) EndTraining();
     else if (document.URL.indexOf("quests") != -1) FaerieQuest();           // BD stats
     else if (document.URL.indexOf("coincidence") != -1) Coincidence();      // BD stats, int
-    else if (document.URL.indexOf("kitchen2") != -1) Kitchen();             // BD stats
+    else if (document.URL.indexOf("kitchen2") != -1) KitchenQuest();             // BD stats
     else if (document.URL.indexOf("process_lab2") != -1) SecretLab();       // BD stats, color, species, gender
     else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies
 
-    // HP gain/loss
+    // temp changes
     else if (document.URL.indexOf("springs") != -1) HealingSprings();
     else if (document.URL.indexOf("snowager2") != -1) Snowager();
+    else if (document.URL.indexOf("soupkitchen") != -1) Soup();
 
     // default
     else if ($(".sidebar")[0]) Sidebar();
 
 
     // ADD ELEMENTS
-    if ($(".sidebar")[0]) addElements();
+    if ($(".sidebar")[0]) {
+        $("head").append (
+            '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' + // icon images
+            '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' + // checkboxes
+            '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">' ); // color pickers
+        buildModule();
+        buildMenus();
+        document.body.appendChild(CreateCSS());
+     }
 
     // STORE DATA
     localStorage.setItem("DATA", JSON.stringify(DATA));
 }
 
 // BUILDER FUNCTIONS
-function addElements(){
+function buildModule(){
     var len = DATA.shown.length;
     if (len>0) {
-        // add assets
-        $("head").append (
-            '<link href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" rel="stylesheet" type="text/css">' + // icon images
-            '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' + // checkboxes
-            '<link href="http://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">' ); // color pickers
-
+        
         // clear module
-        var petModule = $('.sidebarModule:first-child tbody');
-        petModule.html( // replace contents with only top bar
+        $MODULE.html( // replace contents with only top bar
             '<tr> \
                 <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
                     <a href="/quickref.phtml"><b>Pets</b></a> \
@@ -140,9 +166,12 @@ function addElements(){
             console.log
 
             // for some reason children must be added seperately
-            petModule.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
+            $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
             $('#'+inactive+'active_'+petname).append(
-                '<div class="leftHover" petname="'+petname+'"></div> \
+                '<div class="remove_button"> \
+                    <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
+                </div> \
+                <div class="leftHover" petname="'+petname+'"></div> \
                 <div class="leftSubHover" petname="'+petname+'"></div> \
                 <div class="rightHover" petname="'+petname+'"></div> \
                 '+createNavHTML(petname)+' \
@@ -160,14 +189,6 @@ function addElements(){
         }
         $('#nav_'+ACTIVE).find('a').eq(1).addClass('disabled');                          // make active
         if (SETTINGS.stickyActive) $('#nav_'+ACTIVE).find('.move').addClass('disabled'); // move up/down
-        
-
-
-        // menus
-        buildMenus();
-
-        // add CSS
-        document.body.appendChild(CreateCSS());
     }
 }
 function createStatsHTML(petname) {
@@ -368,6 +389,9 @@ function info_HTML() {
     return info;
 }
 function settings_HTML() {
+    var removed = '';
+    for (var i=0; i < DATA.hidden.length; i++)
+        removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
     return ' \
     <div class="menu_header">  \
         <div class="menu_close"><i class="fas fa-times"></i></div>  \
@@ -404,31 +428,31 @@ function settings_HTML() {
             <tr>  \
                 <td>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
+					</span>  \
                 </td>  \
                 <td>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
+					</span>  \
                     <span> \
-                        <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
-                    </span>  \
+						<div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
+					</span>  \
                 </td>  \
             </tr>  \
             </table>  \
@@ -437,22 +461,17 @@ function settings_HTML() {
             <table>  \
             <tr>  \
                 <td>  \
-                    <select name="removed">  \
-                        <option value="volvo">Volvo</option>  \
-                        <option value="saab">Saab</option>  \
-                        <option value="fiat">Fiat</option>  \
-                        <option value="audi">Audi</option>  \
-                    </select>  \
-                    <button>add back</button>  \
-                    <button>deleete</button>  \
+                    <select id="removed_pets" name="removed">'+removed+'</select>  \
+                    <button id="addback_button">add back</button>  \
+                    <button id="delete_button">delete</button>  \
                 </td>  \
                 <td>  \
-                    <button>revert to defaults</button>  \
+                    <button id="revert_button">revert to defaults</button>  \
                 </td>  \
             </tr>  \
             </table>  \
         </div>  \
-    </div>'
+    </div>';
 }
 function CreateCSS() {
     var color = SETTINGS.getColor();
@@ -597,6 +616,24 @@ function CreateCSS() {
         } \
         /* toggles */ \
         /* other */ \
+        .remove_button { \
+            background: #0006; \
+            width: 150; \
+            height: 115; \
+            position: absolute; \
+            text-align: center; \
+            padding-top: 35px; \
+            z-index: 100; \
+            display: none; \
+        } \
+        .remove_button i { \
+            color: #fffd; \
+        } \
+        .remove_button i:hover { \
+            color: #fff; \
+            font-size: 81; \
+            margin-top: -0.5px; \
+        } \
          \
          \
         /* nav bar */ \
@@ -961,7 +998,7 @@ function Coincidence() {
         }
     }
 }
-function Kitchen() {
+function KitchenQuest() {
     console.log('Kitchen Quest');
     /**
      *  +1 hp:          PETNAME has gained a hit point!!!
@@ -1125,6 +1162,12 @@ function healPet(petname,match,n) {
 function Snowager() {
     console.log('Snowager');
 }
+function Soup() {
+    console.log('Soup Kitchen')
+    $('#bxlist li:not(.bx-clone)').each( function() {
+        DATA.pets[$(this).find('b').eq(0).text()] = $(this).find('b').eq(1).text();
+    });
+}
 
 
 // MISC FUNCTIONS
@@ -1247,7 +1290,6 @@ function changeBgColor(tinycolor) {
 // FUNCTIONALITY
 $( window ).on( "load", function() {
     if ($(".sidebar")[0]) {
-        console.log('adding functionality.');
 
         // COLOR PICKERS
         $("#colorpicker").spectrum({
@@ -1303,37 +1345,74 @@ $( window ).on( "load", function() {
 
 
         // MENU BUTTONS
-        $('#info_button i').click(function(){
+        $MODULE.on('click', '#info_button i', function() { // allow for dynamic elements
             $('#info_menu').toggle();
             $('#settings_menu').hide();
+            $('.remove_button').hide();
         });
-        $('#settings_button i').click(function(){
+        $MODULE.on('click', '#settings_button i', function() {
             $('#settings_menu').toggle();
+            $('.remove_button').toggle();
             $('#info_menu').hide();
         });
-        $('.menu_close').click(function(){
-            $(this).parent().hide();
+        $('.menu_close').click(function() {
+            $(this).parent().parent().hide();
+            $('.remove_button').hide();
         });
         $(document).keyup(function(e) {
             if (e.key === "Escape") { // escape key maps to keycode `27`
                 $('#info_menu').hide();
                 $('#settings_menu').hide();
+                $('.remove_button').hide();
             }
         });
 
 
+        // PETS DISPLAYED MANAGEMENT
+        $MODULE.on('click', '.remove_button i', function() {
+            var petname = $(this).attr('petname');
+            DATA.hidden.push(petname);
+            DATA.shown.splice( DATA.shown.indexOf(petname), 1);
+            $('#removed_pets').append('<option value="'+petname+'">'+petname+'</option>');
+            buildModule();
+            $('.remove_button').show();
+            localStorage.setItem("DATA", JSON.stringify(DATA));
+        });
+        $('#addback_button').click(function() {
+            var petname = $('#removed_pets').val();
+            DATA.shown.push(petname);
+            DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
+            buildModule();
+            $('#removed_pets option[value="'+petname+'"]').remove();
+            $('.remove_button').show();
+            localStorage.setItem("DATA", JSON.stringify(DATA));
+        });
+        $('#delete_button').click(function() {
+            var petname = $('#removed_pets').val();
+            DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
+            delete DATA.pets[petname];
+            buildModule();
+            $('#removed_pets option[value="'+petname+'"]').remove();
+            $('.remove_button').show();
+            localStorage.setItem("DATA", JSON.stringify(DATA));
+        });
+
+
         // HOVER SLIDERS
-        $('.rightHover').hover(function(){ // hovering over right hover div exposes stats menu
+        $MODULE.on({ // hovering over right hover div exposes stats menu
+            mouseenter: function() {
                 var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
                 $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
-            }, function(){
+            }, 
+            mouseleave: function() {
                 $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', marginLeft: '95px'}, 500);
-        });
-        $('.move').click(function(){ // arrow buttons
+            }
+        }, '.rightHover');
+        $MODULE.on('click', '.move', function() { // arrow buttons
             if (!$(this).hasClass('disabled')) {
                 var i = DATA.shown.indexOf($(this).attr('petname'));
                 array_move(DATA.shown,i,i+Number($(this).attr('dir')));
-                addElements();
+                buildModule();
                 localStorage.setItem("DATA", JSON.stringify(DATA));
             }
         }); 
