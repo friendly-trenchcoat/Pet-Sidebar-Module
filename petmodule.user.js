@@ -458,12 +458,12 @@ function settings_HTML() {
             </table>  \
         </div>  \
         <div class="section">  \
-            <table>  \
+            <table id="settings_footer">  \
             <tr>  \
                 <td>  \
                     <select id="removed_pets" name="removed">'+removed+'</select>  \
-                    <button id="addback_button">add back</button>  \
-                    <button id="delete_button">delete</button>  \
+                    <div id="addback_button"><i class="fas fa-plus"></i></div> \
+                    <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  \
                 </td>  \
                 <td>  \
                     <button id="revert_button">revert to defaults</button>  \
@@ -491,6 +491,17 @@ function CreateCSS() {
             border: 4px solid '+color+'; \
             border-radius: 20px; \
             z-index: 100; \
+        } \
+        #sidebar_menus button { \
+            background-color: '+subcolor+'; \
+            border: none; \
+            padding: 10px 16px; \
+            margin: 4px 2px; \
+            cursor: pointer; \
+            border-radius: 100px; \
+            color: #fff; \
+            font-weight: 300; \
+            font-size: 16px; \
         } \
         .menu_header { \
             background-color: '+color+'; \
@@ -615,7 +626,7 @@ function CreateCSS() {
             color: '+color+'; \
         } \
         /* toggles */ \
-        /* other */ \
+        /* remove */ \
         .remove_button { \
             background: #0006; \
             width: 150; \
@@ -633,6 +644,27 @@ function CreateCSS() {
             color: #fff; \
             font-size: 81; \
             margin-top: -0.5px; \
+        } \
+        #removed_pets { \
+            width: 200px; \
+            font-size: 16px; \
+            color: '+subcolor+'; \
+            border-color: #0003; \
+            margin-left: 50px; \
+        } \
+        /* buttons */ \
+        #settings_footer { \
+            padding: 0px; \
+        } \
+        #settings_footer td div { \
+            display: inline; \
+            font-size: 22px; \
+            padding-left: 10px; \
+            color: '+subcolor+'; \
+            cursor: pointer; \
+        } \
+        #revert_button { \
+            float: right; \
         } \
          \
          \
@@ -1378,7 +1410,7 @@ $( window ).on( "load", function() {
             $('.remove_button').show();
             localStorage.setItem("DATA", JSON.stringify(DATA));
         });
-        $('#addback_button').click(function() {
+        $('#addback_button i').click(function() {
             var petname = $('#removed_pets').val();
             DATA.shown.push(petname);
             DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
@@ -1387,7 +1419,7 @@ $( window ).on( "load", function() {
             $('.remove_button').show();
             localStorage.setItem("DATA", JSON.stringify(DATA));
         });
-        $('#delete_button').click(function() {
+        $('#delete_button i').click(function() {
             var petname = $('#removed_pets').val();
             DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
             delete DATA.pets[petname];
