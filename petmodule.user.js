@@ -116,7 +116,11 @@
 
     // BUILDER FUNCTIONS
     function buildModule(){
-        if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(DATA.active),0); // stickyActive: put active pet at the top. TODO: put this in settings block
+        if (DATA.hidden.includes(DATA.active)) { // dont let active be hidden
+            DATA.shown.push(DATA.active);
+            DATA.hidden.splice( DATA.hidden.indexOf(DATA.active), 1);
+        }
+        if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(DATA.active),0); // stickyActive: put active pet at the top
         
         var shown = [];
         var petname;
@@ -301,21 +305,7 @@
                 <div id="info_menu"></div> \
                 <div id="settings_menu"></div> \
             </div>');
-        $('#info_menu').append(
-            '<div class="menu_close"><i class="fas fa-times"></i></div> \
-            <div class="innerMenu"> \
-                <h1>Info</h1><hr> \
-                <div id="info_nav"> \
-                    <span><a>usage</a></span> \
-                    <span><a>legend</a></span> \
-                    <span><a>contact</a></span> \
-                </div> \
-                <div id="info_pages"> \
-                    <div id="info_gather" class="page">page 1</div> \
-                    <div id="info_legend" class="page">page 2</div> \
-                    <div id="info_contact" class="page">page 3</div> \
-                </div> \
-            </div>');
+        $('#info_menu').append(info_HTML());
         $('#settings_menu').append(settings_HTML());
         $('#toggle_settings input[type="checkbox"]').each(function() {
             $(this).prop('checked',SETTINGS[$(this).attr('name')]);
@@ -389,12 +379,14 @@
                 </tr> \
             </table> \
         </div>';
-        return info;
+        var html = 
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1> </div> <div class="menu_inner">  <div class="section">  hi  </div> </div>';
+        return html;
     }
     function settings_HTML() {
         var removed = '';
         for (var i=0; i < DATA.hidden.length; i++)
-            if (SETTINGS.allAccts || DATA.pets[DATA.hidden[1]].owner==USER)
+            if (SETTINGS.allAccts || DATA.pets[DATA.hidden[i]].owner==USER)
                 removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
         var html =
             ' <div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1>  </div>  <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showNav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet sats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showStats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showAnim"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/# (color)</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td>  <select id="removed_pets" name="removed">'+removed+'</select>  <div id="addback_button"><i class="fas fa-plus"></i></div>  <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="revert_button">revert to defaults</button>  </td>  </tr>  </table>  </div>  </div>';
