@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.2.3
+// @version        1.2.4
 // @description    Display any number of pets. Moves stats to div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -12,18 +12,9 @@
 
 /** TODOs:
  *
- *  settings menu:
- *      - tooltips
- *      - main settings:
- *          > put switches on right side
- *          > add propper input method for modes
- *          > functionality
- *          > styling
- *
  *  info menu
  *  multiple accounts
  *  collapse sidebar
- *  do something about the hidden hovers showing before the images load
  *  don't let grave danger image overwrite petpet image
  *
  *
@@ -60,7 +51,7 @@
     var $MODULE, FLASH, THEME, BG;
     var USER = $('span.userTag.userTagImage').attr('username') || '';
     var DATA = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_DATA")) || {shown:[], hidden:[], pets:{}, active:''};
-    var SETTINGS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_SETTINGS")) || {
+    var SETTINGS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_SETTINGS_"+USER)) || {
         showNav:true,
         showStats:true,
         showAnim:false,
@@ -906,7 +897,7 @@
         $('#color_settings div, #increment i').css('color',color);
         $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
         $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
     }
     function changeSubcolor(tinycolor) {
         var color;
@@ -923,7 +914,7 @@
         $('#subcolorpicker_text').val(color);
         $('#color_settings input, #removed_pets, #settings_footer td div').css('color',color);
         $('#sidebar_menus button').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
     }
     function changeBgColor(tinycolor) {
         var color;
@@ -935,7 +926,7 @@
         }
         $('#bgcolorpicker_text').val(color);
         $('#sidebar_menus > div, .hover, .picker_popup').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
     }
 
     function functionality(){
@@ -1052,7 +1043,7 @@
             buildModule();
             $('.remove_button').show();
             console.log(SETTINGS);
-            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
         });
         $('#hp_mode,#bd_mode').change(function() {
             var id = $(this).attr('id');
@@ -1060,7 +1051,7 @@
             SETTINGS[id] = val;
             buildModule();
             $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
         });
 
         // HOVER SLIDERS
@@ -1078,12 +1069,13 @@
                 var i = DATA.shown.indexOf($(this).attr('petname'));
                 array_move(DATA.shown,i,i+Number($(this).attr('dir')));
                 buildModule();
+                if ($('#settings_menu').is(":visible")) $('.remove_button').show();
                 localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
             }
         });
     }
 
-    if (window.jQuery) 
+    if (window.jQuery && USER) 
         main();
     else {
         console.log("sidebar: loading jQuery");
