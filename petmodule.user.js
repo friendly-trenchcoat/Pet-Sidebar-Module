@@ -2,7 +2,7 @@
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
 // @version        1.2.4
-// @description    Display any number of pets. Moves stats to div which slides out on hover and adds a navbar for each pet.
+// @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
 // @grant          none
@@ -13,8 +13,6 @@
 /** TODOs:
  *
  *  info menu
- *  multiple accounts
- *  collapse sidebar
  *  don't let grave danger image overwrite petpet image
  *
  *
@@ -63,7 +61,8 @@
         i:10,     // increment for subcolor when it's relative to color
         color:'',
         subcolor:'',
-        bgcolor:''
+        bgcolor:'',
+        collapsed:false
     };
 
     // MAIN
@@ -108,7 +107,7 @@
     }
     function setGlobals() {
         $MODULE = $('.sidebarModule:first-child tbody');
-        FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1);
+        FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1 && document.URL.indexOf("quickref") == -1);
         THEME = String($('.sidebarHeader').css('background-color')) || "#000";
         BG = "rgba(255, 255, 255, 0.93)";
 
@@ -130,14 +129,13 @@
         }
         var len = shown.length;
         if (len>0) {
-            var animstr = '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">';
-
             // clear module
+            var dir = SETTINGS.collapsed ? 'down' : 'up';
             $MODULE.html( // replace contents with only top bar
                 '<tr> \
                     <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
                         <a href="/quickref.phtml"><b>Pets</b></a> \
-                        <span id="fold_button"><i class="fas fa-caret-down"></i></span> \
+                        <span id="fold_button"><i class="fas fa-caret-'+dir+'"></i></span> \
                         <span id="settings_button"><i class="fas fa-cog"></i></span> \
                         <span id="info_button"><i class="fas fa-info-circle"></i></span> \
                     </td> \
@@ -145,38 +143,49 @@
             );
 
             // add pets
-            for (var i=0; i<len; i++) {
-                petname = shown[i];
-                var stats = DATA.pets[petname];
-                var inactive = petname == DATA.active ? '' : 'in';
-                var image = (SETTINGS.showAnim && FLASH) ? animstr.replace("%s", petname) : '<img src="'+stats.image+'" width="150" height="150" border="0">';
-
-                // for some reason children must be added seperately
-                $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
-                $('#'+inactive+'active_'+petname).append(
-                    '<div class="remove_button"> \
-                        <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
-                    </div> \
-                    <div class="leftHover" petname="'+petname+'"></div> \
-                    <div class="leftSubHover" petname="'+petname+'"></div> \
-                    <div class="rightHover" petname="'+petname+'"></div> \
-                    '+createNavHTML(petname)+' \
-                    '+createStatsHTML(petname)+' \
-                    <div class="placeholder"></div> \
-                    <a class="petGlam" href="/quickref.phtml">'+image+'</a>');
-                $('#nav_'+petname).find('.lookup').append(
-                    '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
-                $('#nav_'+petname).find('.petpage').append(
-                    '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
-
-                // disable buttons
-                if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');        // move up
-                if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');        // move down
-                if (stats.isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
+            if (SETTINGS.collapsed) {
+                add_pet(DATA.active);
             }
-            $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                          // make active
-            if (SETTINGS.stickyActive) $('#nav_'+DATA.active).find('.move').addClass('disabled'); // move up/down
+            else {
+                for (var i=0; i<len; i++) {
+                    petname = shown[i];
+                    add_pet(petname);
+
+                    // disable buttons
+                    if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');                        // move up
+                    if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');                        // move down
+                    if (DATA.pets[petname].isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');               // customize
+                }
+            }
+            $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                                                // make active
+            if (SETTINGS.stickyActive || SETTINGS.collapsed) $('#nav_'+DATA.active).find('.move').addClass('disabled'); // move up/down
         }
+    }
+    function add_pet(petname) {
+        var inactive = petname == DATA.active ? '' : 'in';
+        var image = (SETTINGS.showAnim && FLASH) ? 
+            '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
+            .replace("%s", petname) : '<img src="'+DATA.pets[petname].image+'" width="150" height="150" border="0">';
+
+            
+        // for some reason children must be added seperately
+        $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
+        $('#'+inactive+'active_'+petname).append(
+            '<div class="remove_button"> \
+                <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
+            </div> \
+            <div class="leftHover" petname="'+petname+'"></div> \
+            <div class="leftSubHover" petname="'+petname+'"></div> \
+            <div class="rightHover" petname="'+petname+'"></div> \
+            '+createNavHTML(petname)+' \
+            '+createStatsHTML(petname)+' \
+            <div class="placeholder"></div> \
+            <a class="petGlam" href="/quickref.phtml">'+image+'</a>');
+        $('#nav_'+petname).find('.lookup').append(
+            '<a class="sub" href="http://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+        $('#nav_'+petname).find('.petpage').append(
+            '<a class="sub" href="http://www.neopets.com/editpage.phtml?pet_name='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+
     }
     function createStatsHTML(petname) {
         var stats = DATA.pets[petname];
@@ -993,6 +1002,12 @@
             $('#settings_menu').toggle();
             $('.remove_button').toggle();
             $('#info_menu').hide();
+        });
+        $MODULE.on('click', '#fold_button i', function() {
+            SETTINGS.collapsed = SETTINGS.collapsed ? false : true;
+            buildModule();
+            if ($('#settings_menu').is(":visible")) $('.remove_button').show();
+            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
         });
         $('.menu_close').click(function() {
             $(this).parent().parent().hide();
