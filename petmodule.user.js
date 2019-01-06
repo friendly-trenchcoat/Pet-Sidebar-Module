@@ -67,8 +67,8 @@
         allAccts:false,
         stickyActive:false,
         showPetpet:true,
-        hpMode:2, // 0: max only | 1: current / max   | 2:  plus color
-        bdMode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
+        hp_mode:2, // 0: max only | 1: current / max   | 2:  plus color
+        bd_mode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
         i:10,     // increment for subcolor when it's relative to color
         color:'',
         subcolor:'',
@@ -315,6 +315,11 @@
                 </div> \
             </div>');
         $('#settings_menu').append(settings_HTML());
+        $('#toggle_settings input[type="checkbox"]').each(function() {
+            $(this).prop('checked',SETTINGS[$(this).attr('name')]);
+        });
+        $('#hp_mode').val(SETTINGS.hp_mode);
+        $('#bd_mode').val(SETTINGS.bd_mode);
     }
     function info_HTML() {
         var info =
@@ -387,10 +392,10 @@
     function settings_HTML() {
         var removed = '';
         for (var i=0; i < DATA.hidden.length; i++)
-            if (SETTINGS.allAccts || DATA.pets[DATA.hidden[1].owner==USER])
+            if (SETTINGS.allAccts || DATA.pets[DATA.hidden[1]].owner==USER)
                 removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
         var html =
-            ' <div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1>  </div>  <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="nav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet sats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="flash"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allaccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="sticky"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="petpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/#</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td>  <select id="removed_pets" name="removed">'+removed+'</select>  <div id="addback_button"><i class="fas fa-plus"></i></div>  <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="revert_button">revert to defaults</button>  </td>  </tr>  </table>  </div>  </div>';
+            ' <div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1>  </div>  <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showNav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet sats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showStats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showAnim"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/# (color)</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td>  <select id="removed_pets" name="removed">'+removed+'</select>  <div id="addback_button"><i class="fas fa-plus"></i></div>  <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="revert_button">revert to defaults</button>  </td>  </tr>  </table>  </div>  </div>';
         return html;
     }
     function createCSS() {
@@ -814,17 +819,17 @@
     var U_DEF = ['below average','heavy','very heavy'];
     var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightning','mach 1','mach 1','mach 2','mach 3','mach 4'];
     function getHP(current, max) {
-        if (SETTINGS.hpMode==0) return max;
-        if (SETTINGS.hpMode==1) return current+' / '+max;
+        if (SETTINGS.hp_mode==0) return max;
+        if (SETTINGS.hp_mode==1) return current+' / '+max;
         var p = current/max;
         var color = p<0.2 ? 'red' : p<0.4 ? 'orange' : p<0.6 ? 'yellow' : p<0.8 ? 'blue' : 'green';
         return '<font color="'+color+'">'+current+' / '+max+'</font>';
     }
     function getBDStat(n,arr) {
-        if (SETTINGS.bdMode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
-        if (n<21) return SETTINGS.bdMode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
+        if (SETTINGS.bd_mode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
+        if (n<21) return SETTINGS.bd_mode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
         var word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
-        return SETTINGS.bdMode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
+        return SETTINGS.bd_mode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
     }
     function setStrength(word, petname) {
         var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
@@ -1040,6 +1045,23 @@
             localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
         });
 
+
+        // SETTINGS
+        $('#toggle_settings input[type="checkbox"]').change(function() {
+            SETTINGS[$(this).attr('name')] = $(this).prop('checked');
+            buildModule();
+            $('.remove_button').show();
+            console.log(SETTINGS);
+            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+        });
+        $('#hp_mode,#bd_mode').change(function() {
+            var id = $(this).attr('id');
+            var val = $(this).val();
+            SETTINGS[id] = val;
+            buildModule();
+            $('.remove_button').show();
+            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS", JSON.stringify(SETTINGS));
+        });
 
         // HOVER SLIDERS
         $MODULE.on({ // hovering over right hover div exposes stats menu
