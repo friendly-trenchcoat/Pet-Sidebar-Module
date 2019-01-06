@@ -162,18 +162,20 @@
         }
     }
     function add_pet(petname) {
-        var inactive = petname == DATA.active ? '' : 'in';
+        var inactive_id = petname == DATA.active ? '' : 'in';
+        var inactive_arrow = petname == DATA.active ? '' : 
+            '<div class="remove_button"> \
+                <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
+            </div>';
         var image = (SETTINGS.showAnim && FLASH) ? 
             '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
             .replace("%s", petname) : '<img src="'+DATA.pets[petname].image+'" width="150" height="150" border="0">';
 
             
         // for some reason children must be added seperately
-        $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
-        $('#'+inactive+'active_'+petname).append(
-            '<div class="remove_button"> \
-                <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
-            </div> \
+        $MODULE.append('<tr id="'+inactive_id+'active_'+petname+'" ></tr> style="position: relative;"');
+        $('#'+inactive_id+'active_'+petname).append(
+            inactive_arrow+' \
             <div class="leftHover" petname="'+petname+'"></div> \
             <div class="leftSubHover" petname="'+petname+'"></div> \
             <div class="rightHover" petname="'+petname+'"></div> \
