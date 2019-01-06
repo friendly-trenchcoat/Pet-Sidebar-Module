@@ -6,15 +6,12 @@
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
 // @grant          none
-// @require        http://bgrins.github.com/spectrum/spectrum.js
 // ==/UserScript==
 /*jshint multistr: true */
 
 /** TODOs:
  *
  *  info menu
- *  don't let grave danger image overwrite petpet image
- *
  *
  *  Things I will not gather data from:
  *      flash elements (battledome, wheels, etc.)
@@ -47,7 +44,8 @@
     
     // INITIAL GLOBALS
     var $MODULE, FLASH, THEME, BG;
-    var USER = $('span.userTag.userTagImage').attr('username') || '';
+    var USER = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
+    console.log('USER',USER);
     var DATA = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_DATA")) || {shown:[], hidden:[], pets:{}, active:''};
     var SETTINGS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_SETTINGS_"+USER)) || {
         showNav:true,
@@ -107,7 +105,7 @@
     }
     function setGlobals() {
         $MODULE = $('.sidebarModule:first-child tbody');
-        FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1 && document.URL.indexOf("quickref") == -1);
+        FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1 && document.URL.indexOf("quickref") == -1 && document.URL.indexOf("petlookup") == -1);
         THEME = String($('.sidebarHeader').css('background-color')) || "#000";
         BG = "rgba(255, 255, 255, 0.93)";
 
@@ -380,7 +378,7 @@
             </table> \
         </div>';
         var html = 
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1> </div> <div class="menu_inner">  <div class="section">  hi  </div> </div>';
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="about">About</button>  <button name="key">Key</button>  <button name="contact">Contact</button>  </div> </div> <div class="menu_inner">  <div class="section">  hi  </div> </div>';
         return html;
     }
     function settings_HTML() {
@@ -399,7 +397,7 @@
         var statsCSS = document.createElement("style");
         statsCSS.type = "text/css";
         statsCSS.innerHTML = // shut up.
-            '/* menus - general */ #sidebar_menus > div {  position: absolute;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } #sidebar_menus button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } .menu_header {  background-color: '+color+';  padding: 1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 70%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  margin: 14px auto;  text-align: center; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; }   /* menus - info */ #info_nav {  padding-left: 1.5px; } #info_nav span {  background-color: '+color+';  padding: 4px 80px;  color: #fff; } #info_pages {  position: relative; } .page {  position: absolute;  display: none; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
+            '/* menus - general */ #sidebar_menus > div {  position: absolute;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } .menu_header {  background-color: '+color+';  padding: 1px;  margin-top: -1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px;  display: inline-block; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 70%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  margin: 14px auto;  text-align: center; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; }   /* menus - info */ #info_nav {  display: inline; } #info_nav button {  background-color: '+color+';  border: none;  padding: 0px 25px;  margin: 0px -5px 0px -1.5px;  cursor: pointer;  color: #fff;  font-size: 17px; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd;  cursor: pointer; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_menu button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
         document.body.appendChild(statsCSS);
     }
 
@@ -622,6 +620,7 @@
                     stats.max_hp += n;
                 }
                 else if (match[2] == 'intelligence') console.log('not recording this I guess.'); // uhh
+                else if (match[2] == 'attack') stats.strength += n;
                 else stats[match[2]] += n;
             }
         }
@@ -1084,12 +1083,24 @@
         });
     }
 
-    if (window.jQuery && USER) 
-        main();
+    if (window.jQuery && USER) {
+        load_spectrum();
+    }
     else {
+        load_jQuery();
+    }
+
+    function load_jQuery() {
         console.log("sidebar: loading jQuery");
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
+        document.getElementsByTagName('head')[0].appendChild(jq);
+        setTimeout(load_spectrum, 1000);
+    }
+    function load_spectrum() {
+        //console.log("sidebar: loading spectrum");
+        var jq = document.createElement('script');
+        jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(main, 1000);
     }
