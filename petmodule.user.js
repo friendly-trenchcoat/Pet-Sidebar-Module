@@ -376,86 +376,9 @@
         var removed = '';
         for (var i=0; i < DATA.hidden.length; i++)
             removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
-        return ' \
-        <div class="menu_header">  \
-            <div class="menu_close"><i class="fas fa-times"></i></div>  \
-            <h1>Settings</h1>  \
-        </div>  \
-        <div class="menu_inner">  \
-            <div class="section"> \
-                <table id="color_settings">  \
-                <tr> \
-                    <td> \
-                        <div>Color:</div> \
-                        <input class="picker" id="colorpicker"> \
-                        <input class="picker_text" id="colorpicker_text"> \
-                    </td> \
-                    <td> \
-                        <div>Accent<br>Color:</div> \
-                        <input class="picker" id="subcolorpicker"> \
-                        <input class="picker_text" id="subcolorpicker_text"> \
-                        <div id="increment"> \
-                            <i class="fas fa-caret-up"></i> \
-                            <i class="fas fa-caret-down"></i> \
-                        </div> \
-                    </td> \
-                    <td> \
-                        <div>Background<br>Color:</div> \
-                        <input class="picker" id="bgcolorpicker"> \
-                        <input class="picker_text" id="bgcolorpicker_text"> \
-                    </td> \
-                </tr>  \
-                </table>  \
-            </div>  \
-            <div class="section">  \
-                <table>  \
-                <tr>  \
-                    <td>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label> ‏‏‎ navigation menu</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>pet sats slider</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>flash animated pet images</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>all accounts</label></div></div> \
-                        </span>  \
-                    </td>  \
-                    <td>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>keep active pet at top</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>include petpet in slider</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>HP display mode</label></div></div> \
-                        </span>  \
-                        <span> \
-                            <div class="pretty p-switch p-fill"><input type="checkbox" /><div class="state p-success"><label>BD stats display mode</label></div></div> \
-                        </span>  \
-                    </td>  \
-                </tr>  \
-                </table>  \
-            </div>  \
-            <div class="section">  \
-                <table id="settings_footer">  \
-                <tr>  \
-                    <td>  \
-                        <select id="removed_pets" name="removed">'+removed+'</select>  \
-                        <div id="addback_button"><i class="fas fa-plus"></i></div> \
-                        <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  \
-                    </td>  \
-                    <td>  \
-                        <button id="revert_button">revert to defaults</button>  \
-                    </td>  \
-                </tr>  \
-                </table>  \
-            </div>  \
-        </div>';
+        var html =
+            ' <div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1>  </div>  <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="nav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet sats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="flash"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allaccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="sticky"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="petpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/#</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td>  <select id="removed_pets" name="removed">'+removed+'</select>  <div id="addback_button"><i class="fas fa-plus"></i></div>  <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="revert_button">revert to defaults</button>  </td>  </tr>  </table>  </div>  </div>';
+        return html;
     }
     function createCSS() {
         var color = getColor();
@@ -464,7 +387,9 @@
         var statsCSS = document.createElement("style");
         statsCSS.type = "text/css";
         statsCSS.innerHTML = // shut up.
-'/* menus - general */ #sidebar_menus > div {  position: absolute;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } #sidebar_menus button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } .menu_header {  background-color: '+color+';  padding: 1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 70%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  margin: 14px auto;  text-align: center; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 20px 10px; } .section td span {  padding: 8px 50px;  display: block; }   /* menus - info */ #info_nav {  padding-left: 1.5px; } #info_nav span {  background-color: '+color+';  padding: 4px 80px;  color: #fff; } #info_pages {  position: relative; } .page {  position: absolute;  display: none; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';    }
+            '/* menus - general */ #sidebar_menus > div {  position: absolute;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } #sidebar_menus button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } .menu_header {  background-color: '+color+';  padding: 1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 70%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  margin: 14px auto;  text-align: center; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; }   /* menus - info */ #info_nav {  padding-left: 1.5px; } #info_nav span {  background-color: '+color+';  padding: 4px 80px;  color: #fff; } #info_pages {  position: relative; } .page {  position: absolute;  display: none; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
+        document.body.appendChild(statsCSS);
+    }
 
     // GATHERER FUNCTIONS
     var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
