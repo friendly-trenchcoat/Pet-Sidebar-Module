@@ -12,7 +12,6 @@
 /** TODOs:
  * 
  *  fix slider spacing
- *  only load spectrum if they open settings
  *
  *  Things I will not gather data from:
  *      flash elements (battledome, wheels, etc.)
@@ -43,6 +42,7 @@
     'use strict';
     
     // INITIAL GLOBALS
+    var SPECTRUM = false;
     var USER, PETS, DATA, $MODULE, FLASH, THEME, BG;
     (function() {
         var username = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
@@ -81,30 +81,12 @@
                     localStorage.setItem("NEOPET_SIDEBAR_USER", USER);
                 }
 
-                // load resources before calling main()
-                if (window.jQuery) load_spectrum();
+                if (window.jQuery) main();
                 else load_jQuery();
             }
         }
 
     })();
-
-
-    // LOAD RESOURCES
-    function load_jQuery() {
-        console.log("sidebar: loading jQuery");
-        var jq = document.createElement('script');
-        jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
-        document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(load_spectrum, 1000);
-    }
-    function load_spectrum() {
-        //console.log("sidebar: loading spectrum");
-        var jq = document.createElement('script');
-        jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
-        document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(main, 1000);
-    }
 
 
     // MAIN
@@ -141,7 +123,7 @@
             buildModule();
             createCSS();
             buildMenus();
-            functionality();
+            main_functionality();
         }
 
         // STORE DATA
@@ -900,7 +882,7 @@
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
 
-    function functionality(){
+    function settings_functionality() {
         // COLOR PICKERS
         $("#colorpicker").spectrum({
             color: getColor(),
@@ -954,43 +936,6 @@
         $('#increment .fa-caret-down').click(function() { DATA.i -= 5; changeSubcolor(); });
 
 
-        // MENU BUTTONS
-        $MODULE.on('click', '#info_button i', function() { // allow for dynamic elements
-            $('#info_menu').toggle();
-            $('#settings_menu').hide();
-            $('.remove_button').hide();
-        });
-        $MODULE.on('click', '#settings_button i', function() {
-            $('#settings_menu').toggle();
-            $('.remove_button').toggle();
-            $('#info_menu').hide();
-        });
-        $MODULE.on('click', '#fold_button i', function() {
-            DATA.collapsed = DATA.collapsed ? false : true;
-            buildModule();
-            if ($('#settings_menu').is(":visible")) $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
-        });
-        $('.menu_close').click(function() {
-            $(this).parent().parent().hide();
-            $('.remove_button').hide();
-        });
-        $(document).keyup(function(e) {
-            if (e.key === "Escape") { // escape key maps to keycode `27`
-                $('#info_menu').hide();
-                $('#settings_menu').hide();
-                $('.remove_button').hide();
-            }
-        });
-
-
-        // INFO NAV
-        $('#info_nav button').click(function() {
-            $('#info_menu .section').hide();
-            $('#info_'+$(this).attr('name')).show();
-        });
-
-
         // PETS DISPLAYED MANAGEMENT
         $MODULE.on('click', '.remove_button i', function() {
             var petname = $(this).attr('petname');
@@ -1021,7 +966,7 @@
         });
 
 
-        // USER DATA
+        // SETTINGS
         $('#toggle_settings input[type="checkbox"]').change(function() {
             DATA[$(this).attr('name')] = $(this).prop('checked');
             buildModule();
@@ -1037,6 +982,53 @@
             $('.remove_button').show();
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
+
+        
+        $('#settings_menu').toggle();
+        $('.remove_button').toggle();
+        $('#info_menu').hide();
+    }
+
+    function main_functionality() {
+        // MENU BUTTONS
+        $MODULE.on('click', '#info_button i', function() { // allow for dynamic elements
+            $('#info_menu').toggle();
+            $('#settings_menu').hide();
+            $('.remove_button').hide();
+        });
+        $MODULE.on('click', '#settings_button i', function() {
+            if (SPECTRUM) {
+                $('#settings_menu').toggle();
+                $('.remove_button').toggle();
+                $('#info_menu').hide();
+            }
+            else load_spectrum();
+        });
+        $MODULE.on('click', '#fold_button i', function() {
+            DATA.collapsed = DATA.collapsed ? false : true;
+            buildModule();
+            if ($('#settings_menu').is(":visible")) $('.remove_button').show();
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
+        });
+        $('.menu_close').click(function() {
+            $(this).parent().parent().hide();
+            $('.remove_button').hide();
+        });
+        $(document).keyup(function(e) {
+            if (e.key === "Escape") { // escape key maps to keycode `27`
+                $('#info_menu').hide();
+                $('#settings_menu').hide();
+                $('.remove_button').hide();
+            }
+        });
+        
+
+        // INFO NAV
+        $('#info_nav button').click(function() {
+            $('#info_menu .section').hide();
+            $('#info_'+$(this).attr('name')).show();
+        });
+
 
         // HOVER SLIDERS
         $MODULE.on({ // hovering over right hover div exposes stats menu
@@ -1057,6 +1049,23 @@
                 localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
             }
         });
+    }
+
+    // LOAD RESOURCES
+    function load_jQuery() {
+        console.log("sidebar: loading jQuery");
+        var jq = document.createElement('script');
+        jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
+        document.getElementsByTagName('head')[0].appendChild(jq);
+        setTimeout(main, 100);
+    }
+    function load_spectrum() {
+        //console.log("sidebar: loading spectrum");
+        SPECTRUM = true;
+        var jq = document.createElement('script');
+        jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
+        document.getElementsByTagName('head')[0].appendChild(jq);
+        setTimeout(settings_functionality, 100);
     }
 
 })();
