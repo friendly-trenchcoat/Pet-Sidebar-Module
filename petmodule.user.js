@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.2.5
+// @version        1.2.6
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -10,6 +10,9 @@
 /*jshint multistr: true */
 
 /** TODOs:
+ * 
+ *  fix slider spacing
+ *  only load spectrum if they open settings
  *
  *  Things I will not gather data from:
  *      flash elements (battledome, wheels, etc.)
@@ -34,36 +37,79 @@
  *      turmaculus, for pet str and petpet... existance, if i ever care that much
  *
  */
-
-//localStorage.removeItem("NEOPET_SIDEBAR_SETTINGS");
+//localStorage.removeItem("NEOPET_SIDEBAR_PETDATA");
 
 (function() {
     'use strict';
     
     // INITIAL GLOBALS
-    var $MODULE, FLASH, THEME, BG;
-    var USER = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
-    console.log('USER',USER);
-    var DATA = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_DATA")) || {shown:[], hidden:[], pets:{}, active:''};
-    var SETTINGS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_SETTINGS_"+USER)) || {
-        showNav:true,
-        showStats:true,
-        showAnim:false,
-        allAccts:false,
-        stickyActive:false,
-        showPetpet:true,
-        hp_mode:2, // 0: max only | 1: current / max   | 2:  plus color
-        bd_mode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
-        i:10,     // increment for subcolor when it's relative to color
-        color:'',
-        subcolor:'',
-        bgcolor:'',
-        collapsed:false
-    };
+    var USER, PETS, DATA, $MODULE, FLASH, THEME, BG;
+    (function() {
+        var username = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
+        if (username == "Log in") localStorage.setItem("NEOPET_SIDEBAR_USER", ''); // record logout
+        else {
+            var last_user = localStorage.getItem("NEOPET_SIDEBAR_USER") || '';
+            USER = username || last_user; // not all pages have the header
+            if (USER) {
+                PETS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_PETDATA")) || {};
+                DATA = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_USERDATA_"+USER)) || {
+                    showNav:true,
+                    showStats:true,
+                    showAnim:false,
+                    allAccts:false,
+                    stickyActive:false,
+                    showPetpet:true,
+                    hp_mode:2, // 0: max only | 1: current / max   | 2:  plus color
+                    bd_mode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
+                    i:10,      // increment for subcolor when it's relative to color
+                    color:'',
+                    subcolor:'',
+                    bgcolor:'',
+                    collapsed:false,
+                    shown:[],
+                    hidden:[],
+                    active:''
+                };
+                console.log('USER',last_user,'>',USER);
+                if (USER != last_user) {
+                    var s = [];
+                    for (var petname in PETS) {
+                        if (!DATA.hidden.includes(petname))
+                            s.push(petname);
+                    }
+                    DATA.shown = s;
+                    localStorage.setItem("NEOPET_SIDEBAR_USER", USER);
+                }
+
+                // load resources before calling main()
+                if (window.jQuery) load_spectrum();
+                else load_jQuery();
+            }
+        }
+
+    })();
+
+
+    // LOAD RESOURCES
+    function load_jQuery() {
+        console.log("sidebar: loading jQuery");
+        var jq = document.createElement('script');
+        jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
+        document.getElementsByTagName('head')[0].appendChild(jq);
+        setTimeout(load_spectrum, 1000);
+    }
+    function load_spectrum() {
+        //console.log("sidebar: loading spectrum");
+        var jq = document.createElement('script');
+        jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
+        document.getElementsByTagName('head')[0].appendChild(jq);
+        setTimeout(main, 1000);
+    }
+
 
     // MAIN
     function main() {
-        // UPDATE DATA
+        // UPDATE PETS
         // primary sources
         if (document.URL.indexOf("quickref") != -1) QuickRef();
         else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
@@ -99,7 +145,10 @@
         }
 
         // STORE DATA
-        localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
+        localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS));
+        localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
+        //console.log(Object.keys(PETS));
+        //console.log(DATA);
     }
     function setGlobals() {
         $MODULE = $('.sidebarModule:first-child tbody');
@@ -116,21 +165,21 @@
             DATA.shown.push(DATA.active);
             DATA.hidden.splice( DATA.hidden.indexOf(DATA.active), 1);
         }
-        if (SETTINGS.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(DATA.active),0); // stickyActive: put active pet at the top
+        if (DATA.stickyActive) array_move(DATA.shown,DATA.shown.indexOf(DATA.active),0); // stickyActive: put active pet at the top
         
         var shown = [];
         var petname;
-        if (SETTINGS.allAccts) shown = DATA.shown;
+        if (DATA.allAccts) shown = DATA.shown;
         else {
             for (var i=0; i<DATA.shown.length; i++) {
                 petname = DATA.shown[i];
-                if (DATA.pets[petname].owner==USER) shown.push(petname);
+                if (PETS[petname].owner==USER) shown.push(petname);
             }
         }
         var len = shown.length;
         if (len>0) {
             // clear module
-            var dir = SETTINGS.collapsed ? 'down' : 'up';
+            var dir = DATA.collapsed ? 'down' : 'up';
             $MODULE.html( // replace contents with only top bar
                 '<tr> \
                     <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
@@ -143,7 +192,7 @@
             );
 
             // add pets
-            if (SETTINGS.collapsed) {
+            if (DATA.collapsed) {
                 add_pet(DATA.active);
             }
             else {
@@ -152,21 +201,21 @@
                     add_pet(petname);
 
                     // disable buttons
-                    if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');                        // move up
-                    if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');                        // move down
-                    if (DATA.pets[petname].isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');               // customize
+                    if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');                // move up
+                    if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');                // move down
+                    if (PETS[petname].isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
                 }
             }
-            $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                                                // make active
-            if (SETTINGS.stickyActive || SETTINGS.collapsed) $('#nav_'+DATA.active).find('.move').addClass('disabled'); // move up/down
+            $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                                        // make active
+            if (DATA.stickyActive || DATA.collapsed) $('#nav_'+DATA.active).find('.move').addClass('disabled'); // move up/down
         }
     }
     function add_pet(petname) {
         var inactive_id = petname == DATA.active ? '' : 'in';
         var inactive_arrow = petname == DATA.active ? '' : '<i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i>';
-        var image = (SETTINGS.showAnim && FLASH) ? 
+        var image = (DATA.showAnim && FLASH) ? 
             '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
-            .replace("%s", petname) : '<img src="'+DATA.pets[petname].image+'" width="150" height="150" border="0">';
+            .replace("%s", petname) : '<img src="'+PETS[petname].image+'" width="150" height="150" border="0">';
 
             
         // for some reason children must be added seperately
@@ -187,10 +236,10 @@
 
     }
     function createStatsHTML(petname) {
-        if (!SETTINGS.showStats) return '';  // if stats=false return empty
-        var stats = DATA.pets[petname];
+        if (!DATA.showStats) return '';  // if stats=false return empty
+        var stats = PETS[petname];
         var petpetTD = '', petpetStyle='';
-        if (SETTINGS.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
+        if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
             petpetTD =
                 '<td align="center" class="petpet"> \
                     <b>'+stats.petpet_name+'</b> the '+stats.petpet_species+'<br><br> \
@@ -268,7 +317,7 @@
         return statsHTML;
     }
     function createNavHTML(petname) {
-        if (!SETTINGS.showNav) return ''; // if nav=false return empty
+        if (!DATA.showNav) return ''; // if nav=false return empty
         var buttonsHTML =
             '<div id="nav_'+petname+'" class="petnav"> \
                 <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
@@ -289,21 +338,21 @@
         $('#info_menu').append(info_HTML());
         $('#settings_menu').append(settings_HTML());
         $('#toggle_settings input[type="checkbox"]').each(function() {
-            $(this).prop('checked',SETTINGS[$(this).attr('name')]);
+            $(this).prop('checked',DATA[$(this).attr('name')]);
         });
-        $('#hp_mode').val(SETTINGS.hp_mode);
-        $('#bd_mode').val(SETTINGS.bd_mode);
+        $('#hp_mode').val(DATA.hp_mode);
+        $('#bd_mode').val(DATA.bd_mode);
         $('#info_key').show();
     }
     function info_HTML() {
         var html = 
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td><b>Pets</b></td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td><b>Color</b></td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td><b>Accent Color</b></td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td><b>Animated Pets</b></td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>single pet</span>  <table>  <tr>  <td>Faerie Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table> <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements such as wheels or the battledome.</h3> </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.5</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td><b>Pets</b></td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td><b>Color</b></td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td><b>Accent Color</b></td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td><b>Animated Pets</b></td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>single pet</span>  <table>  <tr>  <td>Faerie Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table> <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements such as wheels or the battledome.</h3> </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.6</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
         return html;
     }
     function settings_HTML() {
         var removed = '';
         for (var i=0; i < DATA.hidden.length; i++)
-            if (SETTINGS.allAccts || DATA.pets[DATA.hidden[i]].owner==USER)
+            if (DATA.allAccts || PETS[DATA.hidden[i]].owner==USER)
                 removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
         var html =
             ' <div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1>  </div>  <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showNav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet sats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showStats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showAnim"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/# (color)</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td>  <select id="removed_pets" name="removed">'+removed+'</select>  <div id="addback_button"><i class="fas fa-plus"></i></div>  <div id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="revert_button">revert to defaults</button>  </td>  </tr>  </table>  </div>  </div>';
@@ -332,14 +381,14 @@
                 //if (namesMatch) console.log(namesMatch);
                 var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
                 var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
-                if( !(petname in DATA.pets) ) { // if pet isn't recorded, add it to shown and pets
+                if( !(petname in PETS) ) { // if pet isn't recorded, add it to shown and pets
                     DATA.shown.push(petname);
-                    DATA.pets[petname] = {isUncertain: false};
+                    PETS[petname] = {isUncertain: false};
                 }
-                else if ( !(DATA.pets[petname].species.length) ) { // add pets with only bd stats to shown
+                else if ( !(PETS[petname].species.length) ) { // add pets with only bd stats to shown
                     DATA.shown.push(petname);
                 }
-                var stats = DATA.pets[petname];
+                var stats = PETS[petname];
 
                 var lines = $(v).find('.pet_stats td');
                 var health = $(lines).eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
@@ -364,7 +413,7 @@
                 setMovement($(lines).eq(10).text(),petname);
                 //console.log(stats);
 
-                DATA.pets[petname] = stats;
+                PETS[petname] = stats;
             }
         });
     }
@@ -374,8 +423,8 @@
             if(k%2 === 0) {
                 // get name and retreive data (if any)
                 var petname = $(v).children().first().text().split(" ")[0];
-                if( !(petname in DATA.pets) ) { // if pet isn't recorded, add it only to pets (since incomplete data)
-                    DATA.pets[petname] = {
+                if( !(petname in PETS) ) { // if pet isn't recorded, add it only to pets (since incomplete data)
+                    PETS[petname] = {
                         species: '',
                         color: '',
                         mood: '',
@@ -396,7 +445,7 @@
                         isUncertain: true
                     };
                 }
-                var stats = DATA.pets[petname];
+                var stats = PETS[petname];
 
                 // get stats
                 var dStats = $(v).next().children().first().text();
@@ -413,7 +462,7 @@
                 }
                 //console.log(stats);
 
-                DATA.pets[petname] = stats;
+                PETS[petname] = stats;
             }
         });
     }
@@ -423,8 +472,8 @@
         blurb = blurb.match(new RegExp(' (.+) now has increased (.+)!!!'));
         if (blurb) {
             var petname = blurb[1];
-            if(petname in DATA.pets) { // ignore pets not stored
-                var stats = DATA.pets[petname];
+            if(petname in PETS) { // ignore pets not stored
+                var stats = PETS[petname];
 
                 // get stats
                 //var dStats = $(v).next().children().first().text();
@@ -440,7 +489,7 @@
                 }
                 //console.log(stats);
 
-                DATA.pets[petname] = stats;
+                PETS[petname] = stats;
             }
         }
         else console.log('regex is incorrect');
@@ -452,10 +501,10 @@
             var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
             console.log(petname, faerie);
 
-            if(petname in DATA.pets) { // ignore pets not stored
-                var stats = DATA.pets[petname];
+            if(petname in PETS) { // ignore pets not stored
+                var stats = PETS[petname];
                 console.log('before:\nlv',stats.level,'\nHP: ',stats.max_hp,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
-                DATA.pets[petname] = questSwitch(faerie,stats);
+                PETS[petname] = questSwitch(faerie,stats);
                 console.log('\nafter:\nlv',stats.level,'\nHP: ',stats.max_hp,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
             }
         }
@@ -532,7 +581,7 @@
             var match = new RegExp(/about ([^\.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
             if (match) {
                 console.log('matches:',match[1],match[2],match[3],match[4]);
-                var stats = DATA.pets[match[1]];
+                var stats = PETS[match[1]];
                 var n = (match == 'up') ? match[4]*1 : match[4]*(-1);
                 if (match[2] == 'hit') {
                     stats.current_hp += n;
@@ -554,14 +603,14 @@
         var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
         if (match) {
             console.log('matches:',match[1],match[2]);
-            if (match[1] in DATA.pets) {
+            if (match[1] in PETS) {
                 switch (match[2]){
                     case 'point':
-                        DATA.pets[match[1]].current_hp += 1;
-                        DATA.pets[match[1]].max_hp += 1;
+                        PETS[match[1]].current_hp += 1;
+                        PETS[match[1]].max_hp += 1;
                         break;
                     case 'Defence':
-                        DATA.pets[match[1]].defence += 1;
+                        PETS[match[1]].defence += 1;
                         break;
                     default:
                         console.log('unknown');
@@ -573,11 +622,11 @@
         console.log('Lab Ray');
         var petname = $('p').eq(0).find('b').text();
         console.log(petname);
-        if(petname in DATA.pets) { // ignore pets not stored
+        if(petname in PETS) { // ignore pets not stored
             var blurb = $('p').eq(2).text();
             var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+[^s])s? ([^!]+)/g).exec(blurb);
             if (match) {
-                var stats = DATA.pets[petname];
+                var stats = PETS[petname];
                 var n = Number(number_map[match[2]]) || Number(match[2]);
                 console.log('matches:',match[1],n,match[3],match[4])
                 switch (match[1]) {
@@ -613,7 +662,7 @@
                         break;
                     // else nothing happens or gender change
                 }
-                DATA.pets[petname] = stats;
+                PETS[petname] = stats;
             }
             else console.log('no regex match');
         }
@@ -634,8 +683,8 @@
     function Sidebar() {
         // get name and retreive data (if any)
         var petname = $("a[href='/quickref.phtml']").first().text();
-        if(petname in DATA.pets) { // if pet isn't recorded, not worth starting here
-            var stats = DATA.pets[petname];
+        if(petname in PETS) { // if pet isn't recorded, not worth starting here
+            var stats = PETS[petname];
 
             // get stats
             var activePetStats = $("td[align='left']");
@@ -650,7 +699,7 @@
             stats.image         = $('.activePet a img').attr('src').slice(0,-5)+'4.png'; // pet image (use larger version)
             console.log(stats);
 
-            DATA.pets[petname] = stats;
+            PETS[petname] = stats;
         }
     }
     function Anywhere() {
@@ -679,7 +728,7 @@
             var petname;
             if (match[1]=="All") {
                 console.log('All');
-                for (petname in DATA.pets) healPet(petname,match[3],n);
+                for (petname in PETS) healPet(petname,match[3],n);
             }
             else {
                 petname = match[1];
@@ -690,18 +739,18 @@
         else console.log('No change.');
     }
     function healPet(petname,match,n) {
-        if (petname in DATA.pets) {
+        if (petname in PETS) {
             if (match==" gain") {
                 console.log('gain',n);
-                DATA.pets[petname].current_hp = Number(DATA.pets[petname].current_hp) + Number(n);
+                PETS[petname].current_hp = Number(PETS[petname].current_hp) + Number(n);
             }
             else {
                 console.log('fully healed')
-                DATA.pets[petname].current_hp = DATA.pets[petname].max_hp;
+                PETS[petname].current_hp = PETS[petname].max_hp;
             }
             if (match==" hungry") {
                 console.log('bloated');
-                DATA.pets[petname].hunger = 'bloated';
+                PETS[petname].hunger = 'bloated';
             }
         }
     }
@@ -711,7 +760,7 @@
     function Soup() {
         console.log('Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each( function() {
-            DATA.pets[$(this).find('b').eq(0).text()] = $(this).find('b').eq(1).text();
+            PETS[$(this).find('b').eq(0).text()] = $(this).find('b').eq(1).text();
         });
     }
 
@@ -721,7 +770,7 @@
         arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
     };
     function color_inc(value) {
-        var result = value*1+SETTINGS.i
+        var result = value*1+DATA.i
         return result < 0 ? 0 : result > 255 ? 255 : result;
     }
 
@@ -732,30 +781,30 @@
     var U_DEF = ['below average','heavy','very heavy'];
     var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightning','mach 1','mach 1','mach 2','mach 3','mach 4'];
     function getHP(current, max) {
-        if (SETTINGS.hp_mode==0) return max;
-        if (SETTINGS.hp_mode==1) return current+' / '+max;
+        if (DATA.hp_mode==0) return max;
+        if (DATA.hp_mode==1) return current+' / '+max;
         var p = current/max;
         var color = p<0.2 ? 'red' : p<0.4 ? 'orange' : p<0.6 ? 'yellow' : p<0.8 ? 'blue' : 'green';
         return '<font color="'+color+'">'+current+' / '+max+'</font>';
     }
     function getBDStat(n,arr) {
-        if (SETTINGS.bd_mode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
-        if (n<21) return SETTINGS.bd_mode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
+        if (DATA.bd_mode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
+        if (n<21) return DATA.bd_mode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
         var word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
-        return SETTINGS.bd_mode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
+        return DATA.bd_mode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
     }
     function setStrength(word, petname) {
         var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
         if (STR.indexOf(word) < 0) {
             n = word.match(/\d+/g)[0];
             if (U_STR.indexOf(word) < 0) {
-                var current = DATA.pets[petname].strength;
+                var current = PETS[petname].strength;
                 n = (current-n)>0 && (current-n)<4 ? current : n;
-                DATA.pets[petname].isUncertain = true;
+                PETS[petname].isUncertain = true;
             }
         }
         else n = STR.indexOf(word);
-        DATA.pets[petname].strength = Number(n);
+        PETS[petname].strength = Number(n);
         //console.log("strength: ",word,n);
     }
     function setDefence(word, petname) {
@@ -763,23 +812,23 @@
         if (DEF.indexOf(word) < 0) {
             n = word.match(/\d+/g)[0];
             if (U_DEF.indexOf(word) < 0) {
-                var current = DATA.pets[petname].defence;
+                var current = PETS[petname].defence;
                 n = (current-n)>0 && (current-n)<4 ? current : n;
-                DATA.pets[petname].isUncertain = true;
+                PETS[petname].isUncertain = true;
             }
         }
         else n = DEF.indexOf(word);
-        DATA.pets[petname].defence = Number(n);
+        PETS[petname].defence = Number(n);
         //console.log("defence: ",word,n);
     }
     function setMovement(word, petname) {
         var n = ((MOV.indexOf(word) < 0) ? word.match(/\d+/g)[0] : MOV.indexOf(word));
         if (word == "average") {
-            var current = DATA.pets[petname].movement;
+            var current = PETS[petname].movement;
             n = (current-n)>0 && (current-n)<3 ? current : n;
-            DATA.pets[petname].isUncertain = true;
+            PETS[petname].isUncertain = true;
         }
-        DATA.pets[petname].movement = Number(n);
+        PETS[petname].movement = Number(n);
         //console.log("movement: ",word,n);
     }
     /*function int_toInt(word) {
@@ -792,19 +841,19 @@
 
     // COLOR FUNCTIONS
     function getColor(set) {
-        if (set) SETTINGS.color = set;
-        return String(SETTINGS.color) || THEME;
+        if (set) DATA.color = set;
+        return String(DATA.color) || THEME;
     }
     function getSubcolor(set) {
-        if (set) SETTINGS.subcolor = set;
-        if (SETTINGS.subcolor) return String(SETTINGS.subcolor);
+        if (set) DATA.subcolor = set;
+        if (DATA.subcolor) return String(DATA.subcolor);
         var color = getColor();
         var rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
         return rgbs ? 'rgb('+color_inc(rgbs[1])+', '+color_inc(rgbs[2])+', '+color_inc(rgbs[3])+')' : THEME;
     }
     function getBgColor(set) {
-        if (set) SETTINGS.bgcolor = set;
-        return String(SETTINGS.bgcolor) || BG;
+        if (set) DATA.bgcolor = set;
+        return String(DATA.bgcolor) || BG;
     }
     function changeColor(tinycolor) {
         var color;
@@ -814,12 +863,12 @@
             color = getColor(THEME);
             $("#colorpicker").spectrum('set',color); // update the picker too
         }
-        if (!SETTINGS.subcolor) changeSubcolor(); // maintain relative color
+        if (!DATA.subcolor) changeSubcolor(); // maintain relative color
         $('#colorpicker_text').val(color);
         $('#color_settings div, #increment i').css('color',color);
         $('#sidebar_menus > div, .picker_popup, .hover').css('border-color',color);
         $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
     function changeSubcolor(tinycolor) {
         var color;
@@ -828,7 +877,7 @@
             $('#increment').hide();
         }
         else { // if none selected, make it relative to color
-            SETTINGS.subcolor = '';
+            DATA.subcolor = '';
             $('#increment').show();
             color = getSubcolor();
             $("#subcolorpicker").spectrum('set',color); // update the picker too
@@ -836,7 +885,7 @@
         $('#subcolorpicker_text').val(color);
         $('#color_settings input, #removed_pets, #settings_footer td div').css('color',color);
         $('#sidebar_menus button').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
     function changeBgColor(tinycolor) {
         var color;
@@ -848,7 +897,7 @@
         }
         $('#bgcolorpicker_text').val(color);
         $('#sidebar_menus > div, .hover, .picker_popup').css('background-color',color);
-        localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+        localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
 
     function functionality(){
@@ -901,8 +950,8 @@
             $picker.spectrum('set', $(this).val());
             changeBGColor($picker.spectrum('get'));
         });
-        $('#increment .fa-caret-up').click(function()   { SETTINGS.i += 5; changeSubcolor(); });
-        $('#increment .fa-caret-down').click(function() { SETTINGS.i -= 5; changeSubcolor(); });
+        $('#increment .fa-caret-up').click(function()   { DATA.i += 5; changeSubcolor(); });
+        $('#increment .fa-caret-down').click(function() { DATA.i -= 5; changeSubcolor(); });
 
 
         // MENU BUTTONS
@@ -917,10 +966,10 @@
             $('#info_menu').hide();
         });
         $MODULE.on('click', '#fold_button i', function() {
-            SETTINGS.collapsed = SETTINGS.collapsed ? false : true;
+            DATA.collapsed = DATA.collapsed ? false : true;
             buildModule();
             if ($('#settings_menu').is(":visible")) $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('.menu_close').click(function() {
             $(this).parent().parent().hide();
@@ -950,7 +999,7 @@
             $('#removed_pets').append('<option value="'+petname+'">'+petname+'</option>');
             buildModule();
             $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#addback_button i').click(function() {
             var petname = $('#removed_pets').val();
@@ -959,40 +1008,40 @@
             buildModule();
             $('#removed_pets option[value="'+petname+'"]').remove();
             $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#delete_button i').click(function() {
             var petname = $('#removed_pets').val();
             DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
-            delete DATA.pets[petname];
+            delete PETS[petname];
             buildModule();
             $('#removed_pets option[value="'+petname+'"]').remove();
             $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
 
 
-        // SETTINGS
+        // USER DATA
         $('#toggle_settings input[type="checkbox"]').change(function() {
-            SETTINGS[$(this).attr('name')] = $(this).prop('checked');
+            DATA[$(this).attr('name')] = $(this).prop('checked');
             buildModule();
             $('.remove_button').show();
-            console.log(SETTINGS);
-            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+            console.log(DATA);
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#hp_mode,#bd_mode').change(function() {
             var id = $(this).attr('id');
             var val = $(this).val();
-            SETTINGS[id] = val;
+            DATA[id] = val;
             buildModule();
             $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_SETTINGS_"+USER, JSON.stringify(SETTINGS));
+            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
 
         // HOVER SLIDERS
         $MODULE.on({ // hovering over right hover div exposes stats menu
             mouseenter: function() {
-                var pixels = (SETTINGS.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
+                var pixels = (DATA.showPetpet && ($(this).parent().find('.petpet').length)) ? ['500px','95px'] : ['325px','115px']; // smaller when no petpet
                 $('#stats_'+$(this).attr('petname')).stop(true).animate({width: pixels[0], marginLeft: pixels[1]}, 800);
             },
             mouseleave: function() {
@@ -1005,31 +1054,9 @@
                 array_move(DATA.shown,i,i+Number($(this).attr('dir')));
                 buildModule();
                 if ($('#settings_menu').is(":visible")) $('.remove_button').show();
-                localStorage.setItem("NEOPET_SIDEBAR_DATA", JSON.stringify(DATA));
+                localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
             }
         });
-    }
-
-    if (window.jQuery && USER) {
-        load_spectrum();
-    }
-    else {
-        load_jQuery();
-    }
-
-    function load_jQuery() {
-        console.log("sidebar: loading jQuery");
-        var jq = document.createElement('script');
-        jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
-        document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(load_spectrum, 1000);
-    }
-    function load_spectrum() {
-        //console.log("sidebar: loading spectrum");
-        var jq = document.createElement('script');
-        jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
-        document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(main, 1000);
     }
 
 })();
