@@ -44,6 +44,7 @@
     // INITIAL GLOBALS
     var SPECTRUM = false;
     var USER, PETS, DATA, $MODULE, FLASH, THEME, BG;
+    var STR, U_STR, DEF, U_DEF, MOV; // static
     (function() {
         var username = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
         if (username == "Log in") localStorage.setItem("NEOPET_SIDEBAR_USER", ''); // record logout
@@ -91,6 +92,8 @@
 
     // MAIN
     function main() {
+        setStatics();
+
         // UPDATE PETS
         // primary sources
         if (document.URL.indexOf("quickref") != -1) QuickRef();
@@ -100,6 +103,7 @@
         //else if (document.URL.indexOf("process_training") != -1) EndTraining();
         else if (document.URL.indexOf("quests") != -1) FaerieQuest();           // BD stats
         else if (document.URL.indexOf("coincidence") != -1) Coincidence();      // BD stats, int
+        else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();        // BD stats, int
         else if (document.URL.indexOf("kitchen2") != -1) KitchenQuest();        // BD stats
         else if (document.URL.indexOf("process_lab2") != -1) SecretLab();       // BD stats, color, species, gender
         else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies
@@ -131,6 +135,13 @@
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         //console.log(Object.keys(PETS));
         //console.log(DATA);
+    }
+    function setStatics() {
+        STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
+        U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
+        DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bulletproof','semi deadly godly','demi godly','godly','beyond godly'];
+        U_DEF = ['below average','heavy','very heavy'];
+        MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightning','mach 1','mach 1','mach 2','mach 3','mach 4'];
     }
     function setGlobals() {
         $MODULE = $('.sidebarModule:first-child tbody');
@@ -328,7 +339,7 @@
     }
     function info_HTML() {
         var html = 
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td><b>Pets</b></td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td><b>Color</b></td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td><b>Accent Color</b></td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td><b>Animated Pets</b></td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>single pet</span>  <table>  <tr>  <td>Faerie Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table> <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements such as wheels or the battledome.</h3> </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.6</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td>Pets</td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td>Color</td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td>Accent Color</td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td>Animated Pets</td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>single pet</span>  <table>  <tr>  <td>Faerie Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table>  <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements such as wheels or the battledome.</h3>  </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.6</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
         return html;
     }
     function settings_HTML() {
@@ -347,12 +358,11 @@
         var statsCSS = document.createElement("style");
         statsCSS.type = "text/css";
         statsCSS.innerHTML = // shut up.
-            '/* menus - general */ #sidebar_menus > div {  position: fixed;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } .menu_header {  background-color: '+color+';  padding: 1px;  margin-top: -1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px;  display: inline-block; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 75%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  max-height: 100%;  margin: 14px auto;  overflow: auto; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; } .section p {  margin: 5px 0px 20px 60px;  font-size: 13px;  width: 80%; }   /* menus - info */ #info_nav {  display: inline; } #info_nav button {  background-color: '+color+';  border: none;  padding: 0px 25px;  margin: 0px -5px 0px -1.5px;  cursor: pointer;  color: #fff;  font-size: 17px; } #info_nav button:focus { outline: none; } #info_menu .section {  display: none; } #info_menu span {  margin-left: 50px;  font-weight: bold;  font-size: 18px;  letter-spacing: -0.5px;  color: '+color+'; } #info_menu table {  border-collapse: collapse;  width: 80%;  margin-bottom: 30px; } #info_menu tr:nth-child(odd) {  background-color: #f2f2f2; } #info_menu tr:nth-child(even) {  background-color: #fff; } #info_menu .section:not(#info_about) td:first-child {  text-align: center;  width: 150px;  font-size: 14px; } #info_menu td:first-child {  padding: 8px; } #info_menu td:first-child i {  font-size: 18px; } .box {  font-size: 18px;  font-weight: normal; } #info_menu h3 {  margin: -3px 0px 0px 66px;  font-weight: lighter;  font-size: 8px; } #info_about .fas {  margin-top: 6px; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd;  cursor: pointer; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_menu button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
+            '/* menus - general */ #sidebar_menus > div {  position: fixed;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } .menu_header {  background-color: '+color+';  padding: 1px;  margin-top: -1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: #fff;  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px;  display: inline-block; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: #fff;  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 75%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  max-height: 100%;  margin: 14px auto; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; } .section p {  margin: 5px 0px 20px 60px;  font-size: 13px;  width: 80%; }   /* menus - info */ #info_key, #info_gather {  overflow: auto; } #info_nav {  display: inline; } #info_nav button {  background-color: '+color+';  border: none;  padding: 0px 25px;  margin: 0px -5px 0px -1.5px;  cursor: pointer;  color: #fff;  font-size: 17px; } #info_nav button:focus {  font-weight: bold; outline: none; } #info_menu .section {  display: none; } #info_menu span {  margin-left: 50px;  font-weight: bold;  font-size: 18px;  letter-spacing: -0.5px;  color: '+color+'; } #info_menu table {  border-collapse: collapse;  width: 80%;  margin-bottom: 30px; } #info_menu tr:nth-child(odd) {  background-color: #f2f2f2; } #info_menu tr:nth-child(even) {  background-color: #fff; } #info_menu .section:not(#info_about) td:first-child {  text-align: center;  width: 150px;  font-size: 14px;  font-weight: bold; } #info_menu td:first-child {  padding: 8px; } #info_menu td:first-child i {  font-size: 18px; } .box {  font-size: 18px;  font-weight: normal; } #info_menu h3 {  margin: -3px 0px 0px 66px;  font-weight: lighter;  font-size: 8px; } #info_about .fas {  margin-top: 6px; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150;  height: 115;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd;  cursor: pointer; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_menu button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #revert_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; } .inner img {  border: 2px #ccc dashed; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
         document.body.appendChild(statsCSS);
     }
 
     // GATHERER FUNCTIONS
-    var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
     function QuickRef() {
         console.log('QuickRef');
         // All data except exact stat numbers
@@ -575,11 +585,64 @@
             }
         }
     }
+    function Coltzan() {
+        console.log('Coltzan');
+        var blurb = $('div[align="center"] p').eq(0).text();
+        if (blurb.length) {
+            /**
+             *  stats:
+             *      level
+             *      hit
+             *      defence
+             *      attack
+             *      intelligence
+             *
+             *  PETNAME has gained 1 point(s) of defence!
+             *  PETNAME has gained 1 level(s)! 
+             *  PETNAME gains 1 level! ?
+             *  PETNAME feels stronger! 
+             *  PETNAME feels faster! 
+             *  PETNAME feels more intelligent! 
+             *  All your Neopets are healed to full health!
+             *  
+             */
+            var match = new RegExp(/^([^ ]+) (has gained (\d+)|feels|your).* (\w+)(\(|!)/g).exec(blurb);
+            if (match) {
+                console.log('matches:',match[1],match[4]); // petname, stat
+                var petname = match[1];
+                if (petname == "All")
+                    for (petname in PETS) if (PETS[petname].owner == USER)
+                        PETS[petname].current_hp = PETS[petname].max_hp;
+                else if (petname in PETS) {
+                    switch (match[4]) {
+                        case 'level':
+                            console.log(match[3]);
+                            PETS[petname].level +=match[3];
+                            break;
+                        case 'defence':
+                            console.log(match[3]);
+                            PETS[petname].defence +=match[3];
+                            break;
+                        case 'stronger':
+                            PETS[petname].strength +=1;
+                            break;
+                        case 'faster':
+                            PETS[petname].movement +=1;
+                            break;
+                    }
+                }
+            }
+            else console.log('No change.');
+        }
+    }
     function KitchenQuest() {
         console.log('Kitchen Quest');
         /**
          *  +1 hp:          PETNAME has gained a hit point!!!
+         *  +1 mov:         PETNAME has gained a level!!! (?)
          *  +1 def:         PETNAME has become better at Defence!!!
+         *  +1 str:         PETNAME has become better at Attack!!!
+         *  +1 mov:         PETNAME has become better at Agility!!!
          */
         var blurb = $('p>b').eq(1).text();
         var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
@@ -591,8 +654,17 @@
                         PETS[match[1]].current_hp += 1;
                         PETS[match[1]].max_hp += 1;
                         break;
+                    case 'level':
+                        PETS[match[1]].level += 1;
+                        break;
                     case 'Defence':
                         PETS[match[1]].defence += 1;
+                        break;
+                    case 'Attack':
+                        PETS[match[1]].strength += 1;
+                        break;
+                    case 'Agility':
+                        PETS[match[1]].movement += 1;
                         break;
                     default:
                         console.log('unknown');
@@ -606,8 +678,9 @@
         console.log(petname);
         if(petname in PETS) { // ignore pets not stored
             var blurb = $('p').eq(2).text();
-            var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+[^s])s? ([^!]+)/g).exec(blurb);
+            var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) ([^ ]+[^s])s? ?([^!]+)/g).exec(blurb);
             if (match) {
+                var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
                 var stats = PETS[petname];
                 var n = Number(number_map[match[2]]) || Number(match[2]);
                 console.log('matches:',match[1],n,match[3],match[4])
@@ -679,7 +752,7 @@
             stats.current_hp    = health[1];
             stats.max_hp        = health[2];
             stats.image         = $('.activePet a img').attr('src').slice(0,-5)+'4.png'; // pet image (use larger version)
-            console.log(stats);
+            //console.log(stats);
 
             PETS[petname] = stats;
         }
@@ -701,16 +774,16 @@
          *
          * 1 3 5
          */
-        console.log('Healing Springs')
+        console.log('Healing Springs');
         var blurb = $('center > p').eq(2).text();
-        console.log(blurb)
         var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (match) {
+            var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
             var n = number_map[match[5]];
             var petname;
             if (match[1]=="All") {
                 console.log('All');
-                for (petname in PETS) healPet(petname,match[3],n);
+                for (petname in PETS) if (PETS[petname].owner == USER) healPet(petname,match[3],n);
             }
             else {
                 petname = match[1];
@@ -757,11 +830,6 @@
     }
 
     // STAT FUNCTIONS
-    var STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
-    var U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
-    var DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bulletproof','semi deadly godly','demi godly','godly','beyond godly'];
-    var U_DEF = ['below average','heavy','very heavy'];
-    var MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightning','mach 1','mach 1','mach 2','mach 3','mach 4'];
     function getHP(current, max) {
         if (DATA.hp_mode==0) return max;
         if (DATA.hp_mode==1) return current+' / '+max;
@@ -1057,7 +1125,7 @@
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(main, 100);
+        setTimeout(main, 500);
     }
     function load_spectrum() {
         //console.log("sidebar: loading spectrum");
