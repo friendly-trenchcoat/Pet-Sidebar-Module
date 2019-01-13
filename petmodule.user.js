@@ -10,8 +10,6 @@
 /*jshint multistr: true */
 
 /** TODOs:
- * 
- *  fix slider spacing
  *
  *  Things I will not gather data from:
  *      flash elements (battledome, wheels, etc.)
@@ -94,6 +92,8 @@
         // UPDATE PETS
         // primary sources
         if (document.URL.indexOf("quickref") != -1) QuickRef();
+        else if (document.URL.indexOf("dome/neopets") != -1) Battledome1();
+        else if (document.URL.indexOf("dome/fight") != -1) Battledome2();
         else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
 
         // permanent changes
@@ -107,8 +107,10 @@
 
         // temp changes
         else if (document.URL.indexOf("springs") != -1) HealingSprings();
+        else if (document.URL.indexOf("dome/arena") != -1) Battle();
         else if (document.URL.indexOf("snowager2") != -1) Snowager();
         else if (document.URL.indexOf("soupkitchen") != -1) Soup();
+        else if (document.URL.indexOf("useobject") != -1) Item();
 
         // default
         else if ($(".sidebar")[0]) Sidebar();
@@ -341,7 +343,7 @@
     }
     function info_HTML() {
         var html = 
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td>Pets</td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td>Color</td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td>Accent Color</td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td>Animated Pets</td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets, all data</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>permanent changes</span>  <table>  <tr>  <td>Faerie/Kitchen Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Coltzan</td>  <td>Affected stats numbers, current HP</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table>  <span>temporary changes</span>  <table>  <tr>  <td>Healing Springs</td>  <td>Current HP (illness is not tracked)</td>  </tr>  <tr>  <td>Snowager</td>  <td>Current HP</td>  </tr>  <tr>  <td>Food / Soup Kitchen</td>  <td>Hunger</td>  </tr>  <tr>  <td>Certain Items</td>  <td>Current HP</td>  </tr>  </table>  <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements such as wheels or the battledome.</h3>  </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.6</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td>Pets</td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-down"></i></td>  <td>Show only active or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-mask"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td>Color</td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td>Accent Color</td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td>Animated Pets</td>  <td>On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets, all data</span>  <table>  <tr>  <td><a href="http://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="http://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>permanent changes</span>  <table>  <tr>  <td>Faerie/Kitchen Quest</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Coltzan</td>  <td>Affected stats numbers, current HP</td>  </tr>  <tr>  <td>Random Event</td>  <td>Affected stats numbers</td>  </tr>  </table>  <span>temporary changes</span>  <table>  <tr>  <td>Healing Springs</td>  <td>Current HP (illness is not tracked)</td>  </tr>  <tr>  <td>Snowager</td>  <td>Current HP</td>  </tr>  <tr>  <td>Food / Soup Kitchen</td>  <td>Hunger</td>  </tr>  <tr>  <td>Certain Items</td>  <td>Current HP</td>  </tr>  </table>  <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements like wheels, and I don\'t bother with obscure things.</h3>  </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version 1.2.6</span>  <h3>https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</h3>  <p>This script is written and tested in Chrome. Listed browser support is theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>IE</th>  <th>Opera</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>8.0+</td>  <td>11.5+</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line.<br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
         return html;
     }
     function settings_HTML() {
@@ -370,8 +372,6 @@
     // GATHERER FUNCTIONS
     function QuickRef() {
         console.log('QuickRef');
-        console.log(DATA);
-        console.log(PETS);
         // All data except exact stat numbers
         $('.contentModuleTable tbody').each(function(k,v) {
             if(k%2 === 0) { // even indexed elements are the relevant ones
@@ -416,6 +416,46 @@
             }
         });
     }
+    function Battledome1() {
+        console.log('Battledome Pets');
+        $('.petContainer').each(function(k,v) {
+            var petname = $(v).attr('data-name');
+            if (petname in PETS) {
+                var stats = PETS[petname];
+                var $v = $(v);
+
+                var health = $v.find('.hpValue').text().match(new RegExp(/(\d+)\/(\d+)/));
+                stats.current_hp    = Number(health[1]);
+                stats.max_hp        = Number(health[2]);
+                stats.strength      = Number($v.find('.atkValue').text());
+                stats.defence       = Number($v.find('.defValue').text());
+                stats.movement      = Number($v.find('.agiValue').text());
+                stats.isUncertain   = false;
+
+                PETS[petname] = stats;
+            }
+        });
+    }
+    function Battledome2() {
+        console.log('Battledome Choose');
+        $('.petInfoBox').each(function(k,v) {
+            var petname = $(v).attr('data-name');
+            if (petname in PETS) {
+                var stats = PETS[petname];
+                var $vals = $(v).find('.statValue');
+
+                var health = $vals.eq(0).text().match(new RegExp(/(\d+)\/(\d+)/));
+                stats.current_hp    = Number(health[1]);
+                stats.max_hp        = Number(health[2]);
+                stats.movement      = Number($vals.eq(1).text());
+                stats.strength      = Number($vals.eq(2).text());
+                stats.defence       = Number($vals.eq(3).text());
+                stats.isUncertain   = false;
+
+                PETS[petname] = stats;
+            }
+        });
+    }
     function Training() {
         console.log('Training');
         $("table[width='500'] tbody tr").each(function(k,v) {
@@ -454,7 +494,7 @@
                     stats.level         = Number(dStats[1]);
                     stats.strength      = Number(dStats[2]);
                     stats.defence       = Number(dStats[3]);
-                    stats.strength      = Number(dStats[4]);
+                    stats.movement      = Number(dStats[4]);
                     stats.current_hp    = Number(dStats[5]);
                     stats.max_hp        = Number(dStats[6]);
                     stats.isUncertain   = false;
@@ -693,7 +733,7 @@
                 var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
                 var stats = PETS[petname];
                 var n = Number(number_map[match[2]]) || Number(match[2]);
-                console.log('matches:',match[1],n,match[3],match[4])
+                console.log('matches:',match[1],n,match[3],match[4]);
                 switch (match[1]) {
                     case "changes":
                         if (match[2]=="color") { // color change
@@ -769,8 +809,10 @@
         }
     }
     function Anywhere() {
-        // "<name> loses <amount> <stat> and says" lose 1 or 2 of given stat
-        // "<name> has suddenly gotten stronger"   gain 1 strength point
+        /**
+         *  PETNAME loses # STAT and says [lose 1-2 of a stat]
+         *  PETNAME has suddenly gotten stronger [gain 1 str]
+         */
         console.log("I'll get to it eventually.");
     }
     function Age() {
@@ -820,14 +862,60 @@
             }
         }
     }
+    function Battle() {
+        console.log('Battle');
+        var end = setInterval(function() {
+            if ($('#playground>.end_game').length) {
+                clearInterval(end);
+                battle_end();
+            }
+        }, 500);
+    }
+    function battle_end(){
+        var petname = $('#p1name').text();
+        if (petname && petname in PETS) {
+            PETS[petname].current_hp = Number($('#p1hp').text());
+            localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS)); // finishes late
+        }
+    }
     function Snowager() {
         console.log('Snowager');
+        if ($('.content b').last().text() == "ROOOOAARRR!!!") {
+            for (var petname in PETS) PETS[petname].current_hp = 0;
+        }
     }
     function Soup() {
         console.log('Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each( function() {
             PETS[$(this).find('b').eq(0).text()].hunger = $(this).find('b').eq(1).text();
         });
+    }
+    function Item() {
+        console.log('Item');
+        /**
+         *  PETNAME drinks the potion and gains 12 hit point(s), but is still not fully recovered.
+         *  PETNAME drinks the Super Strength Healing Potion and is restored to full hit points!
+         *  PETNAME was not hungry, and now she is full up!
+         */
+        var blurb = $('p').text();
+        console.log(blurb);
+        var match = new RegExp(/^([^ ]+) ([^ ]+) .+ (?:is |hit |gains )(.+)(?:!| hit)/g).exec(blurb);
+        if (match) {
+            console.log('matches:',match[1],match[2],match[3])
+            var petname = match[1];
+            if (petname in PETS) {
+                switch (match[2]) {
+                    case 'was': // food
+                        PETS[petname].hunger = match[3];
+                        break;
+                    case 'drinks': // potion
+                        var n = Number(match[3]);
+                        if (n) PETS[petname].current_hp += Number(match[3]);
+                        else if (match[3] == 'points') PETS[petname].current_hp = PETS[petname].max_hp;
+                        break;
+                }
+            }
+        }
     }
 
 
