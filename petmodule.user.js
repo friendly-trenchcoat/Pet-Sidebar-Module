@@ -151,7 +151,7 @@
 
     // BUILDER FUNCTIONS
     function buildModule(){
-        if (Object.keys(PETS).length > 0) { // if no pets, do nothin
+        if (Object.keys(PETS).length > 0 && DATA.active in PETS) { // if no pets, do nothin
             // get pets to display
             var shown = [];
             var petname;
