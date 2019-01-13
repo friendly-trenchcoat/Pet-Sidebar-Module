@@ -169,62 +169,54 @@
                     shown.unshift(DATA.active); // add to front of array
             }
             var len = shown.length;
+            if (len>0) {
+                // clear module
+                var dir = DATA.collapsed ? 'down' : 'up';
+                $MODULE.html( // replace contents with only top bar
+                    '<tr> \
+                        <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
+                            <a href="/quickref.phtml"><b>Pets</b></a> \
+                            <span id="fold_button"><i class="fas fa-caret-'+dir+'"></i></span> \
+                            <span id="settings_button"><i class="fas fa-cog"></i></span> \
+                            <span id="info_button"><i class="fas fa-info-circle"></i></span> \
+                        </td> \
+                    </tr>'
+                );
 
-            // if 0, add back last hidden
-            if (len<1) {
-                var last = DATA.hidden.pop();
-                if (last) {
-                    shown.push(last);
-                    DATA.shown.push(last);
+                // add pets
+                if (DATA.collapsed) {
+                    add_pet(shown[0]);
                 }
-                else return; // how
-            }
+                else {
+                    for (var i=0; i<len; i++) {
+                        petname = shown[i];
+                        add_pet(petname);
 
-            // clear module
-            var dir = DATA.collapsed ? 'down' : 'up';
-            $MODULE.html( // replace contents with only top bar
-                '<tr> \
-                    <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
-                        <a href="/quickref.phtml"><b>Pets</b></a> \
-                        <span id="fold_button"><i class="fas fa-caret-'+dir+'"></i></span> \
-                        <span id="settings_button"><i class="fas fa-cog"></i></span> \
-                        <span id="info_button"><i class="fas fa-info-circle"></i></span> \
-                    </td> \
-                </tr>'
-            );
-
-            // add pets
-            if (DATA.collapsed) {
-                add_pet(shown[0]);
-            }
-            else {
-                for (var i=0; i<len; i++) {
-                    petname = shown[i];
-                    add_pet(petname);
-
-                    // disable buttons
-                    if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');                // move up
-                    if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');                // move down
-                    if (PETS[petname].isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
+                        // disable buttons
+                        if (i==0)       $('#nav_'+petname).find('.move').eq(0).addClass('disabled');                // move up
+                        if (i==(len-1)) $('#nav_'+petname).find('.move').eq(1).addClass('disabled');                // move down
+                        if (PETS[petname].isUC) $('#nav_'+petname).find('a').eq(2).addClass('disabled');            // customize
+                    }
                 }
+                $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                                        // make active
+                if (DATA.stickyActive) $('#nav_'+DATA.active).find('.move').addClass('disabled');                   // move up/down
+                if (DATA.collapsed) $('#nav_'+shown[0]).find('.move').addClass('disabled');                         // move up/down
             }
-            $('#nav_'+DATA.active).find('a').eq(1).addClass('disabled');                                        // make active
-            if (DATA.stickyActive) $('#nav_'+DATA.active).find('.move').addClass('disabled');                   // move up/down
-            if (DATA.collapsed) $('#nav_'+shown[0]).find('.move').addClass('disabled');                         // move up/down
         }
     }
     function add_pet(petname) {
-        var inactive_id = petname == DATA.active ? '' : 'in';
-        var inactive_arrow = petname == DATA.active ? '' : '<i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i>';
+        var inactive = petname == DATA.active ? '' : 'in';
         var image = (DATA.showAnim && FLASH) ? 
             '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
             .replace("%s", petname) : '<img src="'+PETS[petname].image+'" width="150" height="150" border="0">';
 
             
         // for some reason children must be added seperately
-        $MODULE.append('<tr id="'+inactive_id+'active_'+petname+'" ></tr> style="position: relative;"');
-        $('#'+inactive_id+'active_'+petname).append(
-            '<div class="remove_button">'+inactive_arrow+'</div> \
+        $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr> style="position: relative;"');
+        $('#'+inactive+'active_'+petname).append(
+            '<div class="remove_button"> \
+                <i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i> \
+            </div> \
             <div class="leftHover" petname="'+petname+'"></div> \
             <div class="leftSubHover" petname="'+petname+'"></div> \
             <div class="rightHover" petname="'+petname+'"></div> \
@@ -371,7 +363,7 @@
         var h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         statsCSS.type = "text/css";
         statsCSS.innerHTML = // shut up.
-            '/* menus - general */ #sidebar_menus > div {  position: fixed;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } .menu_header {  background-color: '+color+';  padding: 1px;  margin-top: -1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: '+h1color+';  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px;  display: inline-block; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: '+h2color+';  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 75%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  max-height: 100%;  margin: 14px auto; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; } .section p {  margin: 5px 0px 20px 60px;  font-size: 13px;  width: 80%; }   /* menus - info */ #info_key, #info_gather {  overflow: auto; } #info_nav {  display: inline; } #info_nav button {  background-color: '+color+';  border: none;  padding: 0px 25px;  margin: 0px -5px 0px -1.5px;  cursor: pointer;  color: '+h2color+';  font-size: 17px; } #info_nav button:focus {  outline: none;  font-weight: bold; } #info_menu .section {  display: none; } #info_menu span {  margin-left: 50px;  font-weight: bold;  font-size: 18px;  letter-spacing: -0.5px;  color: '+color+'; } #info_menu table {  border-collapse: collapse;  width: 80%;  margin-bottom: 30px; } #info_menu tr:nth-child(odd) {  background-color: #f2f2f2; } #info_menu tr:nth-child(even) {  background-color: #fff; } #info_menu .section:not(#info_about) td:first-child {  text-align: center;  width: 150px;  font-size: 14px;  font-weight: bold; } #info_menu td:first-child {  padding: 8px; } #info_menu td:first-child i {  font-size: 18px; } .box {  font-size: 18px;  font-weight: normal; } #info_menu h3 {  margin: -3px 0px 0px 66px;  font-weight: lighter;  font-size: 8px; } #info_about .fas {  margin-top: 6px; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150px;  height: 115px;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd;  cursor: pointer; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_menu button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #clear_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 95px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; white-space: nowrap; } .inner img {  border: 2px #ccc dashed; margin: 0px 25px; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
+            '/* menus - general */ #sidebar_menus > div {  position: fixed;  display: none;  height: 400px;  width: 700px;  margin: 52px;  background-color: '+bgcolor+';  border: 4px solid '+color+';  border-radius: 20px;  z-index: 100; } .menu_header {  background-color: '+color+';  padding: 1px;  margin-top: -1px;  border-radius: 10px 10px 0px 0px; } .menu_header h1 {  color: '+h1color+';  font-family: Verdana, Arial, Helvetica, sans-serif;  font-size: 35px;  margin: 1px 5px;  letter-spacing: -1px;  display: inline-block; } .menu_close {  float: right;  cursor: pointer;  font-size: 30px;  color: '+h2color+';  margin: 5.5px 14px; } .menu_close:hover {  font-size: 31px;  margin: 5.25px 13.5px; } .menu_inner {  width: 90%;  height: 75%;  margin: 20px auto; } .section {  width: 100%;  min-height: 20%;  max-height: 100%;  margin: 14px auto; } .section:nth-child(2) {  border: 5px dotted #0003;  margin-top: 20px; } .section > span {  display: inline-block;  text-align: left;  padding: 5px 15px 0px; } .section > table {  margin: auto;  width: 100%;  text-align: left;  padding: 15px 10px; } .section td span {  padding: 5px;  display: block; } .section p {  margin: 5px 0px 20px 60px;  font-size: 13px;  width: 80%; }   /* menus - info */ #info_key, #info_gather {  overflow: auto; } #info_nav {  display: inline; } #info_nav button {  background-color: '+color+';  border: none;  padding: 0px 25px;  margin: 0px -5px 0px -1.5px;  cursor: pointer;  color: '+h2color+';  font-size: 17px; } #info_nav button:focus {  outline: none;  font-weight: bold; } #info_menu .section {  display: none; } #info_menu span {  margin-left: 50px;  font-weight: bold;  font-size: 18px;  letter-spacing: -0.5px;  color: '+color+'; } #info_menu table {  border-collapse: collapse;  width: 80%;  margin-bottom: 30px; } #info_menu tr:nth-child(odd) {  background-color: #f2f2f2; } #info_menu tr:nth-child(even) {  background-color: #fff; } #info_menu .section:not(#info_about) td:first-child {  text-align: center;  width: 150px;  font-size: 14px;  font-weight: bold; } #info_menu td:first-child {  padding: 8px; } #info_menu td:first-child i {  font-size: 18px; } .box {  font-size: 18px;  font-weight: normal; } #info_menu h3 {  margin: -3px 0px 0px 66px;  font-weight: lighter;  font-size: 8px; } #info_about .fas {  margin-top: 6px; }   /* menus - settings */ /* color */ #color_settings {  table-layout: fixed;  border-spacing: 45px 0px;  padding: 0px; } #color_settings td:first-child>div:first-child {  font-size: 24;  margin-bottom: 6.75px; } #color_settings div, #color_settings input {  margin-bottom: 2px;  letter-spacing: -1px;  font-weight: 600;  font-size: 14; } #color_settings div:not(#increment) {  display: inline-block !important;  color: '+color+'; } #color_settings input {  width: 100%;  text-align: center;  font-size: 12;  letter-spacing: -1.5px;  padding: 2px 0px;  color: '+subcolor+'; } .picker_button {  background: none;  border: none;  float: right; } .picker_popup {  background: '+bgcolor+';  border-color: '+color+'; } #increment {  position: absolute;  margin: -21px 0px 0px 153px; } #increment i {  display: block;  margin: -6px auto;  font-size: 16px;  cursor: pointer;  color: '+color+'; } /* toggles */ #toggle_settings table td {  padding: 5px; } #toggle_settings table td:nth-child(odd) {  text-align: right; } #toggle_settings div {  font-size: 14px; } #toggle_settings select {  width: 100px; } #hp_mode option {  font-weight: bold; } /* remove */ .remove_button {  background: #0006;  width: 150px;  height: 115px;  position: absolute;  text-align: center;  padding-top: 35px;  z-index: 100;  display: none; } .remove_button i {  color: #fffd;  cursor: pointer; } .remove_button i:hover {  color: #fff;  font-size: 81;  margin-top: -0.5px; } #removed_pets {  width: 200px;  font-size: 16px;  color: '+subcolor+';  border-color: #0003;  margin-left: 50px; } /* buttons */ #settings_menu button {  background-color: '+subcolor+';  border: none;  padding: 10px 16px;  margin: 4px 2px;  cursor: pointer;  border-radius: 100px;  color: #fff;  font-weight: 300;  font-size: 16px; } #settings_footer {  padding: 0px; } #settings_footer td div {  display: inline;  font-size: 22px;  padding-left: 10px;  color: '+subcolor+';  cursor: pointer; } #clear_button {  float: right; }   /* pets */ .placeholder {  width: 150px;  height: 150px;  position: absolute;  z-index: 98;  background-color: #fff; } .petGlam {  position: relative;  z-index: 99; }  /* nav bar */ #petsHeader span {  float: right;  font-size: 12px; } #petsHeader span i {  cursor: pointer;  padding: 0px 4px; } .petnav:hover, .leftHover:hover ~ .petnav, .leftSubHover:hover ~ .petnav {  margin-left: -30px; } .petnav a:hover {  cursor: pointer;  margin-left: -5px; } .petnav a:hover .sub {  margin-left: -25px; } .leftHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 3px; } .leftSubHover {  position: absolute;  z-index: 80;  height: 150px;  width: 25px;  margin-left: -22px; } .petnav {  position: absolute;  width: 42px;  z-index: 97;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .5s;  transition-property: margin-left;  transition-duration: .5s; } .petnav a {  position: relative;  display: block;  height: 25px;  font-size: 18px;  color: #fff;  background-color: '+color+';  border-radius: 12px 0px 0px 12px;  z-index: 98; } .disabled {  color: #fffa !important; } .disabled:hover {  margin-left: 0px !important; } .petnav span {  float: left;  width: 32px;  background-color: inherit;  border-radius: 12px 0px 0px 12px; } .petnav i {  padding: 3px; } .sub {  position: absolute !important;  width: 30px;  z-index: -1 !important;  -webkit-transition-property: margin-left;  -webkit-transition-duration: .2s;  transition-property: margin-left;  transition-duration: .2s; } .sub i {  padding: 5.5px; }   /* stats slider */ .rightHover {  position: absolute;  z-index: 100;  height: 150px;  width: 50px;  margin-left: 103px; } .hover {  position: absolute;  border-radius: 25px;  background-color: '+bgcolor+';  border: 3px solid '+color+';  padding: 20px;   height: 104px;  width: 5px;  margin-left: 98px;  overflow: hidden;  z-index: 98; } .inner {  height: 100%;  width: 90%;  float: right;  display: inline; } .inner table {  font: 7pt Verdana;  vertical-align: top; white-space: nowrap; } .inner img {  border: 2px #ccc dashed; margin: 0px 25px; }  .inner i {  font: 6.5pt Verdana; }  /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before {  border-color: <on slim bar>;  background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after {  background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before {  background: <off slim bar> !important; } .pretty.p-switch .state label:after {  background-color: <off slim knob> !important; }  */';
         document.body.appendChild(statsCSS);
     }
 
@@ -1053,13 +1045,15 @@
 
         // PETS DISPLAYED MANAGEMENT
         $MODULE.on('click', '.remove_button i', function() {
-            var petname = $(this).attr('petname');
-            DATA.hidden.push(petname);
-            DATA.shown.splice( DATA.shown.indexOf(petname), 1);
-            $('#removed_pets').append('<option value="'+petname+'">'+petname+'</option>');
-            buildModule();
-            $('.remove_button').show();
-            localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
+            if ($('.leftHover').length > 1) {
+                var petname = $(this).attr('petname');
+                DATA.hidden.push(petname);
+                DATA.shown.splice( DATA.shown.indexOf(petname), 1);
+                $('#removed_pets').append('<option value="'+petname+'">'+petname+'</option>');
+                buildModule();
+                $('.remove_button').show();
+                localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
+            }
         });
         $('#addback_button i').click(function() {
             var petname = $('#removed_pets').val();
@@ -1160,11 +1154,11 @@
             mouseenter: function() {
                 var $el = $('#stats_'+$(this).attr('petname')).stop(true);
                 var auto = $el.css('width', 'auto').width();
-                var ml = (DATA.showPetpet && ($(this).parent().find('.petpet').length)) ? '95px' : '115px';
+                var ml = (DATA.showPetpet && ($(this).parent().find('.petpet').length)) ? '98px' : '115px';
                 $el.width(5).animate({width: auto, paddingRight: '50px', marginLeft: ml}, 800);
             },
             mouseleave: function() {
-                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', paddingRight: '20px', marginLeft: '95px'}, 500);
+                $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', paddingRight: '20px', marginLeft: '98px'}, 500);
             }
         }, '.rightHover');
         $MODULE.on('click', '.move', function() { // arrow buttons
