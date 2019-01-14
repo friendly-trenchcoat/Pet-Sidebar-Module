@@ -10,6 +10,11 @@
 /*jshint multistr: true */
 
 /** TODOs:
+ * 
+ *  - test on a few browsers
+ *      x chrome
+ *      x firefox
+ *      - ie
  *
  *  Things I will not gather data from:
  *      flash elements (battledome, wheels, etc.)
@@ -84,6 +89,7 @@
 
     // MAIN
     function main() {
+        if (!window.jQuery) return load_jQuery();
         console.log(DATA);
         console.log(PETS);
         setStatics();
@@ -1092,6 +1098,8 @@
     }
 
     function settings_functionality() {
+        if (!$.isFunction($.fn.spectrum)) return load_spectrum();
+
         // COLOR PICKERS
         $("#colorpicker").spectrum({
             color: getColor(),
@@ -1280,7 +1288,7 @@
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(main, 500);
+        setTimeout(main, 50);
     }
     function load_spectrum() {
         //console.log("sidebar: loading spectrum");
@@ -1288,7 +1296,7 @@
         var jq = document.createElement('script');
         jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
-        setTimeout(settings_functionality, 100);
+        setTimeout(settings_functionality, 50);
     }
 
 })();
