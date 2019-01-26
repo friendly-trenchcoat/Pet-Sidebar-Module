@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.2.7
+// @version        1.2.8
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -9,12 +9,8 @@
 // ==/UserScript==
 /*jshint multistr: true */
 
-/** TODOs:
+/**
  * 
- *  - verify collectors (particularly training)
- *  - verify update works
- * 
- *
  *  Things I will not gather data from:
  *      wheels
  *      anything that will reflect change on the original module
@@ -37,7 +33,16 @@
     var SPECTRUM = false;
     var USER, PETS, DATA, $MODULE, FLASH, THEME, BG;
     var STR, U_STR, DEF, U_DEF, MOV; // static
-    (function() {
+    
+    try { init(); }
+    catch(err) {
+        console.log(err);
+        if (err.message.indexOf('Cannot read property') >= 0) {
+            clear_pets(); // this usually solves the issue
+            init();
+        }
+    }
+    function init() {
         var username = document.querySelector('.user a:first-child') ? document.querySelector('.user a:first-child').innerHTML : '';
         if (username == "Log in") localStorage.setItem("NEOPET_SIDEBAR_USER", ''); // record logout
         else {
@@ -45,6 +50,8 @@
             USER = username || last_user; // not all pages have the header
             if (USER) {
                 PETS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_PETDATA")) || {};
+                var numbers = ['current_hp','max_hp','level','strength','defence','movement'];
+                for (var petname in PETS) for (var i in numbers) PETS[petname][numbers[i]] = Number(PETS[petname][numbers[i]]);
                 DATA = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_USERDATA_"+USER)) || {
                     showNav:true,
                     showStats:true,
@@ -74,8 +81,7 @@
                 else load_jQuery();
             }
         }
-
-    })();
+    }
 
 
     // MAIN
@@ -90,10 +96,10 @@
         if (document.URL.indexOf("quickref") != -1) QuickRef();
         else if (document.URL.indexOf("dome/neopets") != -1) Battledome1();
         else if (document.URL.indexOf("dome/fight") != -1) Battledome2();
-        else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
+        else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("/training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
 
         // permanent changes
-        //else if (document.URL.indexOf("process_training") != -1) EndTraining();
+        else if (document.URL.indexOf("_training") != -1) EndTraining();        // BD stats
         else if (document.URL.indexOf("quests") != -1) FaerieQuest();           // BD stats
         else if (document.URL.indexOf("coincidence") != -1) Coincidence();      // BD stats, int
         else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();        // BD stats, int
@@ -111,6 +117,7 @@
 
         // default
         else if ($(".sidebar")[0]) Sidebar();
+        Random();
 
         // MISC.
         if (document.URL.indexOf("/neolodge") != -1) fill_neolodge();
@@ -516,30 +523,27 @@
             }
         });
     }
-    function EndTraining() { // incomplete
+    function EndTraining() {
         console.log('EndTraining');
-        var blurb = $('p').first().text();
-        blurb = blurb.match(new RegExp(' (.+) now has increased (.+)!!!'));
-        if (blurb) {
-            var petname = blurb[1];
-            if(petname in PETS) { // ignore pets not stored
-                var stats = PETS[petname];
-
-                // get stats
-                //var dStats = $(v).next().children().first().text();
-                //dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+)'));
-
-                if (dStats) {
-                    stats.level         = Number(dStats[1]);
-                    stats.strength      = Number(dStats[2]);
-                    stats.defence       = Number(dStats[3]);
-                    stats.strength      = Number(dStats[4]);
-                    stats.current_hp    = Number(dStats[5]);
-                    stats.max_hp        = Number(dStats[6]);
+        var blurb = $('p').text();
+        var match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
+        if (match) {
+            var petname = match[1];
+            if(petname in PETS) {
+                var n = Number(match[3]) || 1;
+                console.log('matches:',petname,match[2],n);
+                switch (match[2]) {
+                    case 'Endurance':
+                        PETS[petname].current_hp += n;
+                        PETS[petname].max_hp += n;
+                        break;
+                    case 'Agility':
+                        PETS[petname].movement += n;
+                        break;
+                    default: // defence, strength, level
+                        PETS[petname][match[2].toLowerCase()] += n;
                 }
-                //console.log(stats);
-
-                PETS[petname] = stats;
+                console.log(PETS);
             }
         }
         else console.log('regex is incorrect');
@@ -553,9 +557,7 @@
 
             if(petname in PETS) { // ignore pets not stored
                 var stats = PETS[petname];
-                console.log('before:\nlv',stats.level,'\nHP: ',stats.max_hp,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
                 PETS[petname] = questSwitch(faerie,stats);
-                console.log('\nafter:\nlv',stats.level,'\nHP: ',stats.max_hp,'\nstr:',stats.strength,'\ndef:',stats.defence,'\nmov:',stats.movement);
             }
         }
     }
@@ -733,6 +735,7 @@
     function SecretLab() {
         /**
          *  ... and she changes into a Green Nimmo!!
+         *  ... and she changes colour to White!!
          */
         console.log('Lab Ray');
         var petname = $('p').eq(0).find('b').text();
@@ -746,38 +749,33 @@
                 var n = Number(number_map[match[2]]) || Number(match[2]);
                 console.log('matches:',match[1],n,match[3],match[4]);
                 switch (match[1]) {
-                    case "changes":
-                        if (match[2]=="color") { // color change
-                            // [4] is color
+                    case "changes": // doesn't update picture
+                        if (match[2]=="colour") {   // british color change
                             stats.color = match[4];
-                        } else { // species change
-                            // match [4] to /(.+) (.+)/g where [1] is color and [2] is species
-                            //var morph = new RegExp(/(.+) (.+)/g).exec(match[4]);
+                        } else {                    // species change
                             stats.color = match[3];
                             stats.species = match[4];
                         }
                         break;
-                    case "gains": // stat change
-                        // [2] is quantity, [3] is stat
+                    case "gains":                   // stat change
                         if (match[3]=='maximum') {
                             stats.current_hp += n;
                             stats.max_hp += n;
                         }
                         else stats[match[3]] += n;
                         break;
-                    case "loses": // stat change
-                        // [2] is quantity, [3] is stat
+                    case "loses":                   // stat change
                         if (match[3]=='maximum') {
                             stats.current_hp -= n;
                             stats.max_hp -= n;
                         }
                         else stats[match[3]] -= n;
                         break;
-                    case "goes": // level 1
+                    case "goes":                    // level 1
                         stats.level = 1;
                         break;
                     default:
-                        console.log('No change'); // or gender change
+                        console.log('No change');   // or gender change
                 }
                 PETS[petname] = stats;
             }
@@ -786,16 +784,34 @@
     }
     function PetpetLab() {
         console.log("Petpet Lab");
-        /**
-         *  name change:    b/Bobo shall now be known as b/OMGROFL. How nice.       $('div[align="center"]').find('b').eq(1).text();
-         *  color change:   ?
-         *  species change: ?
-         *  soot:           ?
-         *  disappear:      ?
-         */
-        var newname = $('div[align="center"]').find('b').eq(1).text(); // can also be new level, which should be ignored
-        if (newname) console.log('new name:',newname);
-        else console.log('no change?');
+        var petname = $('b:contains(The Petpet Laboratory) ~ b').eq(1).text();
+        if (petname in PETS) {
+            var newname = $('div[align="center"]').find('b').eq(1).text();
+            if (newname && !Number(newname)) { // can also be new level, which should be ignored
+                console.log('new name:',newname);
+                PETS[petname].petpet_name = newname;
+                return;
+            }
+            var $div = $('b:contains(The Petpet Laboratory) ~ div').eq(1);
+            var match = new RegExp(/(transformed|explosion|disappear)/g).exec($div.text());
+            if (match) {
+                switch (match[1]) {
+                    case 'transformed':
+                        PETS[petname].petpet_image = $div.find('img').attr('src');
+                        PETS[petname].petpet_species = 'Science Experiment'; // idk lol, the image url isnt reliable
+                        break;
+                    case 'explosion':
+                        PETS[petname].petpet_image = $div.find('img').attr('src');
+                        PETS[petname].petpet_species = 'Pile of Soot';
+                        break;
+                    case 'disappear':
+                        PETS[petname].petpet_name = null;
+                        PETS[petname].petpet_image = null;
+                        PETS[petname].petpet_species = null;
+                        break;
+                }
+            }
+        }
     }
     function Sidebar() {
         // get name and retreive data (if any)
@@ -819,26 +835,91 @@
             PETS[petname] = stats;
         }
     }
-    function Anywhere() {
+    function Random() {
         /**
-         *  PETNAME loses # STAT and says [lose 1-2 of a stat]
-         *  PETNAME has suddenly gotten stronger [gain 1 str]
+         *  == HP ==
+         *  You realise all your Neopets are now at full health!    [all full health]
+         *  PETNAME gets hit by a snowball .+ takes X damage!       [lose 3 hp]
+         * 
+         *  == STATS ==
+         *  PETNAME has suddenly gotten stronger                    [gain 1 str]
+         *  PETNAME has suddenly gained a level                     [gain 1 level]
+         *  PETNAME is knocked senseless and loses a level!         [lose 1 level]
+         *  PETNAME sneezes so hard                                 [lose 1 hp]
+         *  PETNAME loses a level and says                          [lose 1 level]
+         *  PETNAME loses X STAT and says                           [lose x HP, strength, defence, speed]
+         * 
+         *  == MOOD ==
+         *  PETNAME doesn't look very happy anymore.                [become depressed]
          */
-        console.log("I'll get to it eventually.");
+        var blurb = $('.randomEvent .copy').text().trim();
+        if (blurb) {
+            var match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
+            if (match) {
+                var petname = match[2];
+                if (petname && petname in PETS) {
+                    console.log('matches:',petname,match[3],match[4],match[5]);
+                    switch (match[3]) {
+                        case 'gets':
+                            PETS[petname].current_hp -= 3;
+                            break;
+                        case 'has':
+                            if (match[5] == 'gotten')       PETS[petname].strength += 1;
+                            else if (match[5] == 'gained')  PETS[petname].level += 1;
+                            break;
+                        case 'is':
+                            if (match[5] == 'senseless')    PETS[petname].level -= 1;
+                            break;
+                        case 'loses':
+                            var n = Number(match[4]);
+                            if (!n)                         PETS[petname].level -= 1;
+                            else switch (match[5]) {
+                                case 'HP':
+                                    PETS[petname].current_hp -= 1;
+                                    PETS[petname].max_hp -= 1;
+                                    break;
+                                case 'speed':
+                                    PETS[petname].movement -= 1;
+                                    break;
+                                case 'strength':
+                                    PETS[petname].strength -= 1;
+                                    break;
+                                case 'defence':
+                                    PETS[petname].defence -= 1;
+                            }
+                            break;
+                        case "doesn't":
+                            PETS[petname].mood = 'depressed';
+                            break;
+                        default:
+                            console.log('No change.');
+                    }
+                }
+                else if (match[1]) {
+                    console.log('Heal all pets.')
+                    for (petname in PETS) if (PETS[petname].owner == USER)
+                        PETS[petname].current_hp = PETS[petname].max_hp;
+                }
+
+            }
+        }
     }
-    function Age() {
+    function Decay() {
         console.log("I'll get to it eventually.");
+        /**
+         *  bloated ==> famished    144 ?
+         *  famished => starving    22  ?
+         *  starving => dying       2
+         */
     }
     function HealingSprings() {
+        console.log('Healing Springs');
         /**
          * All of your Neopets gain seven hit points.  I hope that helps! :)
          * All your Neopets have their health completely restored
          * petname regains their hit points and is not hungry any more
          * petname is fully healed
-         *
-         * 1 3 5
          */
-        console.log('Healing Springs');
         var blurb = $('center > p').eq(2).text();
         var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (match) {
@@ -983,6 +1064,13 @@
                 }
         }
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
+    }
+    function clear_pets() {
+        localStorage.removeItem("NEOPET_SIDEBAR_PETDATA");
+        PETS = {};
+        DATA.shown = [];
+        DATA.hidden = [];
+        DATA.active = '';
     }
 
     // STAT FUNCTIONS
@@ -1208,6 +1296,7 @@
             buildModule();
             $('#removed_pets option[value="'+petname+'"]').remove();
             $('.remove_button').show();
+            localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS));
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
 
@@ -1231,11 +1320,7 @@
 
         // RESETS
         $('#clear_button').click(function() {
-            localStorage.removeItem("NEOPET_SIDEBAR_PETDATA");
-            PETS = {};
-            DATA.shown = [];
-            DATA.hidden = [];
-            DATA.active = '';
+            clear_pets();
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
 
@@ -1311,14 +1396,14 @@
 
     // LOAD RESOURCES
     function load_jQuery() {
-        console.log("sidebar: loading jQuery");
+        console.log("loading jQuery");
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(main, 50);
     }
     function load_spectrum() {
-        //console.log("sidebar: loading spectrum");
+        //console.log("loading spectrum");
         SPECTRUM = true;
         var jq = document.createElement('script');
         jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
