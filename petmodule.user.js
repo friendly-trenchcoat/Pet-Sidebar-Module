@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.2.8
+// @version        1.3.0
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -17,7 +17,6 @@
  *      anything that redirects you to quick ref
  *
  *  Things I may one day gather from:
- *      random events, I guess next time I see one
  *      apple bobbing, for "Blurred Vision" if I ever track wellness
  *      books, tdmbgpop, if I ever track int
  *      items with obscure effects, if I ever care that much
@@ -87,8 +86,8 @@
     // MAIN
     function main() {
         if (!window.jQuery) return load_jQuery();
-        //console.log(DATA);
-        //console.log(PETS);
+        console.log(DATA);
+        console.log(PETS);
 
         // UPDATE PETS
         setStatics();
@@ -138,8 +137,6 @@
         // STORE DATA
         localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS));
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
-        //console.log(Object.keys(PETS));
-        //console.log(DATA);
     }
     function setStatics() {
         STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
@@ -433,7 +430,7 @@
         if (!$notice.length) return 0;
         var dif = new RegExp(/in (\d+) days, (\d+) hours and (\d+) minutes/g).exec($notice.text());
         var now = (new Date).getTime();
-        return now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000;
+        return dif ? now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000 : 0;
     }
     function Battledome1() {
         console.log('Battledome Pets');
@@ -1407,7 +1404,7 @@
         setTimeout(main, 50);
     }
     function load_spectrum() {
-        //console.log("loading spectrum");
+        console.log("loading spectrum");
         SPECTRUM = true;
         var jq = document.createElement('script');
         jq.src = "http://bgrins.github.com/spectrum/spectrum.js";
