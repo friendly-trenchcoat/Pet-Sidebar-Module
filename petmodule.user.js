@@ -22,6 +22,10 @@
  *      items with obscure effects, if I ever care that much
  *      decaying age/hunger/mood, if I ever care that much
  *      turmaculus, for pet str and petpet... existance, if I ever care that much
+ * 
+ *  Other Ideas:
+ *      - maaaayybe make the menus dragable
+ *      - have an immediate response to changeactive, in case they do the new tab thing
  *
  */
 
@@ -85,7 +89,11 @@
 
     // MAIN
     function main() {
-        if (!window.jQuery) return load_jQuery();
+        if (!window.jQuery) {
+            console.log('...')
+            setTimeout(main, 50);
+            return;
+        }
         console.log(DATA);
         console.log(PETS);
 
@@ -1214,7 +1222,11 @@
     }
 
     function settings_functionality() {
-        if (!$.isFunction($.fn.spectrum)) return load_spectrum();
+        if (!$.isFunction($.fn.spectrum)) {
+            console.log('...')
+            setTimeout(settings_functionality, 50);
+            return;
+        }
 
         // COLOR PICKERS
         $("#colorpicker").spectrum({
