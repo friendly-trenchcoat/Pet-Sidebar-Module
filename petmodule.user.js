@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.3.0
+// @version        1.3.1
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -1107,7 +1107,7 @@
                     n = (current-n)>0 && (current-n)<4 ? current : n;
                     PETS[petname].isUncertain = true;
                 }
-            else n = 0;
+            else n = -1;
         }
         else n = STR.indexOf(word);
         PETS[petname].strength = Number(n);
@@ -1124,7 +1124,7 @@
                     n = (current-n)>0 && (current-n)<4 ? current : n;
                     PETS[petname].isUncertain = true;
                 }
-            else n = 0;
+            else n = -1;
         }
         else n = DEF.indexOf(word);
         PETS[petname].defence = Number(n);
