@@ -149,7 +149,7 @@
     function setStatics() {
         STR = ['not yet born','pathetic','very weak','weak','weak','frail','average','quite strong','quite strong','quite strong','strong','strong','very strong','very strong','great','immense','immense','titanic','titanic','titanic','herculean'];
         U_STR = ['weak','quite strong','strong','very strong','immense','titanic'];
-        DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bulletproof','semi deadly godly','demi godly','godly','beyond godly'];
+        DEF = ['not yet born','defenceless','naked','vulnerable','very poor','poor','below average','below average','average','armoured','tough','heavy','heavy','very heavy','very heavy','steel plate','bulletproof','semi-deadly godly','demi-godly','godly','beyond godly'];
         U_DEF = ['below average','heavy','very heavy'];
         MOV = ['not yet born','barely moves','snail pace','lazy','very slow','slow','quite slow','average','average','fast','speedy','super fast','super speedy','breakneck','cheetah','lightning','mach 1','mach 1','mach 2','mach 3','mach 4'];
     }
@@ -406,27 +406,27 @@
                 }
                 var stats = PETS[petname];
 
-                var lines = $(v).find('.pet_stats td');
-                var health = $(lines).eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
+                var $lines = $(v).find('.pet_stats td');
+                var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
                 //if (health) console.log(health);
                 stats.owner         = USER;
-                stats.species       = $(lines).eq(0).text();
-                stats.color         = $(lines).eq(1).text();
-                stats.age           = $(lines).eq(3).text();
-                stats.level         = Number($(lines).eq(4).text());
+                stats.species       = $lines.eq(0).text();
+                stats.color         = $lines.eq(1).text();
+                stats.age           = $lines.eq(3).text();
+                stats.level         = Number($lines.eq(4).text());
                 stats.current_hp    = Number(health[1]);
                 stats.max_hp        = Number(health[2]);
-                stats.mood          = $(lines).eq(6).text();
-                stats.hunger        = $(lines).eq(7).text();
-                stats.intelligence  = $(lines).eq(11).text().replace('E G','E<br>G');
+                stats.mood          = $lines.eq(6).text();
+                stats.hunger        = $lines.eq(7).text();
+                stats.intelligence  = $lines.eq(11).text().replace('E G','E<br>G');
                 stats.petpet_name   = petpet[0];
                 stats.petpet_species= petpet[1];
-                stats.petpet_image  = $(lines).eq(12).find('img').attr('src');
+                stats.petpet_image  = $lines.eq(12).find('img').attr('src');
                 stats.isUC          = $(v).find('.pet_notices:contains(converted)').length ? true : false;
                 stats.neolodge      = get_checkout(v);
-                setStrength($(lines).eq(8).text(),petname);
-                setDefence( $(lines).eq(9).text(),petname);
-                setMovement($(lines).eq(10).text(),petname);
+                setStrength($lines.eq(8).text(),petname);
+                setDefence( $lines.eq(9).text(),petname);
+                setMovement($lines.eq(10).text(),petname);
                 //console.log(stats);
 
                 PETS[petname] = stats;
@@ -1099,12 +1099,15 @@
     function setStrength(word, petname) {
         var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
         if (STR.indexOf(word) < 0) {
-            n = word.match(/\d+/g)[0];
-            if (U_STR.indexOf(word) < 0) {
-                var current = PETS[petname].strength;
-                n = (current-n)>0 && (current-n)<4 ? current : n;
-                PETS[petname].isUncertain = true;
-            }
+            n = word.match(/\d+/g)
+            if (n)
+                if (n && U_STR.indexOf(word) < 0) {
+                    n = Number(n[0]);
+                    var current = PETS[petname].strength;
+                    n = (current-n)>0 && (current-n)<4 ? current : n;
+                    PETS[petname].isUncertain = true;
+                }
+            else n = 0;
         }
         else n = STR.indexOf(word);
         PETS[petname].strength = Number(n);
@@ -1113,25 +1116,30 @@
     function setDefence(word, petname) {
         var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
         if (DEF.indexOf(word) < 0) {
-            n = word.match(/\d+/g)[0];
-            if (U_DEF.indexOf(word) < 0) {
-                var current = PETS[petname].defence;
-                n = (current-n)>0 && (current-n)<4 ? current : n;
-                PETS[petname].isUncertain = true;
-            }
+            n = word.match(/\d+/g)
+            if (n)
+                if (U_STR.indexOf(word) < 0) {
+                    n = Number(n[0]);
+                    var current = PETS[petname].defence;
+                    n = (current-n)>0 && (current-n)<4 ? current : n;
+                    PETS[petname].isUncertain = true;
+                }
+            else n = 0;
         }
         else n = DEF.indexOf(word);
         PETS[petname].defence = Number(n);
         //console.log("defence: ",word,n);
     }
     function setMovement(word, petname) {
-        var n = ((MOV.indexOf(word) < 0) ? word.match(/\d+/g)[0] : MOV.indexOf(word));
+        var n = word.match(/\d+/g);
+        n = ((MOV.indexOf(word) < 0) ? (n ? Number(n[0]) : -1) : MOV.indexOf(word));
+        
         if (word == "average") {
             var current = PETS[petname].movement;
             n = (current-n)>0 && (current-n)<3 ? current : n;
             PETS[petname].isUncertain = true;
         }
-        PETS[petname].movement = Number(n);
+        PETS[petname].movement = n;
         //console.log("movement: ",word,n);
     }
     /*function int_toInt(word) {
