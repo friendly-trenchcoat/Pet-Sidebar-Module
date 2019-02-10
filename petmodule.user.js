@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.3.1
+// @version        1.3.1.2
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -112,7 +112,8 @@
         else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();        // BD stats, int
         else if (document.URL.indexOf("kitchen2") != -1) KitchenQuest();        // BD stats
         else if (document.URL.indexOf("process_lab2") != -1) SecretLab();       // BD stats, color, species, gender
-        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies
+        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies, existance
+        else if (document.URL.indexOf("neopetpet") != -1) Petpet();             // petpet name
 
         // temp changes
         else if (document.URL.indexOf("springs") != -1) HealingSprings();
@@ -819,6 +820,19 @@
             }
         }
     }
+    function Petpet() {
+        console.log("Petpet Play");
+        var petname = $('.content > b').text().split("'")[0];
+        if (petname && petname in PETS) {
+            var blurb = $('.content > center > b').text();
+            var match = new RegExp(/I love ([^,]+), my (.+)/g).exec(blurb);
+            if (match) {
+                PETS[petname].petpet_name = match[1];
+                PETS[petname].petpet_species = match[2];
+                PETS[petname].petpet_image = $('.content > center > img').eq(1).attr('src');
+            }
+        }
+    }
     function Sidebar() {
         // get name and retreive data (if any)
         var petname = $("a[href='/quickref.phtml']").first().text();
@@ -1266,10 +1280,6 @@
             move: function(tinycolor) { changeBgColor(tinycolor) }
         });
         $(".picker").each(function() { $(this).next().next().val($(this).spectrum('get').toRgbString()); }); // initial fill text fields
-        $('.petnav a:not(.disabled)').hover( // here rather than in css because hover can't be changed in 'move'
-            function() { $(this).css("background-color",getSubcolor()); },
-            function() { $(this).css("background-color",getColor()); }
-        );
         $('#colorpicker_text').blur(function() {
             var $picker = $('#colorpicker');
             $picker.spectrum('set', $(this).val()); // doesn't fire event due to infinite loops
@@ -1390,6 +1400,13 @@
             $('#info_menu .section').hide();
             $('#info_'+$(this).attr('name')).show();
         });
+
+
+        // PET NAV
+        $MODULE.on({ // here rather than in css because hover can't be changed in 'move'
+            mouseenter: function() { $(this).css("background-color",getSubcolor()); },
+            mouseleave: function() { $(this).css("background-color",getColor()); }
+        }, '.petnav a:not(.disabled)');
 
 
         // HOVER SLIDERS
