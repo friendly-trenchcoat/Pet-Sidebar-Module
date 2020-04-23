@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.3.1.2
+// @version        1.3.1.3
 // @description    Display any number of pets. Moves stats to a div which slides out on hover and adds a navbar for each pet.
 // @author         friendly-trenchcoat
 // @include        http://www.neopets.com/*
@@ -226,7 +226,7 @@
             '<embed type=\"application/x-shockwave-flash\" src=\"http://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
             .replace("%s", petname) : PETS[petname].dti ?
             '<img src="https://openneo-uploads.s3.amazonaws.com/outfits/'+PETS[petname].dti+'/preview.png" width="150" height="150" border="0">' :
-            '<img src="http://pets.neopets.com/cpn/'+petname+'/1/4.png" width="150" height="150" border="0">';
+            '<img src="http://pets.neopets.com/cp/'+PETS[petname].id+'/1/4.png" width="150" height="150" border="0">';
 
             
         // for some reason children must be added seperately
@@ -335,7 +335,7 @@
         var buttonsHTML =
             '<div id="nav_'+petname+'" class="petnav"> \
                 <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
-                <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'"><span><i class="fas fa-splotch"></i></span></a> \
+                <a href="http://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
                 <a href="http://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-mask"></i></span></a> \
                 <a class="lookup" href="http://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
                 <a class="petpage" href="http://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
@@ -411,6 +411,7 @@
                 var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
                 //if (health) console.log(health);
                 stats.owner         = USER;
+                stats.id            = $(v).find('.pet_image').attr('style').split('/')[4] || 0; 
                 stats.species       = $lines.eq(0).text();
                 stats.color         = $lines.eq(1).text();
                 stats.age           = $lines.eq(3).text();
