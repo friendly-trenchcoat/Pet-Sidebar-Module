@@ -40,7 +40,7 @@
 
     try { init(); }
     catch(err) {
-        console.log(err);
+        console.debug(err);
         if (err.message.indexOf('Cannot read property') >= 0) {
             clear_pets(); // this usually solves the issue
             init();
@@ -75,7 +75,7 @@
                     hidden:[],
                     active:''
                 };
-                console.log('USER',last_user,'>',USER);
+                console.debug('USER',last_user,'>',USER);
                 if (USER != last_user) {
                     clean_pets();
                     localStorage.setItem("NEOPET_SIDEBAR_USER", USER);
@@ -91,12 +91,12 @@
     // MAIN
     function main() {
         if (!window.jQuery) {
-            console.log('...')
+            console.debug('...')
             setTimeout(main, 50);
             return;
         }
-        console.log(DATA);
-        console.log(PETS);
+        console.debug(DATA);
+        console.debug(PETS);
 
         // UPDATE PETS
         setStatics();
@@ -390,13 +390,13 @@
 
     // GATHERER FUNCTIONS
     function QuickRef() {
-        console.log('QuickRef');
+        console.debug('QuickRef');
         // All data except exact stat numbers
         $('.contentModuleTable tbody').each(function(k,v) {
             if(k%2 === 0) { // even indexed elements are the relevant ones
                 var names = $(v).find('th').first().text();
                 var namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its .+|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
-                //if (namesMatch) console.log(namesMatch);
+                //if (namesMatch) console.debug(namesMatch);
                 var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
                 var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
                 if( !(petname in PETS) ) { // if pet isn't recorded, add it to shown and pets
@@ -410,7 +410,7 @@
 
                 var $lines = $(v).find('.pet_stats td');
                 var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
-                //if (health) console.log(health);
+                //if (health) console.debug(health);
                 stats.owner         = USER;
                 stats.id            = $(v).find('.pet_image').attr('style').split('/')[4] || 0;
                 stats.species       = $lines.eq(0).text();
@@ -430,7 +430,7 @@
                 setStrength($lines.eq(8).text(),petname);
                 setDefence( $lines.eq(9).text(),petname);
                 setMovement($lines.eq(10).text(),petname);
-                //console.log(stats);
+                //console.debug(stats);
 
                 PETS[petname] = stats;
             }
@@ -445,7 +445,7 @@
         return dif ? now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000 + 86400000 : 0; // add a day for buffer
     }
     function Battledome1() {
-        console.log('Battledome Pets');
+        console.debug('Battledome Pets');
         $('.petContainer').each(function(k,v) {
             var petname = $(v).attr('data-name');
             if (petname in PETS) {
@@ -465,7 +465,7 @@
         });
     }
     function Battledome2() {
-        console.log('Battledome Choose');
+        console.debug('Battledome Choose');
         $('.petInfoBox').each(function(k,v) {
             var petname = $(v).attr('data-name');
             if (petname in PETS) {
@@ -485,7 +485,7 @@
         });
     }
     function Training() {
-        console.log('Training');
+        console.debug('Training');
         $("table[width='500'] tbody tr").each(function(k,v) {
             if(k%2 === 0) {
                 // get name and retreive data (if any)
@@ -527,21 +527,21 @@
                     stats.max_hp        = Number(dStats[6]);
                     stats.isUncertain   = false;
                 }
-                //console.log(stats);
+                //console.debug(stats);
 
                 PETS[petname] = stats;
             }
         });
     }
     function EndTraining() {
-        console.log('EndTraining');
+        console.debug('EndTraining');
         var blurb = $('p').text();
         var match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
         if (match) {
             var petname = match[1];
             if(petname in PETS) {
                 var n = Number(match[3]) || 1;
-                console.log('matches:',petname,match[2],n);
+                console.debug('matches:',petname,match[2],n);
                 switch (match[2]) {
                     case 'Endurance':
                         PETS[petname].current_hp += n;
@@ -553,17 +553,17 @@
                     default: // defence, strength, level
                         PETS[petname][match[2].toLowerCase()] += n;
                 }
-                console.log(PETS);
+                console.debug(PETS);
             }
         }
-        else console.log('regex is incorrect');
+        else console.debug('regex is incorrect');
     }
     function FaerieQuest() {
-        console.log('FaerieQuest');
+        console.debug('FaerieQuest');
         var petname = $('.pet-name').text().slice(0, -2);
         if (petname.length) { // make sure on right page
             var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
-            console.log(petname, faerie);
+            console.debug(petname, faerie);
 
             if(petname in PETS) { // ignore pets not stored
                 var stats = PETS[petname];
@@ -622,7 +622,7 @@
         return stats;
     }
     function Coincidence() {
-        console.log('Coincidence');
+        console.debug('Coincidence');
         var blurb = $('.randomEvent > .copy').text();
         if (blurb.length) {
             /**
@@ -642,21 +642,21 @@
              */
             var match = new RegExp(/about ([^\.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
             if (match) {
-                console.log('matches:',match[1],match[2],match[3],match[4]);
+                console.debug('matches:',match[1],match[2],match[3],match[4]);
                 var stats = PETS[match[1]];
                 var n = (match == 'up') ? match[4]*1 : match[4]*(-1);
                 if (match[2] == 'hit') {
                     stats.current_hp += n;
                     stats.max_hp += n;
                 }
-                else if (match[2] == 'intelligence') console.log('not recording this I guess.'); // uhh
+                else if (match[2] == 'intelligence') console.debug('not recording this I guess.'); // uhh
                 else if (match[2] == 'attack') stats.strength += n;
                 else stats[match[2]] += n;
             }
         }
     }
     function Coltzan() {
-        console.log('Coltzan');
+        console.debug('Coltzan');
         var blurb = $('div[align="center"] p').eq(0).text();
         if (blurb.length) {
             /**
@@ -678,7 +678,7 @@
              */
             var match = new RegExp(/^([^ ]+) (has gained (\d+)|feels|your).* (\w+)(\(|!)/g).exec(blurb);
             if (match) {
-                console.log('matches:',match[1],match[4]); // petname, stat
+                console.debug('matches:',match[1],match[4]); // petname, stat
                 var petname = match[1];
                 if (petname == "All")
                     for (petname in PETS) if (PETS[petname].owner == USER)
@@ -686,11 +686,11 @@
                 else if (petname in PETS) {
                     switch (match[4]) {
                         case 'level':
-                            console.log(match[3]);
+                            console.debug(match[3]);
                             PETS[petname].level +=match[3];
                             break;
                         case 'defence':
-                            console.log(match[3]);
+                            console.debug(match[3]);
                             PETS[petname].defence +=match[3];
                             break;
                         case 'stronger':
@@ -702,11 +702,11 @@
                     }
                 }
             }
-            else console.log('No change.');
+            else console.debug('No change.');
         }
     }
     function KitchenQuest() {
-        console.log('Kitchen Quest');
+        console.debug('Kitchen Quest');
         /**
          *  +1 hp:          PETNAME has gained a hit point!!!
          *  +1 mov:         PETNAME has gained a level!!! (?)
@@ -717,7 +717,7 @@
         var blurb = $('p>b').eq(1).text();
         var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
         if (match) {
-            console.log('matches:',match[1],match[2]);
+            console.debug('matches:',match[1],match[2]);
             if (match[1] in PETS) {
                 switch (match[2]){
                     case 'point':
@@ -737,7 +737,7 @@
                         PETS[match[1]].movement += 1;
                         break;
                     default:
-                        console.log('unknown');
+                        console.debug('unknown');
                 }
             }
         }
@@ -747,9 +747,9 @@
          *  ... and she changes into a Green Nimmo!!
          *  ... and she changes colour to White!!
          */
-        console.log('Lab Ray');
+        console.debug('Lab Ray');
         var petname = $('p').eq(0).find('b').text();
-        console.log(petname);
+        console.debug(petname);
         if(petname in PETS) { // ignore pets not stored
             var blurb = $('p').eq(2).text();
             var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) a? ?([^ ]+[^ s])s? ?([^!]+)/g).exec(blurb);
@@ -757,7 +757,7 @@
                 var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
                 var stats = PETS[petname];
                 var n = Number(number_map[match[2]]) || Number(match[2]);
-                console.log('matches:',match[1],n,match[3],match[4]);
+                console.debug('matches:',match[1],n,match[3],match[4]);
                 switch (match[1]) {
                     case "changes":
                         if (match[2]=="colour") {   // british color change
@@ -785,20 +785,20 @@
                         stats.level = 1;
                         break;
                     default:
-                        console.log('No change');   // or gender change
+                        console.debug('No change');   // or gender change
                 }
                 PETS[petname] = stats;
             }
-            else console.log('no regex match');
+            else console.debug('no regex match');
         }
     }
     function PetpetLab() {
-        console.log("Petpet Lab");
+        console.debug("Petpet Lab");
         var petname = $('b:contains(The Petpet Laboratory) ~ b').eq(1).text();
         if (petname in PETS) {
             var newname = $('div[align="center"]').find('b').eq(1).text();
             if (newname && !Number(newname)) { // can also be new level, which should be ignored
-                console.log('new name:',newname);
+                console.debug('new name:',newname);
                 PETS[petname].petpet_name = newname;
                 return;
             }
@@ -824,7 +824,7 @@
         }
     }
     function Petpet() {
-        console.log("Petpet Play");
+        console.debug("Petpet Play");
         var petname = $('.content > b').text().split("'")[0];
         if (petname && petname in PETS) {
             var blurb = $('.content > center > b').text();
@@ -852,7 +852,7 @@
             stats.level         = $(activePetStats).eq(5).text();
             stats.current_hp    = health[1];
             stats.max_hp        = health[2];
-            //console.log(stats);
+            //console.debug(stats);
 
             PETS[petname] = stats;
         }
@@ -880,7 +880,7 @@
             if (match) {
                 var petname = match[2];
                 if (petname && petname in PETS) {
-                    console.log('matches:',petname,match[3],match[4],match[5]);
+                    console.debug('matches:',petname,match[3],match[4],match[5]);
                     switch (match[3]) {
                         case 'gets':
                             PETS[petname].current_hp -= 3;
@@ -914,11 +914,11 @@
                             PETS[petname].mood = 'depressed';
                             break;
                         default:
-                            console.log('No change.');
+                            console.debug('No change.');
                     }
                 }
                 else if (match[1]) {
-                    console.log('Heal all pets.')
+                    console.debug('Heal all pets.')
                     for (petname in PETS) if (PETS[petname].owner == USER)
                         PETS[petname].current_hp = PETS[petname].max_hp;
                 }
@@ -927,7 +927,7 @@
         }
     }
     function Decay() {
-        console.log("I'll get to it eventually.");
+        console.debug("I'll get to it eventually.");
         /**
          *  bloated ==> famished    144 ?
          *  famished => starving    22  ?
@@ -935,7 +935,7 @@
          */
     }
     function HealingSprings() {
-        console.log('Healing Springs');
+        console.debug('Healing Springs');
         /**
          * All of your Neopets gain seven hit points.  I hope that helps! :)
          * All your Neopets have their health completely restored
@@ -949,35 +949,35 @@
             var n = number_map[match[5]];
             var petname;
             if (match[1]=="All") {
-                console.log('All');
+                console.debug('All');
                 for (petname in PETS) if (PETS[petname].owner == USER) healPet(petname,match[3],n);
             }
             else {
                 petname = match[1];
-                console.log('pet',petname);
+                console.debug('pet',petname);
                 healPet(petname,match[3],n);
             }
         }
-        else console.log('No change.');
+        else console.debug('No change.');
     }
     function healPet(petname,match,n) {
         if (petname in PETS) {
             if (match==" gain") {
-                console.log('gain',n);
+                console.debug('gain',n);
                 PETS[petname].current_hp = Number(PETS[petname].current_hp) + Number(n);
             }
             else {
-                console.log('fully healed')
+                console.debug('fully healed')
                 PETS[petname].current_hp = PETS[petname].max_hp;
             }
             if (match==" hungry") {
-                console.log('bloated');
+                console.debug('bloated');
                 PETS[petname].hunger = 'bloated';
             }
         }
     }
     function Battle() {
-        console.log('Battle');
+        console.debug('Battle');
         var end = setInterval(function() {
             if ($('#playground>.end_game').length) {
                 clearInterval(end);
@@ -993,18 +993,18 @@
         }
     }
     function Snowager() {
-        console.log('Snowager');
+        console.debug('Snowager');
         if ($('.content b').last().text() == "ROOOOAARRR!!!") // lol
             for (var petname in PETS) PETS[petname].current_hp = 0;
     }
     function Soup() {
-        console.log('Soup Kitchen')
+        console.debug('Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each( function() {
             PETS[$(this).find('b').eq(0).text()].hunger = $(this).find('b').eq(1).text();
         });
     }
     function Item() {
-        console.log('Item');
+        console.debug('Item');
         /**
          *  PETNAME drinks the potion and gains 12 hit point(s), but is still not fully recovered.
          *  PETNAME drinks the Super Strength Healing Potion and is restored to full hit points!
@@ -1013,10 +1013,10 @@
          *  PETNAME's body starts to feel tingly as they turn into a COLOR SPECIES!
          */
         var blurb = $('p').text();
-        console.log(blurb);
+        console.debug(blurb);
         var match = new RegExp(/^([^ ']+)(?:'s)? ([^ ]+) .+ (?:is still |is |hit |gains |into a (.+) )(.+)(?:!| hit)/g).exec(blurb);
         if (match) {
-            console.log('matches:',match[1],match[2],match[3],match[4])
+            console.debug('matches:',match[1],match[2],match[3],match[4])
             var petname = match[1];
             if (petname in PETS) {
                 switch (match[2]) {
@@ -1036,7 +1036,7 @@
         }
     }
     function Neolodge() {
-        console.log('Booking at Neolodge');
+        console.debug('Booking at Neolodge');
         var petname = $('.content p b').eq(2).text();
         if (petname in PETS) {
             var nights = $('.content td[align="right"]').eq(4).text();
@@ -1054,7 +1054,7 @@
         $('select[name="pet_name"] option:nth-child(n+2)').each(function() {
             var petname = $(this).text().slice(0, -1);
             if (petname in PETS && PETS[petname].neolodge<now) {
-                console.log(petname);
+                console.debug(petname);
                 $(this).prop('selected', true);
                 return;
             }
@@ -1128,7 +1128,7 @@
         }
         else n = STR.indexOf(word);
         PETS[petname].strength = Number(n);
-        //console.log("strength: ",word,n);
+        //console.debug("strength: ",word,n);
     }
     function setDefence(word, petname) {
         var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
@@ -1145,7 +1145,7 @@
         }
         else n = DEF.indexOf(word);
         PETS[petname].defence = Number(n);
-        //console.log("defence: ",word,n);
+        //console.debug("defence: ",word,n);
     }
     function setMovement(word, petname) {
         var n = word.match(/\d+/g);
@@ -1157,12 +1157,12 @@
             PETS[petname].isUncertain = true;
         }
         PETS[petname].movement = n;
-        //console.log("movement: ",word,n);
+        //console.debug("movement: ",word,n);
     }
     /*function int_toInt(word) {
         var n = word.match(/\d+/g);
         n = n ? n[0] : word;
-        console.log("intelligence: ",word,n);
+        console.debug("intelligence: ",word,n);
         return n;
     }*/
 
@@ -1248,7 +1248,7 @@
 
     function settings_functionality() {
         if (!$.isFunction($.fn.spectrum)) {
-            console.log('...')
+            console.debug('...')
             setTimeout(settings_functionality, 50);
             return;
         }
@@ -1340,7 +1340,7 @@
             DATA[$(this).attr('name')] = $(this).prop('checked');
             buildModule();
             $('.remove_button').show();
-            console.log(DATA);
+            console.debug(DATA);
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#hp_mode,#bd_mode').change(function() {
@@ -1437,14 +1437,14 @@
 
     // LOAD RESOURCES
     function load_jQuery() {
-        console.log("loading jQuery");
+        console.debug("loading jQuery");
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(main, 50);
     }
     function load_spectrum() {
-        console.log("loading spectrum");
+        console.debug("loading spectrum");
         SPECTRUM = true;
         var jq = document.createElement('script');
         jq.src = "http://bgrins.github.io/spectrum/spectrum.js";
