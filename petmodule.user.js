@@ -30,6 +30,8 @@
  *      - Fix timing bugs on Beta collection sites
  *      - Add wheels collection
  *      - Add training notification similar to Neolodge one
+ *      - Add option to apply Beta background image to legacy site
+ *      - Fix Firefox bugs
  * 
  */
 
@@ -39,7 +41,7 @@
     // INITIAL GLOBALS
     var VERSION = '1.3.2.1';
     var SPECTRUM = false;
-    var USER, PETS, DATA, $MODULE, FLASH, THEME, CSS, CSS2, BG, IS_BETA;
+    var USER, PETS, DATA, $CONTAINER, $MODULE, FLASH, THEME, CSS, CSS2, BG, IS_BETA;
     var STR, U_STR, DEF, U_DEF, MOV; // static
 
     try { init(); }
@@ -168,7 +170,8 @@
         IS_BETA = !!$("#container__2020")[0];
         if (IS_BETA) {
             $('#container__2020').before('<div id="container__psm"><table id="psm"><tbody></tbody></table></div>');
-            $MODULE = $('#psm tbody');
+            $CONTAINER = $('div#container__psm');
+            $MODULE = $('table#psm tbody');
             FLASH = false;
             THEME = String($('.nav-top__2020>a').css('color')) || "#000";
             BG = "rgba(255, 255, 255, 0.99)";
@@ -208,7 +211,7 @@
             if (len>0) {
                 // clear module
                 console.debug('Clear module');
-                var dir = DATA.collapsed ? 'up' : 'down';
+                var dir = DATA.collapsed ? 'right' : 'down';
                 $MODULE.html( // replace contents with only top bar
                     '<tr id="row_petsHeader" > \
                         <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
@@ -1447,31 +1450,31 @@
         const styleResize = () => { // reposition module and recalculate container min-height based on window size
 
             // Module margin-left
-            $('#container__psm').css('margin-left', $('#container__2020').width()/-2);
+            $CONTAINER.css('margin-left', $('#container__2020').width()/-2);
 
             // Container min-height must be set in stylesheet because element attribute is overridden natively
             const winHeight = window.innerHeight - Math.round($('#footer__2020').outerHeight(false));
-            const modHeight = Math.round($('#container__psm').height()) + 175;
-            const newHeight = Math.max(winHeight, modHeight);            
+            const modHeight = Math.round($CONTAINER.height()) + 175;
+            const newHeight = Math.max(winHeight, modHeight);      
             if (CSS2) {
-                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;
+                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;  
             } else {
                 CSS2 = document.createElement("style");
-                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;
+                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;  
                 document.body.appendChild(CSS2);
             }
         }
         const styleScroll = () => { // reposition module based on container size size and scroll position
             const cHeight = $('#container__2020').height();
-            const mHeight = $('#container__psm').height();
+            const mHeight = $CONTAINER.height();
             const maxTop = cHeight - mHeight - 26;
             const top = $(window).scrollTop() + 70;
             if (maxTop > top) {
-                $('#container__psm').css('position', 'fixed');
-                $('#container__psm').css('top', '70px');
+                $CONTAINER.css('position', 'fixed');
+                $CONTAINER.css('top', '70px');
             } else {
-                $('#container__psm').css('position', 'absolute');
-                $('#container__psm').css('top', Math.min(top, maxTop)+'px');
+                $CONTAINER.css('position', 'absolute');
+                $CONTAINER.css('top', Math.min(top, maxTop)+'px');
             }
         }
         if (IS_BETA) { // listeners
@@ -1501,7 +1504,10 @@
         $MODULE.on('click', '#fold_button i', function() {
             DATA.collapsed = DATA.collapsed ? false : true;
             buildModule();
-            if (IS_BETA) styleScroll();
+            if (IS_BETA) {
+                styleResize();
+                styleScroll();
+            }
             if ($('#settings_menu').is(":visible")) $('.remove_button').show();
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
