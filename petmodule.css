@@ -136,11 +136,6 @@ div#footer__2020 {
     margin: 14px auto;
 }
 
-.section:nth-child(2) {
-    border: 5px dotted #0003;
-    margin-top: 20px;
-}
-
 .section>span {
     display: inline-block;
     text-align: left;
@@ -169,6 +164,10 @@ div#footer__2020 {
 #info_key,
 #info_gather {
     overflow: auto;
+}
+#info_gather {
+    border: 5px dotted #ccc;
+    margin-top: 20px;
 }
 
 #info_nav {
@@ -321,31 +320,69 @@ div#footer__2020 {
 
 /* toggles */
 #toggle_settings_section {
-    margin: 25px auto 26px;
+    margin: 0px auto 30px;
 }
-table#toggle_settings {
+div#toggle_settings_tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: -2px;
+}
+div#toggle_settings_tabs>div {
+    font-size: 16px;
+    background-color: #eee;
+    margin: 0;
+    padding: 5px 15px 4px 12px;
+    border-radius: 6px 6px 0 0;
+    color: white;
+    cursor: pointer;
+}
+div#toggle_settings_tabs>div.tab-active {
+    font-weight: 600;
+    color: white;
+    background-color: #ccc;
+}
+#toggle_settings_bodies {
+    position: relative;
+    z-index: 0;
+}
+#toggle_settings_bodies>table {
+    display: none;
     table-layout: fixed;
+    border: 3px dotted #ccc;
+    width: 100%;
+    border-radius: 0 6px 6px 6px;
+    padding: 5px 0px;
 }
-#toggle_settings > tbody > tr > td {
+#toggle_settings_bodies>table.tab-active {
+    display: table;
+}
+#toggle_settings_bodies>table > tbody > tr > td {
     vertical-align: top;
 }
-#toggle_settings table {
+#toggle_settings_bodies>table table {
     margin: auto;
 }
-#toggle_settings table td {
+#toggle_settings_bodies>table table td {
     padding: 5px;
+    vertical-align: baseline;
 }
 
-#toggle_settings table td:nth-child(odd) {
+#toggle_settings_bodies>table table td:nth-child(odd) {
     text-align: right;
 }
 
-#toggle_settings div {
+#toggle_settings_bodies>table div {
     font-size: 14px;
 }
 
-#toggle_settings select {
+#toggle_settings_bodies>table select {
     width: 100px;
+}
+#toggle_settings_bodies>table h2 {
+    margin: 4px 0px 13.5px 0px;
+    font-weight: lighter;
+    font-size: 11px;
+    color: #888;
 }
 
 #hp_mode option {
@@ -681,5 +718,3 @@ img.pa[src^="//images.neopets.com/nq2"] {
 .h5-speaker.speaker-sm {
     display: none;
 }
-
-/* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before { border-color: <on slim bar>; background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after { background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before { background: <off slim bar> !important; } .pretty.p-switch .state label:after { background-color: <off slim knob> !important; } */
