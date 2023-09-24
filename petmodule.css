@@ -60,6 +60,7 @@ div#footer__2020 {
 #container__psm>table#psm>tbody>tr {
     margin-bottom: -4px;
     display: block;
+    position: relative;
 }
 #container__psm>table#psm>tbody>tr#row_petsHeader {
     display: block;
@@ -83,7 +84,7 @@ div#footer__2020 {
     display: none;
     position: fixed;
     width: 700px;
-    height: 400px;
+    height: 462px;
     margin: 52px;
     background-color: '+bgcolor+';
     border: 4px solid '+color+';
@@ -239,6 +240,12 @@ div#footer__2020 {
     font-weight: normal;
 }
 
+#info_menu h2 {
+    margin: 0px 60px 10px 66px;
+    font-weight: lighter;
+    font-size: 12px;
+    color: #888;
+}
 #info_menu h3 {
     margin: -3px 0px 0px 66px;
     font-weight: lighter;
@@ -426,22 +433,34 @@ table#toggle_settings {
     z-index: 99;
 }
 
-.neolodge {
-    position: absolute;
+.timers {
+    position: absolute;   
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center; 
+}
+.timers>div {
+    position: relative; 
     z-index: 103;
     margin: 7px;
-    padding: 9px 6.5px;
+    padding: 6px;
     background-color: #0003;
     border-radius: 100px;
     cursor: pointer;
     display: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
 }
-
-.neolodge i {
+.timers>div i {
     color: #fff !important;
+    display: inline;
 }
-
-.neolodge:hover {
+.timers>div:hover {
     animation: shake 0.5s;
 }
 
@@ -492,6 +511,10 @@ table#toggle_settings {
 }
 
 /* nav bar */
+#psm #petsHeader {
+    display: block;
+    padding: 6px;
+}
 #petsHeader span {
     float: right;
     font-size: 12px;
@@ -642,6 +665,10 @@ table#toggle_settings {
     font: 6.5pt Verdana;
 }
 
+.inner .petpetpet>div {
+    margin-left: -30px;
+}
+
 #sidebar_menus .section td,
 .hover td {
     color: '+textcolor+';
@@ -650,6 +677,9 @@ table#toggle_settings {
 /* MISC. */
 img.pa[src^="//images.neopets.com/nq2"] {
     z-index: 96 !important;
+}
+.h5-speaker.speaker-sm {
+    display: none;
 }
 
 /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before { border-color: <on slim bar>; background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after { background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before { background: <off slim bar> !important; } .pretty.p-switch .state label:after { background-color: <off slim knob> !important; } */

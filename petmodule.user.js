@@ -12,7 +12,7 @@
 /**
  *
  *  Things I will not gather data from:
- *      anything that will reflect change on the original module
+ *      anything that will reflect change on the original module, can just be gathered on page reload
  *      anything that redirects you to quick ref
  *
  *  Things I may one day gather from:
@@ -22,16 +22,16 @@
  *      decaying age/hunger/mood, if I ever care that much
  *      turmaculus, for pet str and petpet... existance, if I ever care that much
  *
- *  Other Ideas:
- *      - maaaayybe make the menus dragable
- *      - have an immediate response to changeactive, in case they do the new tab thing
- *
  *  TODO:
- *      - Fix timing bugs on Beta collection sites
- *      - Add wheels collection
- *      - Add training notification similar to Neolodge one
- *      - Add option to apply Beta background image to legacy site
- *      - Fix Firefox bugs
+ *      - Remove vars
+ *      - Flesh out wheels collection (need to get list of result strings)
+ *      - New Toggle Settings:
+ *          > T apply Beta background image to legacy site
+ *          > T interactable stats slider 
+ *              - doesn't go away when hovering over it
+ *              - intelligence links to books
+ *              - petpet links to petpet 
+ *          > debug mode
  * 
  */
 
@@ -68,8 +68,12 @@
                     showAnim:false,
                     allAccts:false,
                     neolodge:true,
+                    training:true,
+                    gravedanger:true,
+                    trueExpression:false,
                     stickyActive:false,
                     showPetpet:true,
+                    showPetpetpet:false,
                     hp_mode:2, // 0: max only | 1: current / max   | 2:  plus color
                     bd_mode:0, // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
                     i:10,      // increment for subcolor when it's relative to color
@@ -110,17 +114,17 @@
         if (document.URL.indexOf("quickref") != -1) QuickRef();
         else if (document.URL.indexOf("dome/neopets") != -1) Battledome1();
         else if (document.URL.indexOf("dome/fight") != -1) Battledome2();
-        else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("/training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
+        else if (document.URL.indexOf("status") != -1 && ( document.URL.indexOf("training") != -1 || document.URL.indexOf("academy") != -1 ) ) Training();
 
         // permanent changes
-        else if (document.URL.indexOf("_training") != -1) EndTraining();        // BD stats
-        else if (document.URL.indexOf("quests") != -1) FaerieQuest();           // BD stats
-        else if (document.URL.indexOf("coincidence") != -1) Coincidence();      // BD stats, int
-        else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();        // BD stats, int
-        else if (document.URL.indexOf("kitchen") != -1) KitchenQuest();         // BD stats
-        else if (document.URL.indexOf("process_lab2") != -1) SecretLab();       // BD stats, color, species, gender
-        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();  // petpet name, color, spcies, existance
-        else if (document.URL.indexOf("neopetpet") != -1) Petpet();             // petpet name
+        else if (document.URL.indexOf("process_") != -1) EndTraining();                         // BD stats
+        else if (document.URL.indexOf("quests") != -1) FaerieQuest();                           // BD stats
+        else if (document.URL.indexOf("coincidence") != -1) Coincidence();                      // BD stats, int
+        else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();                        // BD stats, int
+        else if (document.URL.indexOf("kitchen") != -1) $(document).ajaxSuccess(KitchenQuest);  // BD stats
+        else if (document.URL.indexOf("process_lab2") != -1) SecretLab();                       // BD stats, color, species, gender
+        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();                  // petpet name, color, spcies, existance
+        else if (document.URL.indexOf("neopetpet") != -1) Petpet();                             // petpet name
 
         // temp changes
         else if (document.URL.indexOf("faerieland/wheel") != -1) spinWheel(Excitement);
@@ -128,12 +132,15 @@
         else if (document.URL.indexOf("mediocrity") != -1) spinWheel(Mediocrity);
         // else if (document.URL.indexOf("monotony") != -1) spinWheel(Monotony);
         // else if (document.URL.indexOf("extravagance") != -1) spinWheel(Extravagance);
-        else if (document.URL.indexOf("springs") != -1) HealingSprings();
+        else if (document.URL.indexOf("springs") != -1) $(document).ajaxSuccess(HealingSprings);
         else if (document.URL.indexOf("dome/arena") != -1) Battle();
-        else if (document.URL.indexOf("snowager") != -1) Snowager();
-        else if (document.URL.indexOf("soupkitchen") != -1) Soup();
+        else if (document.URL.indexOf("snowager") != -1) $(document).ajaxSuccess(Snowager);
+        else if (document.URL.indexOf("soupkitchen") != -1) $(document).ajaxSuccess(Soup);
         else if (document.URL.indexOf("inventory") != -1) Inventory();
         else if (document.URL.indexOf("book_neolodge") != -1) Neolodge();
+
+        // utility
+        else if (document.URL.indexOf("gravedanger") != -1) GraveDanger();
 
         // default
         else if ($(".sidebar")[0]) Sidebar();
@@ -247,20 +254,33 @@
     function add_pet(petname) {
         var inactive = petname == DATA.active ? '' : 'in';
         var neolodge = DATA.neolodge && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].neolodge ?
-            ' style="display: block;"' : '';
+            ' style="display: flex;"' : '';
+        var training = DATA.training && PETS[petname].training && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].training ?
+        ' style="display: flex;"' : '';
+        var gravedanger = DATA.gravedanger && PETS[petname].petpet_danger && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].petpet_danger ?
+        ' style="display: flex;"' : '';
+        const expression = DATA.trueExpression ? PETS[petname].expression : '1';
         var image = (DATA.showAnim && FLASH) ?
             '<embed type=\"application/x-shockwave-flash\" src=\"https://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
             .replace("%s", petname) : PETS[petname].dti ?
             '<img src="https://openneo-uploads.s3.amazonaws.com/outfits/'+PETS[petname].dti+'/preview.png" width="150" height="150" border="0">' :
-            '<img src="https://pets.neopets.com/cp/'+PETS[petname].id+'/1/4.png" width="150" height="150" border="0">';
+            '<img src="https://pets.neopets.com/cp/'+PETS[petname].id+'/'+expression+'/4.png" width="150" height="150" border="0">';
 
 
         // for some reason children must be added seperately
         $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr>');
         $('#'+inactive+'active_'+petname).append(
             '<div class="remove_button"><i class="fas fa-sign-out-alt fa-5x" petname="'+petname+'"></i></div> \
-            <div class="neolodge"'+neolodge+'> \
-                <a href="https://www.neopets.com/neolodge.phtml"><i class="fas fa-concierge-bell fa-lg"></i></a> \
+            <div class="timers"> \
+                <div class="neolodge"'+neolodge+'> \
+                    <a href="https://www.neopets.com/neolodge.phtml"><i class="fas fa-concierge-bell fa-lg"></i></a> \
+                </div> \
+                <div class="training"'+training+'> \
+                    <a href="'+PETS[petname].training_url+'"><i class="fas fa-dumbbell"></i></a> \
+                </div> \
+                <div class="grave-danger"'+gravedanger+'> \
+                    <a href="https://www.neopets.com/halloween/gravedanger/index.phtml"><i class="fas fa-skull fa-lg"></i></a> \
+                </div> \
             </div> \
             <div class="leftHover" petname="'+petname+'"></div> \
             <div class="leftSubHover" petname="'+petname+'"></div> \
@@ -269,6 +289,12 @@
             '+createStatsHTML(petname)+' \
             <div class="placeholder"></div> \
             <a class="petGlam" href="/quickref.phtml">'+image+'</a>');
+        console.debug('test',$('#nav_'+petname).find('.activate').length)
+        $('#nav_'+petname).find('.activate').on('auxclick',() => {
+            console.debug('New active:',petname)
+            DATA.active = petname;
+            buildModule();
+        })
         $('#nav_'+petname).find('.lookup').append(
             '<a class="sub" href="https://www.neopets.com/neopet_desc.phtml?edit_petname='+petname+'"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
         $('#nav_'+petname).find('.petpage').append(
@@ -278,7 +304,7 @@
     function createStatsHTML(petname) {
         if (!DATA.showStats) return '';  // if stats=false return empty
         var stats = PETS[petname];
-        var petpetTD = '', petpetStyle='';
+        var petpetTD = '', petpetStyle='', petpetpetTD = '';
         if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
             petpetTD =
                 '<td align="center" class="petpet"> \
@@ -286,6 +312,14 @@
                     <img src="'+stats.petpet_image+'" width="80" height="80"><br><br> \
                 </td>';
             petpetStyle = ' style="margin-top: -15px;"';
+            
+            if (DATA.showPetpetpet && stats.petpetpet_image) { // if showPetpetpet=true and there is a petpetpet
+                petpetpetTD =
+                    '<td align="center" class="petpetpet"><div> \
+                        and its<br>'+stats.petpetpet_species+'<br><br> \
+                        <img src="'+stats.petpetpet_image+'" width="80" height="80"><br><br> \
+                    </div></td>';
+            }
         }
         var hp = getHP(stats.current_hp,stats.max_hp);
         var statsHTML =
@@ -349,6 +383,7 @@
             </td> \
             \
             '+petpetTD+' \
+            '+petpetpetTD+' \
             \
             </tr></table> \
             \
@@ -361,8 +396,8 @@
         var buttonsHTML =
             '<div id="nav_'+petname+'" class="petnav"> \
                 <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
-                <a href="https://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
-                <a href="https://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-hat-cowboy-side"></i></span></a> \
+                <a class="activate" href="https://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
+                <a class="customize" href="https://www.neopets.com/customise/?view='+petname+'"><span><i class="fas fa-hat-cowboy-side"></i></span></a> \
                 <a class="lookup" href="https://www.neopets.com/petlookup.phtml?pet='+petname+'"><span><i class="fas fa-id-card"></i></span></a> \
                 <a class="petpage" href="https://www.neopets.com/~'+petname+'"><span><i class="fas fa-paw"></i></span></a> \
                 <a class="move" dir="1" petname="'+petname+'"><span><i class="fas fa-chevron-down"></i></span></a> \
@@ -386,7 +421,7 @@
     }
     function info_HTML() {
         var html =
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Info</h1>  <div id="info_nav">  <button name="key" class="active-section">key</button>  <button name="gather">gathering</button>  <button name="about">about</button>  </div> </div> <div class="menu_inner">  <div class="section" id="info_key">  <span>header</span>  <table name="header">  <tr>  <td>Pets</td>  <td>Link to pets quick-ref, the main collection source for the script.</td>  </tr>  <tr>  <td><i class="fas fa-info-circle"></i></td>  <td>This panel</td>  </tr>  <tr>  <td><i class="fas fa-cog"></i></td>  <td>The Settings panel</td>  </tr>  <tr>  <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td>  <td>Show only top or all selected pets</td>  </tr>  </table>  <span>pet navigation</span>  <table name="nav">  <tr>  <td><i class="fas fa-concierge-bell"></i></td>  <td>Neolodge. Appears when your pet is not on holiday, if you have the reminder turned on.</td>  </tr><tr>  <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td>  <td>Move pet up or down one.</td>  </tr>  <tr>  <td><i class="fas fa-splotch"></i></td>  <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don\'t want  to leave the page you\'re on.</td>  </tr>  <tr>  <td><i class="fas fa-hat-cowboy-side"></i></td>  <td>Customize</td>  </tr>  <tr>  <td><i class="fas fa-id-card"></i></td>  <td>Pet lookup</td>  </tr>  <tr>  <td><i class="fas fa-paw"></i></td>  <td>Petpage</td>  </tr>  <tr>  <td><i class="fas fa-pencil-alt"></i></td>  <td>Edit page</td>  </tr>  </table>  <span>settings</span>  <table name="settings">  <tr>  <td><i class="fas fa-sign-out-alt"></i></td>  <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td>  </tr>  <tr>  <td><i class="fas fa-plus"></i></td>  <td>Add pet back to sidebar.</td>  </tr>  <tr>  <td><i class="fas fa-trash-alt"></i></td>  <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td>  </tr>  <tr>  <td>Color</td>  <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td>  </tr>  <tr>  <td>Accent Color</td>  <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the  arrows to raise or lower from 10.</td>  </tr>  <tr>  <td>Animated Pets</td>  <td><b>DEPRECATED</b> On pages that include flash, use animated pet image. Long image-load time.</td>  </tr>  </table>  </div>  <div class="section" id="info_gather">  <span>passive data gathering</span>  <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your  web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared,  allowing you to display pets from other accounts in your sidebar.</p>  <span>all pets, all data</span>  <table>  <tr>  <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td>  <td>Everything except exact stats numbers</td>  </tr>  <tr>  <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td>  <td>Exact stats numbers</td>  </tr>  <tr>  <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td>  <td>Exact stats numbers</td>  </tr>  </table>  <span>permanent changes</span>  <table>  <tr>  <td>Faerie/Kitchen Quests</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Coincidence</td>  <td>Affected stats numbers</td>  </tr>  <tr>  <td>Lab Ray</td>  <td>Affected attributes and stats numbers</td>  </tr>  <tr>  <td>Petpet Lab Ray</td>  <td>Affected petpet info</td>  </tr>  <tr>  <td>Coltzan</td>  <td>Affected stats numbers, current HP</td>  </tr>  </table>  <span>temporary changes</span>  <table>  <tr>  <td>Healing Springs</td>  <td>Current HP (illness is not tracked)</td>  </tr>  <tr>  <td>Snowager</td>  <td>Current HP</td>  </tr>  <tr>  <td>Food / Soup Kitchen</td>  <td>Hunger</td>  </tr>  <tr>  <td>Certain Items</td>  <td>Current HP</td>  </tr>  </table>  <h3 style="margin-top: -30px;">* I can\'t gather data from flash elements like wheels, and I don\'t bother with obscure things.</h3>  </div>  <div class="section" id="info_about">  <span>Pet Sidebar Module version '+VERSION+'</span>  <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a></h3>  <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical.</p>  <table>  <tbody>  <tr>  <th>Chrome</th>  <th>Firefox</th>  <th>Safari</th>  <th>Opera</th>  <th>IE/Edge</th>  </tr>  <tr>  <td>4.0+</td>  <td>3.6+</td>  <td>4.0+</td>  <td>11.5+</td>  <td>lol no</td>  </tr>  </tbody>  </table><br><span>Questions, concerns, bugs, requests?</span>  <p>If it don\'t work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br>  Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i>  <br>  Your friendly neighborhood trenchcoat.  </p>  </div> </div>';
+            '<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don\'t want to leave the page you\'re on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it\'s time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet is not on holiday.</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the arrows to raise or lower from 10.</td> </tr> <tr> <td>Animated Pets</td> <td><b>DEPRECATED</b> On pages that include flash, use animated pet image. Long image-load time.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>temporary changes</span> <table> <tr> <td>Healing Springs</td> <td>Current HP (illness is not tracked)</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP</td> </tr> </table> <h3 style="margin-top: -30px;">* Wheels haven\t been added yet, and I don\'t bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version '+VERSION+'</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>IE/Edge</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don\'t work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>';
         return html;
     }
     function settings_HTML() {
@@ -395,7 +430,7 @@
             if (DATA.allAccts || PETS[DATA.hidden[i]].owner==USER)
                 removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
         var html =
-            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1> </div> <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section" id="toggle_settings_section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showNav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet stats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showStats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr style="display: none;">  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showAnim"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>neolodge reminder</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="neolodge"><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>include petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/# (color)</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  <tr style="display: none;"><td> ‏‏‎ </td></tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td id="removed_pets_container" '+(removed.length ? '' : 'style="display: none;"')+'> <div id="removed_pets_label">Removed Pets:</div> <select id="removed_pets" name="removed">'+removed+'</select>  <div class="footer-btn" id="addback_button"><i class="fas fa-plus"></i></div>  <div class="footer-btn" id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="clear_button">clear all pet data</button>  </td>  </tr>  </table>  </div> </div>';
+            '<div class="menu_header">  <div class="menu_close"><i class="fas fa-times"></i></div>  <h1>Settings</h1> </div> <div class="menu_inner">  <div class="section">  <table id="color_settings">  <tr>  <td>  <div>Color:</div>  <input class="picker" id="colorpicker">  <input class="picker_text" id="colorpicker_text">  </td>  <td>  <div>Accent<br>Color:</div>  <input class="picker" id="subcolorpicker">  <input class="picker_text" id="subcolorpicker_text">  <div id="increment">  <i class="fas fa-caret-up"></i>  <i class="fas fa-caret-down"></i>  </div>  </td>  <td>  <div>Background<br>Color:</div>  <input class="picker" id="bgcolorpicker">  <input class="picker_text" id="bgcolorpicker_text">  </td>  </tr>  </table>  </div>  <div class="section" id="toggle_settings_section">  <table id="toggle_settings">  <tr>  <td>  <table>  <tr>  <td><div>navigation menu</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showNav"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>pet stats slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showStats"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr style="display: none;">  <td><div>flash animated pet images</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showAnim"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>all accounts</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>neolodge reminder</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="neolodge"><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>training reminder</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="training"><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>grave danger reminder</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="gravedanger"><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  </table>  </td>  <td>  <table>  <tr>  <td><div>display true expression</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="trueExpression"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>keep active pet at top</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>show petpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>show petpetpet in slider</div></td>  <td><div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpetpet"/><div class="state p-success"><label> ‏‏‎ </label></div></div></td>  </tr>  <tr>  <td><div>HP display mode</div></td>  <td>  <select id="hp_mode">  <option value="0">#</option>  <option value="1">#/#</option>  <option value="2" style="color: green;">#/# (color)</option>  </select>  </td>  </tr>  <tr>  <td><div>BD stats display mode</div></td>  <td>  <select id="bd_mode">  <option value="0">#</option>  <option value="1">str (#)</option>  <option value="2">neo default</option>  <option value="3">str</option>  </select>  </td>  </tr>  <tr style="display: none;"><td> ‏‏‎ </td></tr>  </table>  </td>  </tr>  </table>  </div>  <div class="section">  <table id="settings_footer">  <tr>  <td id="removed_pets_container" '+(removed.length ? '' : 'style="display: none;"')+'> <div id="removed_pets_label">Removed Pets:</div> <select id="removed_pets" name="removed">'+removed+'</select>  <div class="footer-btn" id="addback_button"><i class="fas fa-plus"></i></div>  <div class="footer-btn" id="delete_button"><i class="fas fa-trash-alt"></i></div>  </td>  <td>  <button id="clear_button">clear all pet data</button>  </td>  </tr>  </table>  </div> </div>';
         return html;
     }
     function createCSS() {
@@ -408,8 +443,7 @@
         var h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
-            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 400px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 100; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+h1color+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+h2color+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section:nth-child(2) { border: 5px dotted #0003; margin-top: 20px; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+h2color+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 25px auto 26px; } table#toggle_settings { table-layout: fixed; } #toggle_settings > tbody > tr > td { vertical-align: top; } #toggle_settings table { margin: auto; } #toggle_settings table td { padding: 5px; } #toggle_settings table td:nth-child(odd) { text-align: right; } #toggle_settings div { font-size: 14px; } #toggle_settings select { width: 100px; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .neolodge { position: absolute; z-index: 103; margin: 7px; padding: 9px 6.5px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; } .neolodge i { color: #fff !important; } .neolodge:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before { border-color: <on slim bar>; background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after { background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before { background: <off slim bar> !important; } .pretty.p-switch .state label:after { background-color: <off slim knob> !important; } */\
-        '
+            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 100; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+h1color+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+h2color+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section:nth-child(2) { border: 5px dotted #0003; margin-top: 20px; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+h2color+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 25px auto 26px; } table#toggle_settings { table-layout: fixed; } #toggle_settings > tbody > tr > td { vertical-align: top; } #toggle_settings table { margin: auto; } #toggle_settings table td { padding: 5px; } #toggle_settings table td:nth-child(odd) { text-align: right; } #toggle_settings div { font-size: 14px; } #toggle_settings select { width: 100px; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; width: 22px; height: 22px; align-items: center; justify-content: center; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
         document.body.appendChild(CSS);
 
     }
@@ -421,10 +455,10 @@
         $('.contentModuleTable tbody').each(function(k,v) {
             if(k%2 === 0) { // even indexed elements are the relevant ones
                 var names = $(v).find('th').first().text();
-                var namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its .+|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
+                var namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its (.+)|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
                 //if (namesMatch) console.debug(namesMatch);
-                var petpet = [namesMatch[2] || namesMatch[5], namesMatch[3] || namesMatch[6]];
-                var petname = namesMatch[1] || namesMatch[4] || namesMatch[7];
+                var petpet = [namesMatch[2] || namesMatch[6], namesMatch[3] || namesMatch[7], namesMatch[4] || null];
+                var petname = namesMatch[1] || namesMatch[5] || namesMatch[8];
                 if( !(petname in PETS) ) { // if pet isn't recorded, add it to shown and pets
                     DATA.shown.push(petname);
                     PETS[petname] = {isUncertain: false};
@@ -436,23 +470,27 @@
 
                 var $lines = $(v).find('.pet_stats td');
                 var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
+                var image = $(v).find('.pet_image').attr('style').split('/');
                 //if (health) console.debug(health);
-                stats.owner         = USER;
-                stats.id            = $(v).find('.pet_image').attr('style').split('/')[4] || 0;
-                stats.species       = $lines.eq(0).text();
-                stats.color         = $lines.eq(1).text();
-                stats.age           = $lines.eq(3).text();
-                stats.level         = Number($lines.eq(4).text());
-                stats.current_hp    = Number(health[1]);
-                stats.max_hp        = Number(health[2]);
-                stats.mood          = $lines.eq(6).text();
-                stats.hunger        = $lines.eq(7).text();
-                stats.intelligence  = $lines.eq(11).text().replace('E G','E<br>G');
-                stats.petpet_name   = petpet[0];
-                stats.petpet_species= petpet[1];
-                stats.petpet_image  = $lines.eq(12).find('img').attr('src');
-                stats.isUC          = $(v).find('.pet_notices:contains(converted)').length ? true : false;
-                stats.neolodge      = get_checkout(v);
+                stats.owner             = USER;
+                stats.id                = image[4] || 0;
+                stats.expression        = image[5] || 1;
+                stats.species           = $lines.eq(0).text();
+                stats.color             = $lines.eq(1).text();
+                stats.age               = $lines.eq(3).text();
+                stats.level             = Number($lines.eq(4).text());
+                stats.current_hp        = Number(health[1]);
+                stats.max_hp            = Number(health[2]);
+                stats.mood              = $lines.eq(6).text();
+                stats.hunger            = $lines.eq(7).text();
+                stats.intelligence      = $lines.eq(11).text().replace('E G','E<br>G');
+                stats.petpet_name       = petpet[0];
+                stats.petpet_species    = petpet[1];
+                stats.petpet_image      = $lines.eq(12).find('img').eq(0).attr('src');
+                stats.petpetpet_species = petpet[2];
+                stats.petpetpet_image   = $lines.eq(12).find('img').eq(1).attr('src');
+                stats.isUC              = $(v).find('.pet_notices:contains(converted)').length ? true : false;
+                stats.neolodge          = get_checkout(v);
                 setStrength($lines.eq(8).text(),petname);
                 setDefence( $lines.eq(9).text(),petname);
                 setMovement($lines.eq(10).text(),petname);
@@ -467,7 +505,7 @@
         if (!notice) return 0;
         var now = (new Date).getTime();
         if (notice.includes('currently checking ')) return now + 86400000; // add a day for buffer
-        var dif = new RegExp(/in (\d+) days, (\d+) hours and (\d+) minutes/g).exec(notice);
+        var dif = new RegExp(/in (\d+) days?, (\d+) hours? and (\d+) minutes?/g).exec(notice);
         return dif ? now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000 + 86400000 : 0; // add a day for buffer
     }
     function Battledome1() {
@@ -512,7 +550,7 @@
     }
     function Training() {
         console.debug('Training');
-        $("table[width='500'] tbody tr").each(function(k,v) {
+        $("table[width='500']>tbody>tr").each(function(k,v) {
             if(k%2 === 0) {
                 // get name and retreive data (if any)
                 var petname = $(v).children().first().text().split(" ")[0];
@@ -543,7 +581,7 @@
                 // get stats
                 var dStats = $(v).next().children().first().text();
                 dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+) / (.+)'));
-
+                console.debug(petname, dStats);
                 if (dStats) {
                     stats.level         = Number(dStats[1]);
                     stats.strength      = Number(dStats[2]);
@@ -553,18 +591,30 @@
                     stats.max_hp        = Number(dStats[6]);
                     stats.isUncertain   = false;
                 }
-                //console.debug(stats);
-
                 PETS[petname] = stats;
+
+                // get training timer
+                let remaining = $(v).next().children().eq(1).find('b').text();
+                if (remaining === 'Course Finished!') PETS[petname].training = PETS[petname].training || 1;
+                else {
+                    remaining = remaining.match(new RegExp(/(\d+) hrs?, (\d+) minutes?, (\d+) seconds?/));
+                    if (remaining) {
+                        remaining = remaining[1]*3600000+remaining[2]*60000+remaining[3]*1000;
+                        console.debug('remaining', remaining);
+                        PETS[petname].training = (new Date).getTime() + remaining;
+                        PETS[petname].training_url = document.URL;
+                    } else PETS[petname].training = 0;
+                }
             }
         });
     }
     function EndTraining() {
-        console.debug('EndTraining');
         var blurb = $('p').text();
         var match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
         if (match) {
+            console.debug('EndTraining');
             var petname = match[1];
+            PETS[petname].training = 0;
             if(petname in PETS) {
                 var n = Number(match[3]) || 1;
                 console.debug('matches:',petname,match[2],n);
@@ -582,7 +632,6 @@
                 console.debug(PETS);
             }
         }
-        else console.debug('regex is incorrect');
     }
     function FaerieQuest() {
         console.debug('FaerieQuest');
@@ -741,7 +790,7 @@
          *  +1 mov:         PETNAME has become better at Agility!!!
          */
         var blurb = $('p>b').eq(-1).text();
-        console.debug(blurb)
+        console.debug(blurb);
         var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
         if (match) {
             console.debug('matches:',match[1],match[2]);
@@ -853,13 +902,17 @@
     function Petpet() {
         console.debug("BETA Petpet Play");
         var petname = $('.page-title__2020 > h1').text().split("'")[0];
+        console.debug(petname)
         if (petname && petname in PETS) {
             var blurb = $('.h5-dialogue > p').text();
-            var match = new RegExp(/I love ([^,]+), my (\w+)/g).exec(blurb);
+            var match = new RegExp(/I love ([^,]+), my (\w+)(?:\s*, and its (\w+))?/g).exec(blurb);
+            console.debug(match)
             if (match) {
                 PETS[petname].petpet_name = match[1];
                 PETS[petname].petpet_species = match[2];
-                PETS[petname].petpet_image = $('.h5-grid2 > img[src^="https://images.neopets.com/items/"]').eq(0).attr('src');
+                PETS[petname].petpet_image = $('.h5-grid3 > img[src^="https://images.neopets.com/items/"]').eq(0).attr('src');
+                PETS[petname].petpetpet_species = match[3];
+                PETS[petname].petpetpet_image = $('.h5-grid3 > img[src^="https://images.neopets.com/items/"]').eq(1).attr('src');
             }
         }
     }
@@ -903,6 +956,7 @@
          */
         var blurb = $('.randomEvent .copy').text().trim();
         if (blurb) {
+            console.debug('Random Event:',blurb);
             var match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
             if (match) {
                 var petname = match[2];
@@ -962,6 +1016,7 @@
          */
     }
     function spinWheel(callback) {
+        console.debug('Wheel');
         // Waiting to finish spinning the wheel
         $('#wheelCanvas').one('click', () => {
             let blurb;
@@ -978,18 +1033,21 @@
         console.debug('BETA Wheel of Excitement:', blurb);
         /**
          * A Golden Light surrounds your pets... they are completely healed!    All pets full HP
+         * ?                                                                    All pets have HP halved & floored
+         * ?                                                                    All pets lose 2/3 of current HP
+         * ?                                                                    Active contracts Chickaroo
          */
     }
     function Mediocrity(blurb) {
         console.debug('BETA Wheel of Mediocrity:', blurb);
         /**
-         * Fireballs rain down from above and singe your Neopets!               HP is halved & floored for all pets
+         * Fireballs rain down from above and singe your Neopets!               All pets have HP halved & floored
          */
     }
     function Misfortune(blurb) {
-        console.debug('BETA Wheel of Mediocrity:', blurb);
+        console.debug('BETA Wheel of Misfortune:', blurb);
         /**
-         * Oh no!  Your pet caught Bubbles from the wheel!                      Active gets Bubbles disease
+         * Oh no!  Your pet caught Bubbles from the wheel!                      Active contracts Bubbles
          */
     }
     function HealingSprings() {
@@ -1001,6 +1059,7 @@
          * petname is fully healed
          */
         var blurb = $('.faerie-battle + p + p').eq(0).text();
+        console.debug(blurb);
         var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (match) {
             var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
@@ -1107,22 +1166,60 @@
     }
     function Neolodge() {
         console.debug('Booking at Neolodge');
-        $('center>img[src^="//pets.neopets.com/"]').each( (k,v) => {
-            const petname = $(v).attr('src').split('/')[4];
-            if (petname in PETS) {
-                var nights = $(v).parent().prev().prev().find('td[align="right"]').eq(4).text();
-                console.debug(petname,nights,'nights')
-                PETS[petname].neolodge = (new Date).getTime() + nights*86400000
-            }
-        });
+        if (!$('center:contains("You can not afford")').length) {
+            $('center>img[src^="//pets.neopets.com/"]').each( (k,v) => {
+                const petname = $(v).attr('src').split('/')[4];
+                if (petname in PETS) {
+                    const nights = $(v).parent().prev().prev().find('td[align="right"]').eq(4).text();
+                    console.debug(petname,nights,'nights');
+                    if (nights?.length) PETS[petname].neolodge = (new Date).getTime() + nights*86400000;
+                }
+            });
+        }
+    }
+    function GraveDanger() {
+        console.debug('Grave Danger');
+        const petname = Object.keys(PETS).find(petname => PETS[petname].petpet_name === $('span.petpetName').text());
+        if (petname) {
+            console.debug('petname',petname)
+            let remaining;
+            const loading = setInterval(function() {
+                remaining = $('#gdRemaining').text();
+                if (!remaining) {
+                    console.debug('Complete')
+                    clearInterval(loading);
+
+                    // enforce reminder until reward has been collected
+                    if ($('.section.brought').length) danger_end(petname,1);
+
+                    // clear when reward collection button is clicked
+                    $('#container__2020 .gdForm>button').click(() => {
+                        danger_end(petname,0);
+                    });
+                } else if (remaining !== '...') {
+                    console.debug('Ongoing',remaining)
+                    clearInterval(loading);
+                    const match = new RegExp(/(\d+) hours?, (\d+) minutes?, (\d+) seconds?/g).exec(remaining);
+                    if (match) {
+                        remaining = match[1]*3600000+match[2]*60000+match[3]*1000;
+                        danger_end(petname,(new Date).getTime() + remaining)
+                    }
+                }
+            }, 500);
+        }
+    }
+    function danger_end(petname,end){
+        PETS[petname].petpet_danger = end;
+        localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS)); // finishes late
     }
 
 
     // MISC FUNCTIONS
     function fill_neolodge() {
-        // first pet in dropdown needing lodge, cockroach towers, 28 nights
+        // first pet in dropdown needing lodge, book all, cockroach towers, 28 nights
         $('select[name="hotel_rate"]').val('5');
         $('select[name="nights"] option:last-child').prop('selected', true);
+        $('#book_all').prop('checked', true);
         var now = (new Date).getTime();
         $('select[name="pet_name"] option:nth-child(n+2)').each(function() {
             var petname = $(this).text().slice(0, -1);
