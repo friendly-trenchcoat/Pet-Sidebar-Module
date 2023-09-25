@@ -714,6 +714,12 @@ div#toggle_settings_tabs>div.tab-active {
     color: '+subcolor+';
 }
 
+.inner .petpet>a,
+.inner .petpetpet>div>a {
+    color: '+textcolor+';
+    font-weight: normal;
+}
+
 .inner .petpetpet>div {
     margin-left: -30px;
 }
