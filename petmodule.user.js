@@ -137,6 +137,7 @@
         else if (document.URL.indexOf("springs") != -1) $(document).ajaxSuccess(HealingSprings);
         else if (document.URL.indexOf("dome/arena") != -1) Battle();
         else if (document.URL.indexOf("snowager") != -1) $(document).ajaxSuccess(Snowager);
+        else if (document.URL.indexOf("geraptiku/process_tomb") != -1) $(document).ajaxSuccess(Geraptiku);
         else if (document.URL.indexOf("soupkitchen") != -1) $(document).ajaxSuccess(Soup);
         else if (document.URL.indexOf("inventory") != -1) Inventory();
         else if (document.URL.indexOf("book_neolodge") != -1) Neolodge();
@@ -1159,9 +1160,17 @@
         }
     }
     function Snowager() {
-        psm_debug('BETA Snowager');
-        if ($('#snowager_container b').last().text() == "ROOOOAARRR!!!") // lol
+        const blurb = $('#snowager_container').text();
+        psm_debug('BETA Snowager', blurb);
+        if (blurb.includes('an icy blast'))
             PETS[DATA.active].current_hp = 1;
+        else if (blurb.includes('a MASSIVE icy blast'))
+            for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = 0;
+    }
+    function Geraptiku() {
+        psm_debug('BETA Geraptiku');
+        if ($('.tomb-result').css('background-image').includes('trap'))
+            PETS[DATA.active].current_hp = Math.floor(Number(PETS[DATA.active].current_hp)/2);
     }
     function Soup() {
         psm_debug('BETA Soup Kitchen')
