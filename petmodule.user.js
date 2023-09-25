@@ -8,6 +8,7 @@
 // @grant          none
 // ==/UserScript==
 /*jshint multistr: true */
+/* globals $ */
 
 /**
  *
@@ -23,9 +24,8 @@
  *      turmaculus, for pet str and petpet... existance, if I ever care that much
  *
  *  TODO:
- *      - Remove vars
  *      - Flesh out wheels collection (need to get list of result strings)
- * 
+ *
  */
 
 (function() {
@@ -33,10 +33,10 @@
 
     // INITIAL GLOBALS
     // I know I should have made a class but I don't feel like it now
-    var VERSION = '1.3.2.1';
-    var SPECTRUM = false;
-    var USER, PETS, DATA, $CONTAINER, $MODULE, FLASH, THEME, CSS, CSS2, BG, IS_BETA;
-    var STR, U_STR, DEF, U_DEF, MOV; // static
+    const VERSION = '1.3.2.1';
+    let SPECTRUM = false;
+    let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, CSS2, BG, IS_BETA;
+    let STR, U_STR, DEF, U_DEF, MOV; // static
     const DATA_DEFAULTS = {
         showNav:true,
         showStats:true,
@@ -74,15 +74,15 @@
         }
     }
     function init() {
-        var username = document.querySelector('.user a:first-child')?.innerHTML || document.querySelector('.nav-profile-dropdown-text > a')?.innerHTML || '';
+        const username = document.querySelector('.user a:first-child')?.innerHTML || document.querySelector('.nav-profile-dropdown-text > a')?.innerHTML || '';
         if (username == "Log in") localStorage.setItem("NEOPET_SIDEBAR_USER", ''); // record logout
         else {
-            var last_user = localStorage.getItem("NEOPET_SIDEBAR_USER") || '';
+            const last_user = localStorage.getItem("NEOPET_SIDEBAR_USER") || '';
             USER = username || last_user; // not all pages have the header
             if (USER) {
                 PETS = JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_PETDATA")) || {};
-                var numbers = ['current_hp','max_hp','level','strength','defence','movement'];
-                for (var petname in PETS) for (var i in numbers) PETS[petname][numbers[i]] = Number(PETS[petname][numbers[i]]);
+                const numbers = ['current_hp','max_hp','level','strength','defence','movement'];
+                for (let petname in PETS) for (let i in numbers) PETS[petname][numbers[i]] = Number(PETS[petname][numbers[i]]);
                 DATA = {...DATA_DEFAULTS, ...JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_USERDATA_"+USER))};
                 psm_debug('USER',last_user,'>',USER);
                 if (USER != last_user) {
@@ -133,8 +133,8 @@
         else if (document.URL.indexOf("mediocrity") != -1) spinWheel(Mediocrity);
         else if (document.URL.indexOf("monotony") != -1) spinWheel(Monotony);
 
-        // other temp changes 
-        else if (document.URL.indexOf("springs") != -1) $(document).ajaxSuccess(HealingSprings);
+        // other temp changes
+        else if (document.URL.indexOf("springs") != -1) HealingSprings();
         else if (document.URL.indexOf("dome/arena") != -1) Battle();
         else if (document.URL.indexOf("snowager") != -1) $(document).ajaxSuccess(Snowager);
         else if (document.URL.indexOf("geraptiku/process_tomb") != -1) $(document).ajaxSuccess(Geraptiku);
@@ -182,7 +182,6 @@
             $('#container__2020').before('<div id="container__psm"><table id="psm"><tbody></tbody></table></div>');
             $CONTAINER = $('div#container__psm');
             $MODULE = $('table#psm tbody');
-            FLASH = false;
             THEME = String($('.nav-top__2020>a').css('color')) || "#000";
             BG = "rgba(255, 255, 255, 0.99)";
 
@@ -190,7 +189,6 @@
             DATA.betaBG_url = $('body').css('background-image');
         } else {
             $MODULE = $('.sidebarModule:first-child tbody');
-            FLASH = ($('.sidebar').length && document.body.innerHTML.search('swf') !== -1 && document.URL.indexOf("bank") == -1 && document.URL.indexOf("quickref") == -1 && document.URL.indexOf("petlookup") == -1);
             THEME = String($('.sidebarHeader').css('background-color')) || "#000";
             BG = "rgba(255, 255, 255, 0.99)";
 
@@ -203,11 +201,11 @@
         psm_debug('Build module');
         if (Object.keys(PETS).length > 0 && DATA.active in PETS) { // if no pets, do nothin
             // get pets to display
-            var shown = [];
-            var petname;
+            let shown = [];
+            let petname;
             if (DATA.allAccts) shown = DATA.shown;
             else {
-                for (var i=0; i<DATA.shown.length; i++) {
+                for (let i=0; i<DATA.shown.length; i++) {
                     petname = DATA.shown[i];
                     if (PETS[petname].owner==USER) shown.push(petname);
                 }
@@ -218,10 +216,10 @@
                 else
                     shown.unshift(DATA.active); // add to front of array
             }
-            var len = shown.length;
+            const len = shown.length;
             if (len>0) {
                 // clear module
-                var dir = DATA.collapsed ? 'right' : 'down';
+                const dir = DATA.collapsed ? 'right' : 'down';
                 $MODULE.html( // replace contents with only top bar
                     '<tr id="row_petsHeader" > \
                         <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
@@ -238,7 +236,7 @@
                     add_pet(shown[0]);
                 }
                 else {
-                    for (var i=0; i<len; i++) {
+                    for (let i=0; i<len; i++) {
                         petname = shown[i];
                         add_pet(petname);
 
@@ -255,20 +253,14 @@
         }
     }
     function add_pet(petname) {
-        var inactive = petname == DATA.active ? '' : 'in';
-        var neolodge = DATA.neolodge && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].neolodge ?
+        const inactive = petname == DATA.active ? '' : 'in';
+        const neolodge = DATA.neolodge && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].neolodge ?
             ' style="display: flex;"' : '';
-        var training = DATA.training && PETS[petname].training && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].training ?
+        const training = DATA.training && PETS[petname].training && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].training ?
         ' style="display: flex;"' : '';
-        var gravedanger = DATA.gravedanger && PETS[petname].petpet_danger && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].petpet_danger ?
+        const gravedanger = DATA.gravedanger && PETS[petname].petpet_danger && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].petpet_danger ?
         ' style="display: flex;"' : '';
         const expression = DATA.trueExpression ? PETS[petname].expression : '1';
-        var image = (DATA.showAnim && FLASH) ?
-            '<embed type=\"application/x-shockwave-flash\" src=\"https://images.neopets.com/customise/customNeopetViewer_v35.swf\" width=\"150\" height=\"150\" style=\"undefined\" id=\"CustomNeopetView\" name=\"CustomNeopetView\" bgcolor=\"white\" quality=\"high\" scale=\"showall\" menu=\"false\" allowscriptaccess=\"always\" swliveconnect=\"true\" wmode=\"opaque\" flashvars=\"webServer=http%3A%2F%2Fwww.neopets.com&amp;imageServer=http%3A%2F%2Fimages.neopets.com&amp;gatewayURL=http%3A%2F%2Fwww.neopets.com%2Famfphp%2Fgateway.php&amp;pet_name=%s&amp;lang=en&amp;pet_slot=\">'
-            .replace("%s", petname) : PETS[petname].dti ?
-            '<img src="https://openneo-uploads.s3.amazonaws.com/outfits/'+PETS[petname].dti+'/preview.png" width="150" height="150" border="0">' :
-            '<img src="https://pets.neopets.com/cp/'+PETS[petname].id+'/'+expression+'/4.png" width="150" height="150" border="0">';
-
 
         // for some reason children must be added seperately
         $MODULE.append('<tr id="'+inactive+'active_'+petname+'" ></tr>');
@@ -291,7 +283,7 @@
             '+createNavHTML(petname)+' \
             '+createStatsHTML(petname)+' \
             <div class="placeholder"></div> \
-            <a class="petGlam">'+image+'</a>');
+            <a class="petGlam"><img src="https://pets.neopets.com/cp/'+PETS[petname].id+'/'+expression+'/4.png" width="150" height="150" border="0"></a>');
         $('#nav_'+petname).find('.activate').on('auxclick',() => {
             psm_debug('New active:',petname)
             DATA.active = petname;
@@ -305,8 +297,8 @@
     }
     function createStatsHTML(petname) {
         if (!DATA.showStats) return '';  // if stats=false return empty
-        var stats = PETS[petname];
-        var petpetTD = '', petpetStyle='', petpetpetTD = '';
+        const stats = PETS[petname];
+        let petpetTD = '', petpetStyle='', petpetpetTD = '';
         if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
             const a1 = DATA.interactableSlider ? `<a href="https://www.neopets.com/neopetpet.phtml?neopet_name=${petname}">` : '';
             const a2 = DATA.interactableSlider ? `</a>` : '';
@@ -316,7 +308,7 @@
                     <img src="${stats.petpet_image}" width="80" height="80"><br><br>
                     ${a2}</td>`;
             petpetStyle = ' style="margin-top: -15px;"';
-            
+
             if (DATA.showPetpetpet && stats.petpetpet_image) { // if showPetpetpet=true and there is a petpetpet
                 petpetpetTD =
                     `<td align="center" class="petpetpet"><div>${a1}
@@ -332,11 +324,11 @@
                 <td align="left"><b style="color: ${stats.gender === 'Female' ? '#FD9AFF' : 'blue'}">${stats.gender}</b></td>
             </tr>
         ` : '';
-        var hp = getHP(stats.current_hp,stats.max_hp);
-        var int = DATA.interactableSlider 
+        const hp = getHP(stats.current_hp,stats.max_hp);
+        const int = DATA.interactableSlider
             ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
             : `<b>${stats.intelligence}</b>`;
-        var statsHTML =
+        const statsHTML =
             '<div id="stats_'+petname+'" class="hover stats" petname="'+petname+'"> \
             <div class="inner"'+petpetStyle+'> \
             \
@@ -409,7 +401,7 @@
     }
     function createNavHTML(petname) {
         if (!DATA.showNav) return ''; // if nav=false return empty
-        var buttonsHTML =
+        const buttonsHTML =
             '<div id="nav_'+petname+'" class="petnav"> \
                 <a class="move" dir="-1" petname="'+petname+'"><span><i class="fas fa-chevron-up"></i></span></a> \
                 <a class="activate" href="https://www.neopets.com/process_changepet.phtml?new_active_pet='+petname+'" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
@@ -443,27 +435,27 @@
         $('#info_key').show();
     }
     function info_HTML() {
-        var html =
+        const html =
             '<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don\'t want to leave the page you\'re on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it\'s time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet is not on holiday.</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the arrows to raise or lower from 10.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>temporary changes</span> <table> <tr> <td>Healing Springs</td> <td>Current HP (illness is not tracked)</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP</td> </tr> </table> <h3 style="margin-top: -30px;">* Wheels haven\'t been added yet, and I don\'t bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version '+VERSION+'</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>IE/Edge</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don\'t work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>';
         return html;
     }
     function settings_HTML() {
-        var removed = '';
-        for (var i=0; i < DATA.hidden.length; i++)
+        let removed = '';
+        for (let i=0; i < DATA.hidden.length; i++)
             if (DATA.allAccts || PETS[DATA.hidden[i]].owner==USER)
                 removed += '<option value="'+DATA.hidden[i]+'">'+DATA.hidden[i]+'</option>';
-        var html =
+        const html =
             '<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Settings</h1> </div> <div class="menu_inner"> <div class="section"> <table id="color_settings"> <tr> <td> <div>Color:</div> <input class="picker" id="colorpicker"> <input class="picker_text" id="colorpicker_text"> </td> <td> <div>Accent<br>Color:</div> <input class="picker" id="subcolorpicker"> <input class="picker_text" id="subcolorpicker_text"> <div id="increment"> <i class="fas fa-caret-up"></i> <i class="fas fa-caret-down"></i> </div> </td> <td> <div>Background<br>Color:</div> <input class="picker" id="bgcolorpicker"> <input class="picker_text" id="bgcolorpicker_text"> </td> </tr> </table> </div> <div class="section" id="toggle_settings_section"> <div id="toggle_settings_tabs"> <div name="general" class="tab-active">General</div> <div name="stats">Stats Slider</div> </div> <div id="toggle_settings_bodies"> <table name="general" class="tab-active"> <tr> <td> <table> <tr> <td> <div>navigation menu</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showNav" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>pet stats slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showStats" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>keep active pet at top</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>display true expression</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="trueExpression" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>all accounts</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>neolodge reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="neolodge"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>training reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="training"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>grave danger reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="gravedanger"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>always use beta theme bg</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="betaBG"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>debug mode</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="debug"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> <table name="stats"> <tr> <td> <table> <tr> <td> <div>show pet name</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showName" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show pet gender</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showGender" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpetpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>HP display mode</div> </td> <td> <select id="hp_mode"> <option value="0">#</option> <option value="1">#/#</option> <option value="2" style="color: green;">#/# (color)</option> </select> </td> </tr> <tr> <td> <div>BD stats display mode</div> </td> <td> <select id="bd_mode"> <option value="0">#</option> <option value="1">str (#)</option> <option value="2">neo default</option> <option value="3">str</option> </select> </td> </tr> <tr> <td> <div>interactable slider</div> <h2>stats slider will not disappear on hover, and will include links to books read and petpet interraction</h2> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="interactableSlider" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> </div> </div> <div class="section"> <table id="settings_footer"> <tr> <td id="removed_pets_container" '+(removed.length ? '' : ' style="display: none;"')+'> <div id="removed_pets_label">Removed Pets:</div> <select id="removed_pets" name="removed">'+removed+'</select> <div class="footer-btn" id="addback_button"><i class="fas fa-plus"></i></div> <div class="footer-btn" id="delete_button"><i class="fas fa-trash-alt"></i></div> </td> <td> <button id="clear_button">clear all pet data</button> </td> </tr> </table> </div> </div>';
         return html;
     }
     function createCSS() {
-        var color = getColor();
-        var subcolor = getSubcolor();
-        var bgcolor = getBgColor();
-        var textcolor = getTextColor(bgcolor);
-        var theme = color == THEME;
-        var h1color = theme ? $('.sidebarHeader a').css('color') : "#fff";
-        var h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
+        const color = getColor();
+        const subcolor = getSubcolor();
+        const bgcolor = getBgColor();
+        const textcolor = getTextColor(bgcolor);
+        const theme = color == THEME;
+        const h1color = theme ? $('.sidebarHeader a').css('color') : "#fff";
+        const h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
             /* BETA */ body { overflow-x: hidden; } .betaBG { background-image: '+DATA.betaBG_url+' !important; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 100; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+h1color+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+h2color+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+h2color+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 14.25px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: '+subcolor+'; } .inner .petpet>a, .inner .petpetpet>div>a { color: '+textcolor+'; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
@@ -477,11 +469,11 @@
         // All data except exact stat numbers
         $('.contentModuleTable tbody').each(function(k,v) {
             if(k%2 === 0) { // even indexed elements are the relevant ones
-                var names = $(v).find('th').first().text();
-                var namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its (.+)|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
+                const names = $(v).find('th').first().text();
+                const namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its (.+)|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
                 //if (namesMatch) psm_debug(namesMatch);
-                var petpet = [namesMatch[2] || namesMatch[6], namesMatch[3] || namesMatch[7], namesMatch[4] || null];
-                var petname = namesMatch[1] || namesMatch[5] || namesMatch[8];
+                const petpet = [namesMatch[2] || namesMatch[6], namesMatch[3] || namesMatch[7], namesMatch[4] || null];
+                const petname = namesMatch[1] || namesMatch[5] || namesMatch[8];
                 if( !(petname in PETS) ) { // if pet isn't recorded, add it to shown and pets
                     DATA.shown.push(petname);
                     PETS[petname] = {isUncertain: false};
@@ -489,11 +481,11 @@
                 else if ( !(PETS[petname].species.length) ) { // add pets with only bd stats to shown
                     DATA.shown.push(petname);
                 }
-                var stats = PETS[petname];
+                const stats = PETS[petname];
 
-                var $lines = $(v).find('.pet_stats td');
-                var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
-                var image = $(v).find('.pet_image').attr('style').split('/');
+                const $lines = $(v).find('.pet_stats td');
+                const health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
+                const image = $(v).find('.pet_image').attr('style').split('/');
                 //if (health) psm_debug(health);
                 stats.owner             = USER;
                 stats.id                = image[4] || 0;
@@ -525,22 +517,22 @@
         });
     }
     function get_checkout(v) {
-        var notice = $(v).find('.pet_notices:contains(Neolodge)').text() || false;
+        const notice = $(v).find('.pet_notices:contains(Neolodge)').text() || false;
         if (!notice) return 0;
-        var now = (new Date).getTime();
+        const now = (new Date).getTime();
         if (notice.includes('currently checking ')) return now + 86400000; // add a day for buffer
-        var dif = new RegExp(/in (\d+) days?, (\d+) hours? and (\d+) minutes?/g).exec(notice);
+        const dif = new RegExp(/in (\d+) days?, (\d+) hours? and (\d+) minutes?/g).exec(notice);
         return dif ? now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000 + 86400000 : 0; // add a day for buffer
     }
     function Battledome1() {
         psm_debug('Battledome Pets');
         $('.petContainer').each(function(k,v) {
-            var petname = $(v).attr('data-name');
+            const petname = $(v).attr('data-name');
             if (petname in PETS) {
-                var stats = PETS[petname];
-                var $v = $(v);
+                const stats = PETS[petname];
+                const $v = $(v);
 
-                var health = $v.find('.hpValue').text().match(new RegExp(/(\d+)\/(\d+)/));
+                const health = $v.find('.hpValue').text().match(new RegExp(/(\d+)\/(\d+)/));
                 stats.current_hp    = Number(health[1]);
                 stats.max_hp        = Number(health[2]);
                 stats.strength      = Number($v.find('.atkValue').text());
@@ -555,12 +547,12 @@
     function Battledome2() {
         psm_debug('Battledome Choose');
         $('.petInfoBox').each(function(k,v) {
-            var petname = $(v).attr('data-name');
+            const petname = $(v).attr('data-name');
             if (petname in PETS) {
-                var stats = PETS[petname];
-                var $vals = $(v).find('.statValue');
+                const stats = PETS[petname];
+                const $vals = $(v).find('.statValue');
 
-                var health = $vals.eq(0).text().match(new RegExp(/(\d+)\/(\d+)/));
+                const health = $vals.eq(0).text().match(new RegExp(/(\d+)\/(\d+)/));
                 stats.current_hp    = Number(health[1]);
                 stats.max_hp        = Number(health[2]);
                 stats.movement      = Number($vals.eq(1).text());
@@ -577,7 +569,7 @@
         $("table[width='500']>tbody>tr").each(function(k,v) {
             if(k%2 === 0) {
                 // get name and retreive data (if any)
-                var petname = $(v).children().first().text().split(" ")[0];
+                const petname = $(v).children().first().text().split(" ")[0];
                 if( !(petname in PETS) ) { // if pet isn't recorded, add it only to pets (since incomplete data)
                     PETS[petname] = {
                         species: '',
@@ -600,11 +592,11 @@
                         isUncertain: true
                     };
                 }
-                var stats = PETS[petname];
+                const stats = PETS[petname];
 
                 // get stats
-                var dStats = $(v).next().children().first().text();
-                dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+) / (.+)'));
+                let dStats = $(v).next().children().first().text();
+                dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp {2}: (.+) / (.+)'));
                 psm_debug(petname, dStats);
                 if (dStats) {
                     stats.level         = Number(dStats[1]);
@@ -633,14 +625,14 @@
         });
     }
     function EndTraining() {
-        var blurb = $('p').text();
-        var match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
+        const blurb = $('p').text();
+        const match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
         if (match) {
             psm_debug('EndTraining');
-            var petname = match[1];
+            const petname = match[1];
             PETS[petname].training = 0;
             if(petname in PETS) {
-                var n = Number(match[3]) || 1;
+                const n = Number(match[3]) || 1;
                 psm_debug('matches:',petname,match[2],n);
                 switch (match[2]) {
                     case 'Endurance':
@@ -658,18 +650,19 @@
     }
     function FaerieQuest() {
         psm_debug('FaerieQuest');
-        var petname = $('.pet-name').text().slice(0, -2);
+        const petname = $('.pet-name').text().slice(0, -2);
         if (petname.length) { // make sure on right page
-            var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
+            const faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
             psm_debug(petname, faerie);
 
             if(petname in PETS) { // ignore pets not stored
-                var stats = PETS[petname];
+                const stats = PETS[petname];
                 PETS[petname] = questSwitch(faerie,stats);
             }
         }
     }
     function questSwitch(faerie,stats) {
+        let blurb;
         switch (faerie) {
             case 'Air':
                 stats.movement += 3;
@@ -707,21 +700,21 @@
                 break;
             case 'Soup':
                 // 2*2 (HP OR def OR str OR mov OR lv)
-                var blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+)s? .*and 2 (\w+)s?/));
+                blurb = $('.pet-name').parent().text().match(new RegExp(/gained 2 (\w+)s? .*and 2 (\w+)s?/));
                 stats[blurb[1]] += 2;
                 stats[blurb[2]] += 2;
                 break;
             case 'Gray':
                 // leaches off of elemental or fountain faerie. she's a poser.
-                var newFaeire = $('.pet-name').parent().text().match(new RegExp(/another faerie. (\w+) .aerie, come/));
-                if (newFaeire != "Earth") questSwitch(newFaeire,stats);
+                blurb = $('.pet-name').parent().text().match(new RegExp(/another faerie. (\w+) .aerie, come/));
+                if (blurb != "Earth") questSwitch(blurb,stats);
                 break;
         }
         return stats;
     }
     function Coincidence() {
         psm_debug('Coincidence');
-        var blurb = $('.randomEvent > .copy').text();
+        const blurb = $('.randomEvent > .copy').text();
         if (blurb.length) {
             /**
              *  stats:
@@ -738,11 +731,11 @@
              *  - 1 to 3 stat:
              *      An electric current starts to fill the room, but quickly leads to smoke. When everything has settled, you see that there is something different about ACTIVE PET NAME. Oh, no... It looks like their STAT NAME has gone down by X!
              */
-            var match = new RegExp(/about ([^\.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
+            const match = new RegExp(/about ([^.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
             if (match) {
                 psm_debug('matches:',match[1],match[2],match[3],match[4]);
-                var stats = PETS[match[1]];
-                var n = (match == 'up') ? match[4]*1 : match[4]*(-1);
+                const stats = PETS[match[1]];
+                const n = (match == 'up') ? match[4]*1 : match[4]*(-1);
                 if (match[2] == 'hit') {
                     stats.current_hp += n;
                     stats.max_hp += n;
@@ -755,7 +748,7 @@
     }
     function Coltzan() {
         psm_debug('Coltzan');
-        var blurb = $('div[align="center"] p').eq(0).text();
+        const blurb = $('div[align="center"] p').eq(0).text();
         if (blurb.length) {
             /**
              *  stats:
@@ -774,13 +767,13 @@
              *  All your Neopets are healed to full health!
              *
              */
-            var match = new RegExp(/^([^ ]+) (has gained (\d+)|feels|your).* (\w+)(\(|!)/g).exec(blurb);
+            const match = new RegExp(/^([^ ]+) (has gained (\d+)|feels|your).* (\w+)(\(|!)/g).exec(blurb);
             if (match) {
                 psm_debug('matches:',match[1],match[4]); // petname, stat
-                var petname = match[1];
+                const petname = match[1];
                 if (petname == "All")
-                    for (petname in PETS) if (PETS[petname].owner == USER)
-                        PETS[petname].current_hp = PETS[petname].max_hp;
+                    for (let each_petname in PETS) if (PETS[each_petname].owner == USER)
+                        PETS[each_petname].current_hp = PETS[each_petname].max_hp;
                 else if (petname in PETS) {
                     switch (match[4]) {
                         case 'level':
@@ -810,9 +803,9 @@
          *  +1 str:         PETNAME has become better at Attack!!!
          *  +1 mov:         PETNAME has become better at Agility!!!
          */
-        var blurb = $('p>b').eq(-1).text();
+        const blurb = $('p>b').eq(-1).text();
         psm_debug(blurb);
-        var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
+        const match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
         if (match) {
             psm_debug('matches:',match[1],match[2]);
             if (match[1] in PETS) {
@@ -845,15 +838,15 @@
          *  ... and she changes colour to White!!
          */
         psm_debug('Lab Ray');
-        var petname = $('p').eq(0).find('b').text();
+        const petname = $('p').eq(0).find('b').text();
         psm_debug(petname);
         if(petname in PETS) { // ignore pets not stored
-            var blurb = $('p').eq(2).text();
-            var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) a? ?([^ ]+[^ s])s? ?([^!]+)/g).exec(blurb);
+            const blurb = $('p').eq(2).text();
+            const match = new RegExp(/and s?he ([^ ]+) ([^ ]+) a? ?([^ ]+[^ s])s? ?([^!]+)/g).exec(blurb);
             if (match) {
-                var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
-                var stats = PETS[petname];
-                var n = Number(number_map[match[2]]) || Number(match[2]);
+                const number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
+                const stats = PETS[petname];
+                const n = Number(number_map[match[2]]) || Number(match[2]);
                 psm_debug('matches:',match[1],n,match[3],match[4]);
                 switch (match[1]) {
                     case "changes":
@@ -891,16 +884,16 @@
     }
     function PetpetLab() {
         psm_debug("Petpet Lab");
-        var petname = $('b:contains(The Petpet Laboratory) ~ b').eq(1).text();
+        const petname = $('b:contains(The Petpet Laboratory) ~ b').eq(1).text();
         if (petname in PETS) {
-            var newname = $('div[align="center"]').find('b').eq(1).text();
+            const newname = $('div[align="center"]').find('b').eq(1).text();
             if (newname && !Number(newname)) { // can also be new level, which should be ignored
                 psm_debug('new name:',newname);
                 PETS[petname].petpet_name = newname;
                 return;
             }
-            var $div = $('b:contains(The Petpet Laboratory) ~ div').eq(1);
-            var match = new RegExp(/(transformed|explosion|disappear)/g).exec($div.text());
+            const $div = $('b:contains(The Petpet Laboratory) ~ div').eq(1);
+            const match = new RegExp(/(transformed|explosion|disappear)/g).exec($div.text());
             if (match) {
                 switch (match[1]) {
                     case 'transformed':
@@ -922,11 +915,11 @@
     }
     function Petpet() {
         psm_debug("BETA Petpet Play");
-        var petname = $('.page-title__2020 > h1').text().split("'")[0];
+        const petname = $('.page-title__2020 > h1').text().split("'")[0];
         psm_debug(petname)
         if (petname && petname in PETS) {
-            var blurb = $('.h5-dialogue > p').text();
-            var match = new RegExp(/I love ([^,]+), my (\w+)(?:\s*, and its (\w+))?/g).exec(blurb);
+            const blurb = $('.h5-dialogue > p').text();
+            const match = new RegExp(/I love ([^,]+), my (\w+)(?:\s*, and its (\w+))?/g).exec(blurb);
             psm_debug(match)
             if (match) {
                 PETS[petname].petpet_name = match[1];
@@ -939,13 +932,13 @@
     }
     function Sidebar() {
         // get name and retreive data (if any)
-        var petname = $("a[href='/quickref.phtml']").first().text();
+        const petname = $("a[href='/quickref.phtml']").first().text();
         if(petname in PETS) { // if pet isn't recorded, not worth starting here
-            var stats = PETS[petname];
+            const stats = PETS[petname];
 
             // get stats
-            var activePetStats = $("td[align='left']");
-            var health = $(activePetStats).eq(1).text().match(new RegExp(/(\d+) \/ (\d+)/));
+            const activePetStats = $("td[align='left']");
+            const health = $(activePetStats).eq(1).text().match(new RegExp(/(\d+) \/ (\d+)/));
             stats.species       = $(activePetStats).eq(0).text();
             stats.mood          = $(activePetStats).eq(2).text();
             stats.hunger        = $(activePetStats).eq(3).text();
@@ -975,12 +968,12 @@
          *  == MOOD ==
          *  PETNAME doesn't look very happy anymore.                [become depressed]
          */
-        var blurb = $('.randomEvent .copy').text().trim();
+        const blurb = $('.randomEvent .copy').text().trim();
         if (blurb) {
             psm_debug('Random Event:',blurb);
-            var match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
+            const match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
             if (match) {
-                var petname = match[2];
+                const petname = match[2];
                 if (petname && petname in PETS) {
                     psm_debug('matches:',petname,match[3],match[4],match[5]);
                     switch (match[3]) {
@@ -995,8 +988,7 @@
                             if (match[5] == 'senseless')    PETS[petname].level -= 1;
                             break;
                         case 'loses':
-                            var n = Number(match[4]);
-                            if (!n)                         PETS[petname].level -= 1;
+                            if (!Number(match[4]))          PETS[petname].level -= 1;
                             else switch (match[5]) {
                                 case 'HP':
                                     PETS[petname].current_hp -= 1;
@@ -1021,21 +1013,21 @@
                 }
                 else if (match[1]) {
                     psm_debug('Heal all pets.')
-                    for (petname in PETS) if (PETS[petname].owner == USER)
-                        PETS[petname].current_hp = PETS[petname].max_hp;
+                    for (let each_petname in PETS) if (PETS[each_petname].owner == USER)
+                        PETS[each_petname].current_hp = PETS[each_petname].max_hp;
                 }
 
             }
         }
     }
-    function Decay() {
-        psm_debug("I'll get to it eventually.");
-        /**
-         *  bloated ==> famished    144 ?
-         *  famished => starving    22  ?
-         *  starving => dying       2
-         */
-    }
+    // function Decay() {
+    //     psm_debug("I'll get to it eventually.");
+    //     /**
+    //      *  bloated ==> famished    144 ?
+    //      *  famished => starving    22  ?
+    //      *  starving => dying       2
+    //      */
+    // }
     function spinWheel(callback) {
         psm_debug('Wheel');
         // Waiting to finish spinning the wheel
@@ -1058,7 +1050,6 @@
          * The Lava Ghoul flies down from a nearby cloud and breathes FIRE over your pets!  All pets lose 2/3 of current HP floor(curr/3)
          * ?                                                                                Active contracts Chickaroo
          */
-        var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (blurb.includes('completely'))
             for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = PETS[petname].max_hp;
         // else if (blurb.includes('?'))
@@ -1108,13 +1099,14 @@
          * petname regains their hit points and is not hungry any more
          * petname is fully healed
          */
-        var blurb = $('.faerie-battle + p + p').eq(0).text();
+        const blurb = $('.faerie-battle + p + p').eq(0).text();
         psm_debug(blurb);
-        var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
+        psm_debug('alt',$('.faerie-bye + p').eq(0).text());
+        const match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (match) {
-            var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
-            var n = number_map[match[5]];
-            var petname;
+            const number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
+            const n = number_map[match[5]];
+            let petname;
             if (match[1]=="All") {
                 psm_debug('All');
                 for (petname in PETS) if (PETS[petname].owner == USER) healPet(petname,match[3],n);
@@ -1145,7 +1137,7 @@
     }
     function Battle() {
         psm_debug('Battle');
-        var end = setInterval(function() {
+        const end = setInterval(function() {
             if ($('#playground>.end_game').length) {
                 clearInterval(end);
                 battle_end();
@@ -1153,7 +1145,7 @@
         }, 500);
     }
     function battle_end(){
-        var petname = $('#p1name').text();
+        const petname = $('#p1name').text();
         if (petname && petname in PETS) {
             PETS[petname].current_hp = Number($('#p1hp').text());
             localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS)); // finishes late
@@ -1190,7 +1182,7 @@
                     useItem(result);
                 }
             }, 500);
-        }) 
+        });
     }
     function useItem(blurb) {
         psm_debug('BETA Item');
@@ -1201,18 +1193,17 @@
          *  PETNAME was not hungry, and now he is full up!
          *  PETNAME's body starts to feel tingly as they turn into a COLOR SPECIES!
          */
-        var match = new RegExp(/^([^ ']+)(?:'s)? ([^ ]+) .+ (?:is still |is |hit |gains |into a (.+) )(.+)(?:!| hit)/g).exec(blurb);
+        const match = new RegExp(/^([^ ']+)(?:'s)? ([^ ]+) .+ (?:is still |is |hit |gains |into a (.+) )(.+)(?:!| hit)/g).exec(blurb);
         if (match) {
             psm_debug('matches:',match[1],match[2],match[3],match[4])
-            var petname = match[1];
+            const petname = match[1];
             if (petname in PETS) {
                 switch (match[2]) {
                     case 'was':     // food
                         PETS[petname].hunger = match[4];
                         break;
                     case 'drinks':  // health potion
-                        var n = Number(match[4]);
-                        if (n) PETS[petname].current_hp += n;
+                        if (match[4]) PETS[petname].current_hp += Number(match[4]);
                         else if (match[4] == 'points') PETS[petname].current_hp = PETS[petname].max_hp;
                         break;
                     case 'body':    // morphing potion
@@ -1281,9 +1272,9 @@
         $('select[name="hotel_rate"]').val('5');
         $('select[name="nights"] option:last-child').prop('selected', true);
         $('#book_all').prop('checked', true);
-        var now = (new Date).getTime();
+        const now = (new Date).getTime();
         $('select[name="pet_name"] option:nth-child(n+2)').each(function() {
-            var petname = $(this).text().slice(0, -1);
+            const petname = $(this).text().slice(0, -1);
             if (petname in PETS && PETS[petname].neolodge<now) {
                 $(this).prop('selected', true);
                 return;
@@ -1292,28 +1283,28 @@
     }
     function array_move(arr, old_index, new_index) {
         arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-    };
+    }
     function color_inc(value) {
-        var result = value*1+DATA.i
+        const result = value*1+DATA.i
         return result < 0 ? 0 : result > 255 ? 255 : result;
     }
     function clean_pets() {
-        var all = DATA.shown.concat(DATA.hidden);
-        var len = all.length;
-        var pets = Object.keys(PETS);
-        for (var petname in PETS) {
+        const pets = Object.keys(PETS);
+        const all = DATA.shown.concat(DATA.hidden);
+        let len = all.length;
+        for (let petname in PETS) {
             if (!all.includes(petname)) {
                 len += 1;
                 DATA.shown.push(petname);
             }
         }
         if (len != pets.length) {
-            for(var i=0; i<DATA.shown.length; i++)
+            for(let i=0; i<DATA.shown.length; i++)
                 if (!pets.includes(DATA.shown[i])) {
                     DATA.shown.splice(i,1);
                     i -= 1;
                 }
-            for(var i=0; i<DATA.hidden.length; i++)
+            for(let i=0; i<DATA.hidden.length; i++)
                 if (!pets.includes(DATA.hidden[i])) {
                     DATA.hidden.splice(i,1);
                     i -= 1;
@@ -1333,24 +1324,24 @@
     function getHP(current, max) {
         if (DATA.hp_mode==0) return max;
         if (DATA.hp_mode==1) return current+' / '+max;
-        var p = current/max;
-        var color = p<0.2 ? 'red' : p<0.4 ? 'orange' : p<0.6 ? 'yellow' : p<0.8 ? 'blue' : 'green';
+        const p = current/max;
+        const color = p<0.2 ? 'red' : p<0.4 ? 'orange' : p<0.6 ? 'yellow' : p<0.8 ? 'blue' : 'green';
         return '<font color="'+color+'">'+current+' / '+max+'</font>';
     }
     function getBDStat(n,arr) {
         if (DATA.bd_mode==0 || (arr!=STR && arr!=DEF && arr!=MOV)) return n; // 'num' <default>
         if (n<21) return DATA.bd_mode==1 ? arr[n]+' ('+n+')' : arr[n];       // 'str (num)' OR 'str'
-        var word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
+        const word = n<40 ? 'GREAT' : n<60 ? 'EXCELLENT' : n<80 ? 'AWESOME' : n<100 ? 'AMAZING' : n<150 ? 'LEGENDARY' : 'ULTIMATE';
         return DATA.bd_mode<3 ? word+' ('+n+')' : word;  // 'str (num)'  /  'str', 'str (num)' <neo default> OR 'str'
     }
     function setStrength(word, petname) {
-        var n; // = ((STR.indexOf(word) < 0) ? word.match(/\d+/g)[0] : STR.indexOf(word));
+        let n;
         if (STR.indexOf(word) < 0) {
             n = word.match(/\d+/g)
             if (n)
-                if (n && U_STR.indexOf(word) < 0) {
+                if (U_STR.indexOf(word) < 0) {
                     n = Number(n[0]);
-                    var current = PETS[petname].strength;
+                    const current = PETS[petname].strength;
                     n = (current-n)>0 && (current-n)<4 ? current : n;
                     PETS[petname].isUncertain = true;
                 }
@@ -1361,13 +1352,13 @@
         //psm_debug("strength: ",word,n);
     }
     function setDefence(word, petname) {
-        var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
+        let n;
         if (DEF.indexOf(word) < 0) {
             n = word.match(/\d+/g)
             if (n)
-                if (U_STR.indexOf(word) < 0) {
+                if (U_DEF.indexOf(word) < 0) {
                     n = Number(n[0]);
-                    var current = PETS[petname].defence;
+                    const current = PETS[petname].defence;
                     n = (current-n)>0 && (current-n)<4 ? current : n;
                     PETS[petname].isUncertain = true;
                 }
@@ -1378,11 +1369,11 @@
         //psm_debug("defence: ",word,n);
     }
     function setMovement(word, petname) {
-        var n = word.match(/\d+/g);
+        let n = word.match(/\d+/g);
         n = ((MOV.indexOf(word) < 0) ? (n ? Number(n[0]) : -1) : MOV.indexOf(word));
 
         if (word == "average") {
-            var current = PETS[petname].movement;
+            const current = PETS[petname].movement;
             n = (current-n)>0 && (current-n)<3 ? current : n;
             PETS[petname].isUncertain = true;
         }
@@ -1390,7 +1381,7 @@
         //psm_debug("movement: ",word,n);
     }
     /*function int_toInt(word) {
-        var n = word.match(/\d+/g);
+        let n = word.match(/\d+/g);
         n = n ? n[0] : word;
         psm_debug("intelligence: ",word,n);
         return n;
@@ -1405,8 +1396,8 @@
     function getSubcolor(set) {
         if (set) DATA.subcolor = set;
         if (DATA.subcolor) return String(DATA.subcolor);
-        var color = getColor();
-        var rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
+        const color = getColor();
+        const rgbs = color.match(new RegExp(/rgb\((\d+), ?(\d+), ?(\d+)\)/));
         return rgbs ? 'rgb('+color_inc(rgbs[1])+', '+color_inc(rgbs[2])+', '+color_inc(rgbs[3])+')' : THEME;
     }
     function getBgColor(set) {
@@ -1415,17 +1406,17 @@
     }
     function getTextColor(bg) {
         // automatically use white or black text depending on background luminance
-        var rgb = bg.match(new RegExp(/rgba?\((\d+), ?(\d+), ?(\d+),? ?([\d\.]+)?/));
+        const rgb = bg.match(new RegExp(/rgba?\((\d+), ?(\d+), ?(\d+),? ?([\d.]+)?/));
         if (!rgb || (rgb[4] && rgb[4]<0.3)) return '#000';
-        for (var i=1; i<4; i++) {
+        for (let i=1; i<4; i++) {
             rgb[i] = rgb[i]/255.0;
             rgb[i] = rgb[i] <= 0.03928 ? rgb[i]/12.92 : Math.pow(((rgb[i]+0.055)/1.055), 2.4);
         }
-        var L = 0.2126*rgb[1] + 0.7152*rgb[2] + 0.0722*rgb[3];
+        const L = 0.2126*rgb[1] + 0.7152*rgb[2] + 0.0722*rgb[3];
         return L > 0.179 ? '#000' : '#fff';
     }
     function changeColor(tinycolor) {
-        var color;
+        let color;
         if (tinycolor) {
             $('.menu_header h1, #info_nav button, .menu_close').css('color','#fff');
             color = getColor(tinycolor.toRgbString());
@@ -1445,7 +1436,7 @@
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
     function changeSubcolor(tinycolor) {
-        var color;
+        let color;
         if (tinycolor) {
             color = getSubcolor(tinycolor.toRgbString());
             $('#increment').hide();
@@ -1462,7 +1453,7 @@
         localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
     }
     function changeBgColor(tinycolor) {
-        var color;
+        let color;
         if (tinycolor)
             color = getBgColor(tinycolor.toRgbString());
         else { // if none selected, return to theme color
@@ -1514,17 +1505,17 @@
         });
         $(".picker").each(function() { $(this).next().next().val($(this).spectrum('get').toRgbString()); }); // initial fill text fields
         $('#colorpicker_text').blur(function() {
-            var $picker = $('#colorpicker');
+            const $picker = $('#colorpicker');
             $picker.spectrum('set', $(this).val()); // doesn't fire event due to infinite loops
             changeColor($picker.spectrum('get'));   // use the picker's' color validation
         });
         $('#subcolorpicker_text').blur(function() {
-            var $picker = $('#subcolorpicker');
+            const $picker = $('#subcolorpicker');
             $picker.spectrum('set', $(this).val());
             changeSubcolor($picker.spectrum('get'));
         });
         $('#bgcolorpicker_text').blur(function() {
-            var $picker = $('#bgcolorpicker');
+            const $picker = $('#bgcolorpicker');
             $picker.spectrum('set', $(this).val());
             changeBgColor($picker.spectrum('get'));
         });
@@ -1543,7 +1534,7 @@
         }
         $MODULE.on('click', '.remove_button i', function() {
             if ($('.leftHover').length > 1) {
-                var petname = $(this).attr('petname');
+                const petname = $(this).attr('petname');
                 DATA.hidden.push(petname);
                 DATA.shown.splice( DATA.shown.indexOf(petname), 1);
                 removePet(petname);
@@ -1553,7 +1544,7 @@
             }
         });
         $('#addback_button i').click(function() {
-            var petname = $('#removed_pets').val();
+            const petname = $('#removed_pets').val();
             DATA.shown.push(petname);
             DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
             buildModule();
@@ -1562,7 +1553,7 @@
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#delete_button i').click(function() {
-            var petname = $('#removed_pets').val();
+            const petname = $('#removed_pets').val();
             DATA.hidden.splice( DATA.hidden.indexOf(petname), 1);
             delete PETS[petname];
             buildModule();
@@ -1574,7 +1565,7 @@
 
 
         // SETTINGS
-        $('#toggle_settings_bodies input[type="checkbox"]').change(function(e, v) {
+        $('#toggle_settings_bodies input[type="checkbox"]').change(function(e) {
             DATA[$(this).attr('name')] = $(this).prop('checked');
             const name = $(e.target).attr('name');
             if (!['betaBG','debug'].includes(name)) {
@@ -1587,8 +1578,8 @@
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#hp_mode,#bd_mode').change(function() {
-            var id = $(this).attr('id');
-            var val = $(this).val();
+            const id = $(this).attr('id');
+            const val = $(this).val();
             DATA[id] = val;
             buildModule();
             $('.remove_button').show();
@@ -1617,12 +1608,12 @@
             // Container min-height must be set in stylesheet because element attribute is overridden natively
             const winHeight = window.innerHeight - Math.round($('#footer__2020').outerHeight(false));
             const modHeight = Math.round($CONTAINER.height()) + 175;
-            const newHeight = Math.max(winHeight, modHeight);      
+            const newHeight = Math.max(winHeight, modHeight);
             if (CSS2) {
-                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;  
+                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;
             } else {
                 CSS2 = document.createElement("style");
-                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;  
+                CSS2.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;
                 document.body.appendChild(CSS2);
             }
         }
@@ -1730,7 +1721,7 @@
         }
         $MODULE.on('click', '.move', function() { // arrow buttons
             if (!$(this).hasClass('disabled')) {
-                var i = DATA.shown.indexOf($(this).attr('petname'));
+                const i = DATA.shown.indexOf($(this).attr('petname'));
                 array_move(DATA.shown,i,i+Number($(this).attr('dir')));
                 buildModule();
                 if ($('#settings_menu').is(":visible")) $('.remove_button').show();
@@ -1742,7 +1733,7 @@
     // LOAD RESOURCES
     function load_jQuery() {
         psm_debug("loading jQuery");
-        var jq = document.createElement('script');
+        const jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(main, 50);
@@ -1750,7 +1741,7 @@
     function load_spectrum() {
         psm_debug("loading spectrum");
         SPECTRUM = true;
-        var jq = document.createElement('script');
+        const jq = document.createElement('script');
         jq.src = "https://bgrins.github.io/spectrum/spectrum.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(settings_functionality, 50);
