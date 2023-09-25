@@ -2,6 +2,9 @@
 body {
     overflow-x: hidden;
 }
+.betaBG {
+    background-image: '+DATA.betaBG_url+' !important;
+}
 .navsub-left__2020 {
     margin-left: 225px;
 }
@@ -700,6 +703,15 @@ div#toggle_settings_tabs>div.tab-active {
 
 .inner i {
     font: 6.5pt Verdana;
+}
+
+.inner .petname {
+    position: absolute;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    color: '+subcolor+';
 }
 
 .inner .petpetpet>div {
