@@ -25,13 +25,6 @@
  *  TODO:
  *      - Remove vars
  *      - Flesh out wheels collection (need to get list of result strings)
- *      - New Toggle Settings:
- *          > T apply Beta background image to legacy site
- *          > T interactable stats slider 
- *              - doesn't go away when hovering over it
- *              - intelligence links to books
- *              - petpet links to petpet 
- *          > debug mode
  * 
  */
 
@@ -54,7 +47,7 @@
         training:true,
         gravedanger:true,
         betaBG:false,
-        debug:false,        // TODO
+        debug:false,
         showName:false,
         showGender:false,
         showPetpet:true,
@@ -74,7 +67,7 @@
 
     try { init(); }
     catch(err) {
-        console.debug(err);
+        console.error(err);
         if (err.message.indexOf('Cannot read property') >= 0) {
             clear_pets(); // this usually solves the issue
             init();
@@ -91,7 +84,7 @@
                 var numbers = ['current_hp','max_hp','level','strength','defence','movement'];
                 for (var petname in PETS) for (var i in numbers) PETS[petname][numbers[i]] = Number(PETS[petname][numbers[i]]);
                 DATA = {...DATA_DEFAULTS, ...JSON.parse(localStorage.getItem("NEOPET_SIDEBAR_USERDATA_"+USER))};
-                console.debug('USER',last_user,'>',USER);
+                psm_debug('USER',last_user,'>',USER);
                 if (USER != last_user) {
                     clean_pets();
                     localStorage.setItem("NEOPET_SIDEBAR_USER", USER);
@@ -107,12 +100,12 @@
     // MAIN
     function main() {
         if (!window.jQuery) {
-            console.debug('...')
+            psm_debug('...')
             setTimeout(main, 50);
             return;
         }
-        console.debug('DATA',DATA);
-        console.debug('PETS',PETS);
+        psm_debug('DATA',DATA);
+        psm_debug('PETS',PETS);
 
         // UPDATE PETS
         setStatics();
@@ -134,8 +127,8 @@
 
         // wheels are not completed, just keeping active for logs
         else if (document.URL.indexOf("faerieland/wheel") != -1) spinWheel(Excitement);
-        else if (document.URL.indexOf("faerieland/wheel") != -1) spinWheel(Excitement);
-        else if (document.URL.indexOf("faerieland/wheel") != -1) spinWheel(Knowledge);
+        else if (document.URL.indexOf("extravagance") != -1) spinWheel(Extravagance);
+        else if (document.URL.indexOf("medieval/knowledge") != -1) spinWheel(Knowledge);
         else if (document.URL.indexOf("halloween/wheel") != -1) spinWheel(Misfortune);
         else if (document.URL.indexOf("mediocrity") != -1) spinWheel(Mediocrity);
         else if (document.URL.indexOf("monotony") != -1) spinWheel(Monotony);
@@ -206,7 +199,7 @@
 
     // BUILDER FUNCTIONS
     function buildModule(){
-        console.debug('Build module',Object.keys(PETS).length,DATA.active);
+        psm_debug('Build module');
         if (Object.keys(PETS).length > 0 && DATA.active in PETS) { // if no pets, do nothin
             // get pets to display
             var shown = [];
@@ -227,7 +220,6 @@
             var len = shown.length;
             if (len>0) {
                 // clear module
-                console.debug('Clear module');
                 var dir = DATA.collapsed ? 'right' : 'down';
                 $MODULE.html( // replace contents with only top bar
                     '<tr id="row_petsHeader" > \
@@ -299,9 +291,8 @@
             '+createStatsHTML(petname)+' \
             <div class="placeholder"></div> \
             <a class="petGlam">'+image+'</a>');
-        console.debug('test',$('#nav_'+petname).find('.activate').length)
         $('#nav_'+petname).find('.activate').on('auxclick',() => {
-            console.debug('New active:',petname)
+            psm_debug('New active:',petname)
             DATA.active = petname;
             buildModule();
         })
@@ -474,20 +465,20 @@
         var h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
-            /* BETA */ body { overflow-x: hidden; } .betaBG { background-image: '+DATA.betaBG_url+' !important; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 100; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+h1color+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+h2color+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+h2color+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 13.5px 0px; font-weight: lighter; font-size: 11px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: '+subcolor+'; } .inner .petpet>a, .inner .petpetpet>div>a { color: '+textcolor+'; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
+            /* BETA */ body { overflow-x: hidden; } .betaBG { background-image: '+DATA.betaBG_url+' !important; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 100; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+h1color+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+h2color+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+h2color+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 14.25px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: '+subcolor+'; } .inner .petpet>a, .inner .petpetpet>div>a { color: '+textcolor+'; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
         document.body.appendChild(CSS);
 
     }
 
     // GATHERER FUNCTIONS
     function QuickRef() {
-        console.debug('QuickRef');
+        psm_debug('QuickRef');
         // All data except exact stat numbers
         $('.contentModuleTable tbody').each(function(k,v) {
             if(k%2 === 0) { // even indexed elements are the relevant ones
                 var names = $(v).find('th').first().text();
                 var namesMatch = names.match(new RegExp(/(.+) with (.+) the (.+) and its (.+)|(.+) with (.+) the (.+)|(.+)/)); // allow for presence/absence of petpet/petpetpet
-                //if (namesMatch) console.debug(namesMatch);
+                //if (namesMatch) psm_debug(namesMatch);
                 var petpet = [namesMatch[2] || namesMatch[6], namesMatch[3] || namesMatch[7], namesMatch[4] || null];
                 var petname = namesMatch[1] || namesMatch[5] || namesMatch[8];
                 if( !(petname in PETS) ) { // if pet isn't recorded, add it to shown and pets
@@ -502,7 +493,7 @@
                 var $lines = $(v).find('.pet_stats td');
                 var health = $lines.eq(5).text().match(new RegExp(/(\d+) \/ (\d+)/));
                 var image = $(v).find('.pet_image').attr('style').split('/');
-                //if (health) console.debug(health);
+                //if (health) psm_debug(health);
                 stats.owner             = USER;
                 stats.id                = image[4] || 0;
                 stats.expression        = image[5] || 1;
@@ -526,7 +517,7 @@
                 setStrength($lines.eq(8).text(),petname);
                 setDefence( $lines.eq(9).text(),petname);
                 setMovement($lines.eq(10).text(),petname);
-                //console.debug(stats);
+                //psm_debug(stats);
 
                 PETS[petname] = stats;
             }
@@ -541,7 +532,7 @@
         return dif ? now + dif[1]*86400000 + dif[2]*3600000 + dif[3]*60000 + 86400000 : 0; // add a day for buffer
     }
     function Battledome1() {
-        console.debug('Battledome Pets');
+        psm_debug('Battledome Pets');
         $('.petContainer').each(function(k,v) {
             var petname = $(v).attr('data-name');
             if (petname in PETS) {
@@ -561,7 +552,7 @@
         });
     }
     function Battledome2() {
-        console.debug('Battledome Choose');
+        psm_debug('Battledome Choose');
         $('.petInfoBox').each(function(k,v) {
             var petname = $(v).attr('data-name');
             if (petname in PETS) {
@@ -581,7 +572,7 @@
         });
     }
     function Training() {
-        console.debug('Training');
+        psm_debug('Training');
         $("table[width='500']>tbody>tr").each(function(k,v) {
             if(k%2 === 0) {
                 // get name and retreive data (if any)
@@ -613,7 +604,7 @@
                 // get stats
                 var dStats = $(v).next().children().first().text();
                 dStats = dStats.match(new RegExp('Lvl : (.+)Str : (.+)Def : (.+)Mov : (.+)Hp  : (.+) / (.+)'));
-                console.debug(petname, dStats);
+                psm_debug(petname, dStats);
                 if (dStats) {
                     stats.level         = Number(dStats[1]);
                     stats.strength      = Number(dStats[2]);
@@ -632,7 +623,7 @@
                     remaining = remaining.match(new RegExp(/(\d+) hrs?, (\d+) minutes?, (\d+) seconds?/));
                     if (remaining) {
                         remaining = remaining[1]*3600000+remaining[2]*60000+remaining[3]*1000;
-                        console.debug('remaining', remaining);
+                        psm_debug('remaining', remaining);
                         PETS[petname].training = (new Date).getTime() + remaining;
                         PETS[petname].training_url = document.URL;
                     } else PETS[petname].training = 0;
@@ -644,12 +635,12 @@
         var blurb = $('p').text();
         var match = new RegExp(/ (.+) now has increased (.+)!!!(?:\n*.+up (\d))?/g).exec(blurb);
         if (match) {
-            console.debug('EndTraining');
+            psm_debug('EndTraining');
             var petname = match[1];
             PETS[petname].training = 0;
             if(petname in PETS) {
                 var n = Number(match[3]) || 1;
-                console.debug('matches:',petname,match[2],n);
+                psm_debug('matches:',petname,match[2],n);
                 switch (match[2]) {
                     case 'Endurance':
                         PETS[petname].current_hp += n;
@@ -661,16 +652,15 @@
                     default: // defence, strength, level
                         PETS[petname][match[2].toLowerCase()] += n;
                 }
-                console.debug(PETS);
             }
         }
     }
     function FaerieQuest() {
-        console.debug('FaerieQuest');
+        psm_debug('FaerieQuest');
         var petname = $('.pet-name').text().slice(0, -2);
         if (petname.length) { // make sure on right page
             var faerie = $('.description_top').text().match(new RegExp(/for [^A-Z]*([A-Z][^ ]+) /))[1];
-            console.debug(petname, faerie);
+            psm_debug(petname, faerie);
 
             if(petname in PETS) { // ignore pets not stored
                 var stats = PETS[petname];
@@ -729,7 +719,7 @@
         return stats;
     }
     function Coincidence() {
-        console.debug('Coincidence');
+        psm_debug('Coincidence');
         var blurb = $('.randomEvent > .copy').text();
         if (blurb.length) {
             /**
@@ -749,21 +739,21 @@
              */
             var match = new RegExp(/about ([^\.]+).+their (\w+).+gone (\w+).+by (\d+)/g).exec(blurb);
             if (match) {
-                console.debug('matches:',match[1],match[2],match[3],match[4]);
+                psm_debug('matches:',match[1],match[2],match[3],match[4]);
                 var stats = PETS[match[1]];
                 var n = (match == 'up') ? match[4]*1 : match[4]*(-1);
                 if (match[2] == 'hit') {
                     stats.current_hp += n;
                     stats.max_hp += n;
                 }
-                else if (match[2] == 'intelligence') console.debug('not recording this I guess.'); // uhh
+                // else if (match[2] == 'intelligence') psm_debug('not recording this I guess.'); // uhh
                 else if (match[2] == 'attack') stats.strength += n;
                 else stats[match[2]] += n;
             }
         }
     }
     function Coltzan() {
-        console.debug('Coltzan');
+        psm_debug('Coltzan');
         var blurb = $('div[align="center"] p').eq(0).text();
         if (blurb.length) {
             /**
@@ -785,7 +775,7 @@
              */
             var match = new RegExp(/^([^ ]+) (has gained (\d+)|feels|your).* (\w+)(\(|!)/g).exec(blurb);
             if (match) {
-                console.debug('matches:',match[1],match[4]); // petname, stat
+                psm_debug('matches:',match[1],match[4]); // petname, stat
                 var petname = match[1];
                 if (petname == "All")
                     for (petname in PETS) if (PETS[petname].owner == USER)
@@ -793,11 +783,9 @@
                 else if (petname in PETS) {
                     switch (match[4]) {
                         case 'level':
-                            console.debug(match[3]);
                             PETS[petname].level +=match[3];
                             break;
                         case 'defence':
-                            console.debug(match[3]);
                             PETS[petname].defence +=match[3];
                             break;
                         case 'stronger':
@@ -809,11 +797,11 @@
                     }
                 }
             }
-            else console.debug('No change.');
+            else psm_debug('No change.');
         }
     }
     function KitchenQuest() {
-        console.debug('BETA Kitchen Quest');
+        psm_debug('BETA Kitchen Quest');
         /**
          *  +1 hp:          PETNAME has gained a hit point!!!
          *  +1 mov:         PETNAME has gained a level!!! (?)
@@ -822,10 +810,10 @@
          *  +1 mov:         PETNAME has become better at Agility!!!
          */
         var blurb = $('p>b').eq(-1).text();
-        console.debug(blurb);
+        psm_debug(blurb);
         var match = new RegExp(/([^ ]+) has .+ ([^ !]+)!/g).exec(blurb);
         if (match) {
-            console.debug('matches:',match[1],match[2]);
+            psm_debug('matches:',match[1],match[2]);
             if (match[1] in PETS) {
                 switch (match[2]){
                     case 'point':
@@ -845,7 +833,7 @@
                         PETS[match[1]].movement += 1;
                         break;
                     default:
-                        console.debug('unknown');
+                        psm_debug('unknown');
                 }
             }
         }
@@ -855,9 +843,9 @@
          *  ... and she changes into a Green Nimmo!!
          *  ... and she changes colour to White!!
          */
-        console.debug('Lab Ray');
+        psm_debug('Lab Ray');
         var petname = $('p').eq(0).find('b').text();
-        console.debug(petname);
+        psm_debug(petname);
         if(petname in PETS) { // ignore pets not stored
             var blurb = $('p').eq(2).text();
             var match = new RegExp(/and s?he ([^ ]+) ([^ ]+) a? ?([^ ]+[^ s])s? ?([^!]+)/g).exec(blurb);
@@ -865,7 +853,7 @@
                 var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
                 var stats = PETS[petname];
                 var n = Number(number_map[match[2]]) || Number(match[2]);
-                console.debug('matches:',match[1],n,match[3],match[4]);
+                psm_debug('matches:',match[1],n,match[3],match[4]);
                 switch (match[1]) {
                     case "changes":
                         if (match[2]=="colour") {   // british color change
@@ -893,20 +881,20 @@
                         stats.level = 1;
                         break;
                     default:
-                        console.debug('No change');   // or gender change
+                        psm_debug('No change');   // or gender change
                 }
                 PETS[petname] = stats;
             }
-            else console.debug('no regex match');
+            else psm_debug('no regex match');
         }
     }
     function PetpetLab() {
-        console.debug("Petpet Lab");
+        psm_debug("Petpet Lab");
         var petname = $('b:contains(The Petpet Laboratory) ~ b').eq(1).text();
         if (petname in PETS) {
             var newname = $('div[align="center"]').find('b').eq(1).text();
             if (newname && !Number(newname)) { // can also be new level, which should be ignored
-                console.debug('new name:',newname);
+                psm_debug('new name:',newname);
                 PETS[petname].petpet_name = newname;
                 return;
             }
@@ -932,13 +920,13 @@
         }
     }
     function Petpet() {
-        console.debug("BETA Petpet Play");
+        psm_debug("BETA Petpet Play");
         var petname = $('.page-title__2020 > h1').text().split("'")[0];
-        console.debug(petname)
+        psm_debug(petname)
         if (petname && petname in PETS) {
             var blurb = $('.h5-dialogue > p').text();
             var match = new RegExp(/I love ([^,]+), my (\w+)(?:\s*, and its (\w+))?/g).exec(blurb);
-            console.debug(match)
+            psm_debug(match)
             if (match) {
                 PETS[petname].petpet_name = match[1];
                 PETS[petname].petpet_species = match[2];
@@ -964,7 +952,7 @@
             stats.level         = $(activePetStats).eq(5).text();
             stats.current_hp    = health[1];
             stats.max_hp        = health[2];
-            //console.debug(stats);
+            //psm_debug(stats);
 
             PETS[petname] = stats;
         }
@@ -988,12 +976,12 @@
          */
         var blurb = $('.randomEvent .copy').text().trim();
         if (blurb) {
-            console.debug('Random Event:',blurb);
+            psm_debug('Random Event:',blurb);
             var match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
             if (match) {
                 var petname = match[2];
                 if (petname && petname in PETS) {
-                    console.debug('matches:',petname,match[3],match[4],match[5]);
+                    psm_debug('matches:',petname,match[3],match[4],match[5]);
                     switch (match[3]) {
                         case 'gets':
                             PETS[petname].current_hp -= 3;
@@ -1027,11 +1015,11 @@
                             PETS[petname].mood = 'depressed';
                             break;
                         default:
-                            console.debug('No change.');
+                            psm_debug('No change.');
                     }
                 }
                 else if (match[1]) {
-                    console.debug('Heal all pets.')
+                    psm_debug('Heal all pets.')
                     for (petname in PETS) if (PETS[petname].owner == USER)
                         PETS[petname].current_hp = PETS[petname].max_hp;
                 }
@@ -1040,7 +1028,7 @@
         }
     }
     function Decay() {
-        console.debug("I'll get to it eventually.");
+        psm_debug("I'll get to it eventually.");
         /**
          *  bloated ==> famished    144 ?
          *  famished => starving    22  ?
@@ -1048,7 +1036,7 @@
          */
     }
     function spinWheel(callback) {
-        console.debug('Wheel');
+        psm_debug('Wheel');
         // Waiting to finish spinning the wheel
         $('#wheelCanvas').one('click', () => {
             let blurb;
@@ -1062,7 +1050,7 @@
         });
     }
     function Excitement(blurb) {
-        console.debug('BETA Wheel of Excitement:', blurb);
+        psm_debug('BETA Wheel of Excitement:', blurb);
         /**
          * A Golden Light surrounds your pets... they are completely healed!                All pets full HP
          * ?                                                                                All pets lose half of current HP floor(curr/2)
@@ -1078,14 +1066,14 @@
             for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = Math.floor(Number(PETS[petname].current_hp)/3);
     }
     function Extravagance(blurb) {
-        console.debug('BETA Wheel of Extravagance:', blurb);
+        psm_debug('BETA Wheel of Extravagance:', blurb);
         /**
          * ?                                                                    Active gains 10 of one of H/S/D/M/I, or +10% if stat is very low
          * I'm not freakin testing this, send me a line with what the reward message is if you get this tho lol
          */
     }
     function Knowledge(blurb) {
-        console.debug('BETA Wheel of Knowledge:', blurb);
+        psm_debug('BETA Wheel of Knowledge:', blurb);
         /**
          * ?                                                                    Active gains or loses 1 int
          * ?                                                                    Active gains 1 int
@@ -1093,26 +1081,26 @@
          */
     }
     function Misfortune(blurb) {
-        console.debug('BETA Wheel of Misfortune:', blurb);
+        psm_debug('BETA Wheel of Misfortune:', blurb);
         /**
          * Oh no!  Your pet caught Bubbles from the wheel!                      Active contracts Bubbles
          */
     }
     function Mediocrity(blurb) {
-        console.debug('BETA Wheel of Mediocrity:', blurb);
+        psm_debug('BETA Wheel of Mediocrity:', blurb);
         /**
          * Fireballs rain down from above and singe your Neopets!               All pets have HP halved & floored
          */
     }
     function Monotony(blurb) {
-        console.debug('BETA Wheel of Monotony:', blurb);
+        psm_debug('BETA Wheel of Monotony:', blurb);
         /**
          * ?                                                                    Active loses half of current HP floor(curr/2)
          * Not tracking lair of the beast bc it's unreliable
          */
     }
     function HealingSprings() {
-        console.debug('BETA Healing Springs');
+        psm_debug('BETA Healing Springs');
         /**
          * All of your Neopets gain seven hit points.  I hope that helps! :)
          * All your Neopets have their health completely restored
@@ -1120,42 +1108,42 @@
          * petname is fully healed
          */
         var blurb = $('.faerie-battle + p + p').eq(0).text();
-        console.debug(blurb);
+        psm_debug(blurb);
         var match = blurb.match(new RegExp(/^(All|([^ ]+)) .*( hungry| heal| gain)([^ ]+| (\w+))/)); // ^(All|([^ ]+)) .*(fully|gain)s? (\w+)
         if (match) {
             var number_map = {'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13, 'fourteen': 14, 'fifteen': 15};
             var n = number_map[match[5]];
             var petname;
             if (match[1]=="All") {
-                console.debug('All');
+                psm_debug('All');
                 for (petname in PETS) if (PETS[petname].owner == USER) healPet(petname,match[3],n);
             }
             else {
                 petname = match[1];
-                console.debug('pet',petname);
+                psm_debug('pet',petname);
                 healPet(DATA.active,match[3],n); // petname is now capitalized at HS
             }
         }
-        else console.debug('No change.');
+        else psm_debug('No change.');
     }
     function healPet(petname,match,n) {
         if (petname in PETS) {
             if (match==" gain") {
-                console.debug('gain',n);
+                psm_debug('gain',n);
                 PETS[petname].current_hp = Number(PETS[petname].current_hp) + Number(n);
             }
             else {
-                console.debug('fully healed')
+                psm_debug('fully healed')
                 PETS[petname].current_hp = PETS[petname].max_hp;
             }
             if (match==" hungry") {
-                console.debug('bloated');
+                psm_debug('bloated');
                 PETS[petname].hunger = 'bloated';
             }
         }
     }
     function Battle() {
-        console.debug('Battle');
+        psm_debug('Battle');
         var end = setInterval(function() {
             if ($('#playground>.end_game').length) {
                 clearInterval(end);
@@ -1171,23 +1159,23 @@
         }
     }
     function Snowager() {
-        console.debug('BETA Snowager');
+        psm_debug('BETA Snowager');
         if ($('#snowager_container b').last().text() == "ROOOOAARRR!!!") // lol
             PETS[DATA.active].current_hp = 1;
     }
     function Soup() {
-        console.debug('BETA Soup Kitchen')
+        psm_debug('BETA Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each( function() {
             PETS[$(this).find('strong').eq(0).text()].hunger = $(this).find('strong').eq(1).text();
         });
     }
     function Inventory() {
-        console.debug('BETA Inventory');
+        psm_debug('BETA Inventory');
         $('body').on('click', 'div.invitem-submit', () => {
             let result;
             const loading = setInterval(function() {
                 result = $('#invResult > .popup-body__2020 > p').eq(-1).text();
-                console.debug('>',result)
+                psm_debug(result)
                 if (result && result !== 'Loading...') {
                     clearInterval(loading);
                     useItem(result);
@@ -1196,7 +1184,7 @@
         }) 
     }
     function useItem(blurb) {
-        console.debug('BETA Item');
+        psm_debug('BETA Item');
         /**
          *  PETNAME drinks the potion and gains 12 hit point(s), but is still not fully recovered.
          *  PETNAME drinks the Super Strength Healing Potion and is restored to full hit points!
@@ -1206,7 +1194,7 @@
          */
         var match = new RegExp(/^([^ ']+)(?:'s)? ([^ ]+) .+ (?:is still |is |hit |gains |into a (.+) )(.+)(?:!| hit)/g).exec(blurb);
         if (match) {
-            console.debug('matches:',match[1],match[2],match[3],match[4])
+            psm_debug('matches:',match[1],match[2],match[3],match[4])
             var petname = match[1];
             if (petname in PETS) {
                 switch (match[2]) {
@@ -1226,28 +1214,28 @@
         }
     }
     function Neolodge() {
-        console.debug('Booking at Neolodge');
+        psm_debug('Booking at Neolodge');
         if (!$('center:contains("You can not afford")').length) {
             $('center>img[src^="//pets.neopets.com/"]').each( (k,v) => {
                 const petname = $(v).attr('src').split('/')[4];
                 if (petname in PETS) {
                     const nights = $(v).parent().prev().prev().find('td[align="right"]').eq(4).text();
-                    console.debug(petname,nights,'nights');
+                    psm_debug(petname,nights,'nights');
                     if (nights?.length) PETS[petname].neolodge = (new Date).getTime() + nights*86400000;
                 }
             });
         }
     }
     function GraveDanger() {
-        console.debug('Grave Danger');
+        psm_debug('Grave Danger');
         const petname = Object.keys(PETS).find(petname => PETS[petname].petpet_name === $('span.petpetName').text());
         if (petname) {
-            console.debug('petname',petname)
+            psm_debug('petname',petname)
             let remaining;
             const loading = setInterval(function() {
                 remaining = $('#gdRemaining').text();
                 if (!remaining) {
-                    console.debug('Complete')
+                    psm_debug('Complete')
                     clearInterval(loading);
 
                     // enforce reminder until reward has been collected
@@ -1258,7 +1246,7 @@
                         danger_end(petname,0);
                     });
                 } else if (remaining !== '...') {
-                    console.debug('Ongoing',remaining)
+                    psm_debug('Ongoing',remaining)
                     clearInterval(loading);
                     const match = new RegExp(/(\d+) hours?, (\d+) minutes?, (\d+) seconds?/g).exec(remaining);
                     if (match) {
@@ -1276,6 +1264,9 @@
 
 
     // MISC FUNCTIONS
+    function psm_debug(...args) {
+        if (DATA.debug) console.debug('[PSM]', ...args);
+    }
     function fill_neolodge() {
         // first pet in dropdown needing lodge, book all, cockroach towers, 28 nights
         $('select[name="hotel_rate"]').val('5');
@@ -1285,7 +1276,6 @@
         $('select[name="pet_name"] option:nth-child(n+2)').each(function() {
             var petname = $(this).text().slice(0, -1);
             if (petname in PETS && PETS[petname].neolodge<now) {
-                console.debug(petname);
                 $(this).prop('selected', true);
                 return;
             }
@@ -1359,7 +1349,7 @@
         }
         else n = STR.indexOf(word);
         PETS[petname].strength = Number(n);
-        //console.debug("strength: ",word,n);
+        //psm_debug("strength: ",word,n);
     }
     function setDefence(word, petname) {
         var n; // = ((DEF.indexOf(word) < 0) ? word.match(/\d+/g)[0] : DEF.indexOf(word));
@@ -1376,7 +1366,7 @@
         }
         else n = DEF.indexOf(word);
         PETS[petname].defence = Number(n);
-        //console.debug("defence: ",word,n);
+        //psm_debug("defence: ",word,n);
     }
     function setMovement(word, petname) {
         var n = word.match(/\d+/g);
@@ -1388,12 +1378,12 @@
             PETS[petname].isUncertain = true;
         }
         PETS[petname].movement = n;
-        //console.debug("movement: ",word,n);
+        //psm_debug("movement: ",word,n);
     }
     /*function int_toInt(word) {
         var n = word.match(/\d+/g);
         n = n ? n[0] : word;
-        console.debug("intelligence: ",word,n);
+        psm_debug("intelligence: ",word,n);
         return n;
     }*/
 
@@ -1479,7 +1469,7 @@
 
     function settings_functionality() {
         if (!$.isFunction($.fn.spectrum)) {
-            console.debug('...')
+            psm_debug('...')
             setTimeout(settings_functionality, 50);
             return;
         }
@@ -1585,7 +1575,6 @@
                 if ($(e.target).prop('checked')) $('body').addClass('betaBG');
                 else $('body').removeClass('betaBG');
             }
-            console.debug(DATA);
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_"+USER, JSON.stringify(DATA));
         });
         $('#hp_mode,#bd_mode').change(function() {
@@ -1707,7 +1696,7 @@
         // HOVER SLIDERS
         $MODULE.on({ // hovering over right hover div exposes stats menu
             mouseenter: function(e) {
-                console.log('ENTER rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
+                // psm_debug('ENTER rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
                 if (!DATA.interactableSlider || !$(e.relatedTarget).closest('.stats').length) {
                     const $stats = $('#stats_'+$(this).attr('petname')).stop(true);
                     const auto = $stats.css('width', 'auto').width();
@@ -1716,7 +1705,7 @@
                 }
             },
             mouseleave: function(e) {
-                console.log('LEAVE rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
+                // psm_debug('LEAVE rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
                 if (!DATA.interactableSlider || !$(e.relatedTarget).closest('.stats').length)
                     $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', paddingRight: '20px', marginLeft: '98px'}, 500);
             }
@@ -1724,7 +1713,7 @@
         if (DATA.interactableSlider) { // if interactable, don't hide menu until mouse leaves it
             $MODULE.on({
                 mouseleave: function(e) {
-                    console.log('LEAVE stats | rightHover >',$(e.relatedTarget).closest('.rightHover').length,$(e.relatedTarget))
+                    // psm_debug('LEAVE stats | rightHover >',$(e.relatedTarget).closest('.rightHover').length,$(e.relatedTarget))
                     if (!$(e.relatedTarget).closest('.rightHover').length)
                         $('#stats_'+$(this).attr('petname')).stop(true).animate({width: '5px', paddingRight: '20px', marginLeft: '98px'}, 500);
                 }
@@ -1743,14 +1732,14 @@
 
     // LOAD RESOURCES
     function load_jQuery() {
-        console.debug("loading jQuery");
+        psm_debug("loading jQuery");
         var jq = document.createElement('script');
         jq.src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(main, 50);
     }
     function load_spectrum() {
-        console.debug("loading spectrum");
+        psm_debug("loading spectrum");
         SPECTRUM = true;
         var jq = document.createElement('script');
         jq.src = "https://bgrins.github.io/spectrum/spectrum.js";

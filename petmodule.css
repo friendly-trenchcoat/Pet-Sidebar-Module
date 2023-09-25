@@ -382,9 +382,9 @@ div#toggle_settings_tabs>div.tab-active {
     width: 100px;
 }
 #toggle_settings_bodies>table h2 {
-    margin: 4px 0px 13.5px 0px;
+    margin: 4px 0px 14.25px 0px;
     font-weight: lighter;
-    font-size: 11px;
+    font-size: 10.5px;
     color: #888;
 }
 
