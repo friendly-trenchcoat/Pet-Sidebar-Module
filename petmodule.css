@@ -2,9 +2,6 @@
 body {
     overflow-x: hidden;
 }
-.betaBG {
-    background-image: '+DATA.betaBG_url+' !important;
-}
 .navsub-left__2020 {
     margin-left: 225px;
 }
@@ -355,6 +352,7 @@ div#toggle_settings_tabs>div.tab-active {
     width: 100%;
     border-radius: 0 6px 6px 6px;
     padding: 5px 0px;
+    height: 172px;
 }
 #toggle_settings_bodies>table.tab-active {
     display: table;
@@ -382,7 +380,7 @@ div#toggle_settings_tabs>div.tab-active {
     width: 100px;
 }
 #toggle_settings_bodies>table h2 {
-    margin: 4px 0px 14.25px 0px;
+    margin: 4px 0px 0px 0px;
     font-weight: lighter;
     font-size: 10.5px;
     color: #888;
@@ -707,6 +705,7 @@ div#toggle_settings_tabs>div.tab-active {
 
 .inner .petname {
     position: absolute;
+    top: 5px;
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 14px;
     font-weight: bold;
