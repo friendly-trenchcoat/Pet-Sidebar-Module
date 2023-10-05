@@ -5,6 +5,9 @@
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
+// @exclude        https://*.neopets.com/home/index.phtml*
+// @exclude        https://*.neopets.com/index.phtml
+// @exclude        https://*.neopets.com/login/*
 // @grant          none
 // ==/UserScript==
 /*jshint multistr: true */
@@ -26,7 +29,6 @@
  *  TODO:
  *      - UI for when there's no pet data
  *      - Wellness
- *          > Sidebar
  *          > Apple bobbing
  *          > Inventory (looks like they forgot to update the UI for medicine)
  *
@@ -247,14 +249,17 @@
                         add_pet(petname);
 
                         // disable buttons
-                        if (i == 0) $('#nav_' + petname).find('.move').eq(0).addClass('disabled');                        // move up
-                        if (i == (len - 1)) $('#nav_' + petname).find('.move').eq(1).addClass('disabled');                        // move down
-                        // if (PETS[petname].isUC) $('#nav_'+petname).find('a').eq(2).removeAttr('href').addClass('disabled'); // customize
+                        if (i == 0) $('#nav_' + petname).find('.move').eq(0).addClass('disabled');          // move up
+                        if (i == (len - 1)) $('#nav_' + petname).find('.move').eq(1).addClass('disabled');  // move down
+                        if (PETS[petname].owner !== USER ) {
+                            $('#nav_'+petname).find('a').eq(1).removeAttr('href').addClass('disabled');     // make active
+                            $('#nav_'+petname).find('a').eq(2).removeAttr('href').addClass('disabled');     // customize
+                        }
                     }
                 }
-                $('#nav_' + DATA.active).find('a').eq(1).removeAttr('href').addClass('disabled');                             // make active
-                if (DATA.stickyActive) $('#nav_' + DATA.active).find('.move').addClass('disabled');                           // move up/down
-                if (DATA.collapsed) $('#nav_' + shown[0]).find('.move').addClass('disabled');                                 // move up/down
+                $('#nav_' + DATA.active).find('a').eq(1).removeAttr('href').addClass('disabled');           // make active
+                if (DATA.stickyActive) $('#nav_' + DATA.active).find('.move').addClass('disabled');         // move up/down
+                if (DATA.collapsed) $('#nav_' + shown[0]).find('.move').addClass('disabled');               // move up/down
             }
         }
     }
@@ -295,10 +300,12 @@
             DATA.active = petname;
             buildModule();
         })
-        $('#nav_' + petname).find('.lookup').append(
-            '<a class="sub" href="https://www.neopets.com/neopet_desc.phtml?edit_petname=' + petname + '"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
-        $('#nav_' + petname).find('.petpage').append(
-            '<a class="sub" href="https://www.neopets.com/editpage.phtml?pet_name=' + petname + '"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+        if (PETS[petname].owner === USER ) {
+            $('#nav_' + petname).find('.lookup').append(
+                '<a class="sub" href="https://www.neopets.com/neopet_desc.phtml?edit_petname=' + petname + '"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+            $('#nav_' + petname).find('.petpage').append(
+                '<a class="sub" href="https://www.neopets.com/editpage.phtml?pet_name=' + petname + '"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
+        }
 
     }
     function createStatsHTML(petname) {
@@ -954,8 +961,9 @@
             const stats = PETS[petname];
 
             // get stats
-            const activePetStats = $("td[align='left']");
+            const activePetStats = $("td.activePetInfo td[align='left']");
             const health = $(activePetStats).eq(1).text().match(new RegExp(/(\d+) \/ (\d+)/));
+            stats.expression = $("td.activePet img").attr('src').split('/')[5] || 1;
             stats.species = $(activePetStats).eq(0).text();
             stats.mood = $(activePetStats).eq(2).text();
             stats.hunger = $(activePetStats).eq(3).text();
@@ -963,7 +971,6 @@
             stats.level = $(activePetStats).eq(5).text();
             stats.current_hp = health[1];
             stats.max_hp = health[2];
-            //psm_debug(stats);
 
             PETS[petname] = stats;
         }
@@ -1144,11 +1151,15 @@
         psm_debug('BETA Wheel of Monotony:', blurb);
         /**
          * Your Neopet loses half their hit points!                            Active loses half of current HP floor(curr/2)
-         * You've earned a visit to the Lair of the Beast!                     Sometimes active reduced to 1 HP?
+         * You've earned a visit to the Lair of the Beast!                     Sometimes? active reduced to 1 HP
          */
         if (blurb.includes('half')) {
             psm_debug(DATA.active, 'loses half of current HP');
             PETS[DATA.active].current_hp = Math.floor(Number(PETS[DATA.active].current_hp) / 2);
+        }
+        else if (blurb.includes('Beast')) {
+            psm_debug(DATA.active, 'reduced to 1 HP');
+            PETS[DATA.active].current_hp = 1;
         }
         else return false;
         return true;
@@ -1236,19 +1247,16 @@
     function Inventory() {
         psm_debug('BETA Inventory');
         $('body').on('click', 'div.invitem-submit', () => {
-            let result;
-            const loading = setInterval(function () {
-                result = $('#invResult > .popup-body__2020 > p, #invResult > .popup-body__2020 > pr').eq(-1).text();
-                psm_debug(result)
+            $(document).ajaxSuccess(() => {
+                const result = $('#invResult > .popup-body__2020 > p, #invResult > .popup-body__2020 > pr').eq(-1).text();
                 if (result && result !== 'Loading...') {
-                    clearInterval(loading);
                     useItem(result);
                 }
-            }, 500);
+            });
         });
     }
     function useItem(blurb) {
-        psm_debug('BETA Item');
+        psm_debug('BETA Item', blurb);
         /**
          *  PETNAME drinks the potion and gains 12 hit point(s), but is still not fully recovered.
          *  PETNAME drinks the Super Strength Healing Potion and is restored to full hit points!
