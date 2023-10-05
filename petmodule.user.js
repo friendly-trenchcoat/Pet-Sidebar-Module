@@ -5,7 +5,7 @@
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
-// @exclude        https://*.neopets.com/home/index.phtml*
+// @exclude        https://*.neopets.com/home/* 
 // @exclude        https://*.neopets.com/index.phtml
 // @exclude        https://*.neopets.com/login/*
 // @grant          none
@@ -251,9 +251,9 @@
                         // disable buttons
                         if (i == 0) $('#nav_' + petname).find('.move').eq(0).addClass('disabled');          // move up
                         if (i == (len - 1)) $('#nav_' + petname).find('.move').eq(1).addClass('disabled');  // move down
-                        if (PETS[petname].owner !== USER ) {
-                            $('#nav_'+petname).find('a').eq(1).removeAttr('href').addClass('disabled');     // make active
-                            $('#nav_'+petname).find('a').eq(2).removeAttr('href').addClass('disabled');     // customize
+                        if (PETS[petname].owner !== USER) {
+                            $('#nav_' + petname).find('a').eq(1).removeAttr('href').addClass('disabled');     // make active
+                            $('#nav_' + petname).find('a').eq(2).removeAttr('href').addClass('disabled');     // customize
                         }
                     }
                 }
@@ -300,7 +300,7 @@
             DATA.active = petname;
             buildModule();
         })
-        if (PETS[petname].owner === USER ) {
+        if (PETS[petname].owner === USER) {
             $('#nav_' + petname).find('.lookup').append(
                 '<a class="sub" href="https://www.neopets.com/neopet_desc.phtml?edit_petname=' + petname + '"><span><i class="fas fa-pencil-alt fa-xs"></i></span></a>');
             $('#nav_' + petname).find('.petpage').append(
@@ -312,9 +312,10 @@
         if (!DATA.showStats) return '';  // if stats=false return empty
         const stats = PETS[petname];
         let petpetTD = '', petpetStyle = '', petpetpetTD = '';
+        const hasSliderLinks = DATA.interactableSlider && PETS[petname].owner === USER;
         if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
-            const a1 = DATA.interactableSlider ? `<a href="https://www.neopets.com/neopetpet.phtml?neopet_name=${petname}">` : '';
-            const a2 = DATA.interactableSlider ? `</a>` : '';
+            const a1 = hasSliderLinks ? `<a href="https://www.neopets.com/neopetpet.phtml?neopet_name=${petname}">` : '';
+            const a2 = hasSliderLinks ? `</a>` : '';
             petpetTD =
                 `<td align="center" class="petpet">${a1}
                     <b>${stats.petpet_name}</b> the<br>${stats.petpet_species}<br><br>
@@ -338,7 +339,7 @@
             </tr>
         ` : '';
         const hp = getHP(stats.current_hp, stats.max_hp);
-        const int = DATA.interactableSlider
+        const int = hasSliderLinks
             ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
             : `<b>${stats.intelligence}</b>`;
         const statsHTML =
@@ -1781,7 +1782,6 @@
         // HOVER SLIDERS
         $MODULE.on({ // hovering over right hover div exposes stats menu
             mouseenter: function (e) {
-                // psm_debug('ENTER rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
                 if (!DATA.interactableSlider || !$(e.relatedTarget).closest('.stats').length) {
                     const $stats = $('#stats_' + $(this).attr('petname')).stop(true);
                     const auto = $stats.css('width', 'auto').width();
@@ -1790,7 +1790,6 @@
                 }
             },
             mouseleave: function (e) {
-                // psm_debug('LEAVE rightHover | stats >',$(e.relatedTarget).closest('.stats').length,$(e.relatedTarget))
                 if (!DATA.interactableSlider || !$(e.relatedTarget).closest('.stats').length)
                     $('#stats_' + $(this).attr('petname')).stop(true).animate({ width: '5px', paddingRight: '20px', marginLeft: '98px' }, 500);
             }
@@ -1798,7 +1797,6 @@
         if (DATA.interactableSlider) { // if interactable, don't hide menu until mouse leaves it
             $MODULE.on({
                 mouseleave: function (e) {
-                    // psm_debug('LEAVE stats | rightHover >',$(e.relatedTarget).closest('.rightHover').length,$(e.relatedTarget))
                     if (!$(e.relatedTarget).closest('.rightHover').length)
                         $('#stats_' + $(this).attr('petname')).stop(true).animate({ width: '5px', paddingRight: '20px', marginLeft: '98px' }, 500);
                 }
