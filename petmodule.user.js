@@ -1560,6 +1560,7 @@
         $('#color_settings div, #increment i, #info_menu span').css('color', color);
         $('#sidebar_menus > div, .picker_popup, .hover').css('border-color', color);
         $('.menu_header, #info_nav button, .petnav, .petnav a').css('background-color', color);
+        $('.menu_header h1, .menu_close, #info_nav>button').css('color', getTextColor(color));
         set_items(true, false);
     }
     function changeSubcolor(tinycolor) {
