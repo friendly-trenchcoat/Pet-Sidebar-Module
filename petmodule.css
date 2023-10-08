@@ -105,7 +105,7 @@ div#footer__2020 {
 }
 
 .menu_header h1 {
-    color: '+h1color+';
+    color: '+headertextcolor+';
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 35px;
     margin: 1px 5px;
@@ -117,7 +117,7 @@ div#footer__2020 {
     float: right;
     cursor: pointer;
     font-size: 30px;
-    color: '+h2color+';
+    color: '+headertextcolor+';
     margin: 5.5px 14px;
 }
 
@@ -185,7 +185,7 @@ div#footer__2020 {
     padding: 0px 25px;
     margin: 0px -5px 0px -1.5px;
     cursor: pointer;
-    color: '+h2color+';
+    color: '+headertextcolor+';
     font-size: 17px;
 }
 
@@ -325,11 +325,20 @@ div#footer__2020 {
     margin: -21px 0px 0px 153px;
 }
 
-#increment i {
+#increment>i {
     display: block;
     margin: -6px auto;
     font-size: 16px;
     cursor: pointer;
+    color: '+color+';
+}
+
+#increment>b#incrementLabel {
+    position: absolute;
+    top: 0px;
+    left: 12px;
+    font-size: 12px;
+    line-height: 14px;
     color: '+color+';
 }
 
