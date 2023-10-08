@@ -24,7 +24,7 @@
  *      books, tdmbgpop, if I ever track int
  *      items with obscure effects, if I ever care that much
  *      decaying age/hunger/mood, if I ever care that much
- *      turmaculus, for pet str and petpet... existance, if I ever care that much
+ *      turmaculus, for pet str and petpet... existence, if I ever care that much
  *
  */
 
@@ -122,7 +122,7 @@
         else if (document.URL.indexOf("desert/shrine") != -1) Coltzan();                        // BD stats, int
         else if (document.URL.indexOf("/kitchen") != -1) $(document).ajaxSuccess(KitchenQuest); // BD stats
         else if (document.URL.indexOf("process_lab2") != -1) SecretLab();                       // BD stats, color, species, gender
-        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();                  // petpet name, color, spcies, existance
+        else if (document.URL.indexOf("process_petpetlab") != -1) PetpetLab();                  // petpet name, color, species, existence
         else if (document.URL.indexOf("neopetpet") != -1) Petpet();                             // petpet name
 
         // wheels are not completed, just keeping active for logs
@@ -956,7 +956,7 @@
                 switch (match[1]) {
                     case 'transformed':
                         PETS[petname].petpet_image = $div.find('img').attr('src');
-                        PETS[petname].petpet_species = 'Science Experiment'; // idk lol, the image url isnt reliable
+                        PETS[petname].petpet_species = 'Science Experiment'; // idk lol, the image url isn't reliable
                         break;
                     case 'explosion':
                         PETS[petname].petpet_image = $div.find('img').attr('src');
