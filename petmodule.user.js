@@ -20,17 +20,11 @@
  *      anything that redirects you to quick ref
  *
  *  Things I may one day gather from:
- *      apple bobbing, for "Blurred Vision" if I ever track wellness
+ *      apple bobbing, for "Blurred Vision" if I ever track wellness with any seriousness
  *      books, tdmbgpop, if I ever track int
  *      items with obscure effects, if I ever care that much
  *      decaying age/hunger/mood, if I ever care that much
  *      turmaculus, for pet str and petpet... existance, if I ever care that much
- *
- *  TODO:
- *      - UI for when there's no pet data
- *      - Wellness
- *          > Apple bobbing
- *          > Inventory (looks like they forgot to update the UI for medicine)
  *
  */
 
@@ -41,7 +35,7 @@
     // I know I should have made a class but I don't feel like it now
     const VERSION = '1.3.2.1';
     let SPECTRUM = false;
-    let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, BG_CSS, CONTAINER_CSS, BG, IS_BETA;
+    let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, BG_CSS, CONTAINER_CSS, BG, IS_BETA, CUR_SHOWN;
     const [STR, U_STR, DEF, U_DEF, MOV] = setStatics();
     const DATA_DEFAULTS = {
         showNav: true,
@@ -173,7 +167,7 @@
         if (!IS_BETA && $('#header')[0] && document.URL.indexOf('lookup') == -1) createBackgroundCSS();
 
         // STORE DATA
-        set_items(true, true, false);
+        set_items(true, true);
     }
     function setStatics() {
         return [
@@ -207,7 +201,21 @@
     // BUILDER FUNCTIONS
     function buildModule() {
         // psm_debug('Build module');
-        if (Object.keys(PETS).length > 0 && DATA.active in PETS) { // if no pets, do nothin
+        // clear module
+        const dir = DATA.collapsed ? 'right' : 'down';
+        $MODULE.html( // replace contents with only top bar
+            '<tr id="row_petsHeader" class="empty"> \
+                <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
+                    <div> \
+                        <a href="/quickref.phtml"><b>Pets</b></a> \
+                        <span id="fold_button" title="PSM Collapse"><i class="fas fa-caret-'+ dir + '"></i></span> \
+                        <span id="settings_button" title="PSM Settings"><i class="fas fa-cog"></i></span> \
+                        <span id="info_button" title="PSM Info"><i class="fas fa-info-circle"></i></span> \
+                    </div> \
+                </td> \
+            </tr>'
+        );
+        if (Object.keys(PETS).length > 0 && DATA.active in PETS) {
             // get pets to display
             let shown = [];
             let petname;
@@ -224,33 +232,22 @@
                 else
                     shown.unshift(DATA.active); // add to front of array
             }
-            const len = shown.length;
-            if (len > 0) {
-                // clear module
-                const dir = DATA.collapsed ? 'right' : 'down';
-                $MODULE.html( // replace contents with only top bar
-                    '<tr id="row_petsHeader" > \
-                        <td id="petsHeader" valign="middle" class="sidebarHeader medText"> \
-                            <a href="/quickref.phtml"><b>Pets</b></a> \
-                            <span id="fold_button"><i class="fas fa-caret-'+ dir + '"></i></span> \
-                            <span id="settings_button"><i class="fas fa-cog"></i></span> \
-                            <span id="info_button"><i class="fas fa-info-circle"></i></span> \
-                        </td> \
-                    </tr>'
-                );
+            CUR_SHOWN = shown.length;
+            if (CUR_SHOWN > 0) {
+                $('#row_petsHeader').removeClass('empty');
 
                 // add pets
                 if (DATA.collapsed) {
                     add_pet(shown[0]);
                 }
                 else {
-                    for (let i = 0; i < len; i++) {
+                    for (let i = 0; i < CUR_SHOWN; i++) {
                         petname = shown[i];
                         add_pet(petname);
 
                         // disable buttons
                         if (i == 0) $('#nav_' + petname).find('.move').eq(0).addClass('disabled');          // move up
-                        if (i == (len - 1)) $('#nav_' + petname).find('.move').eq(1).addClass('disabled');  // move down
+                        if (i == (CUR_SHOWN - 1)) $('#nav_' + petname).find('.move').eq(1).addClass('disabled');  // move down
                         if (PETS[petname].owner !== USER) {
                             $('#nav_' + petname).find('a').eq(1).removeAttr('href').addClass('disabled');     // make active
                             $('#nav_' + petname).find('a').eq(2).removeAttr('href').addClass('disabled');     // customize
@@ -265,6 +262,7 @@
     }
     function add_pet(petname) {
         const inactive = petname == DATA.active ? '' : 'in';
+        const remove = CUR_SHOWN > 1 ? '<div class="remove_button"><i class="fas fa-sign-out-alt fa-5x" petname="' + petname + '"></i></div>' : '';
         const neolodge = DATA.neolodge && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].neolodge ?
             ' style="display: flex;"' : '';
         const training = DATA.training && PETS[petname].training >= 0 && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].training ?
@@ -276,8 +274,8 @@
         // for some reason children must be added seperately
         $MODULE.append('<tr id="' + inactive + 'active_' + petname + '" ></tr>');
         $('#' + inactive + 'active_' + petname).append(
-            '<div class="remove_button"><i class="fas fa-sign-out-alt fa-5x" petname="' + petname + '"></i></div> \
-            <div class="timers"> \
+            remove +
+            '<div class="timers"> \
                 <div class="neolodge"'+ neolodge + '> \
                     <a href="https://www.neopets.com/neolodge.phtml"><i class="fas fa-concierge-bell fa-lg"></i></a> \
                 </div> \
@@ -294,9 +292,9 @@
             '+ createNavHTML(petname) + ' \
             '+ createStatsHTML(petname) + ' \
             <div class="placeholder"></div> \
-            <a class="petGlam"><img src="https://pets.neopets.com/cp/'+ PETS[petname].id + '/' + expression + '/4.png" width="150" height="150" border="0"></a>');
-        $('#nav_' + petname).find('.activate').on('auxclick', () => {
-            psm_debug('New active:', petname)
+            <a class="petGlam" petname="'+ petname + '"><img src="https://pets.neopets.com/cp/' + PETS[petname].id + '/' + expression + '/4.png" width="150" height="150" border="0"></a>');
+        $MODULE.on('auxclick', `#nav_${petname} .activate`, () => {
+            psm_debug('New active:', petname);
             DATA.active = petname;
             buildModule();
         })
@@ -308,9 +306,11 @@
         }
 
     }
-    function createStatsHTML(petname) {
+    function createStatsHTML(petname, outerHTML = true) {
         if (!DATA.showStats) return '';  // if stats=false return empty
         const stats = PETS[petname];
+        const o1 = outerHTML ? '<div id="stats_' + petname + '" class="hover stats" petname="' + petname + '">' : '';
+        const o2 = outerHTML ? '</div>' : '';
         let petpetTD = '', petpetStyle = '', petpetpetTD = '';
         const hasSliderLinks = DATA.interactableSlider && PETS[petname].owner === USER;
         if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
@@ -343,8 +343,8 @@
             ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
             : `<b>${stats.intelligence}</b>`;
         const statsHTML =
-            '<div id="stats_' + petname + '" class="hover stats" petname="' + petname + '"> \
-            <div class="inner"'+ petpetStyle + '> \
+            o1 +
+            '<div class="inner"' + petpetStyle + '> \
             \
             '+ name + '\
             <table cellpadding="1" cellspacing="0" border="0"><tr> \
@@ -409,8 +409,7 @@
             \
             </tr></table> \
             \
-            </div> \
-            </div>';
+            </div>' + o2;
         return statsHTML;
     }
     function createNavHTML(petname) {
@@ -426,14 +425,37 @@
             </div>';
         return buttonsHTML;
     }
+    function renderStats(petname) {
+        psm_debug('Rendering stats slider')
+        const pets = !petname ? PETS : petname in PETS ? { petname: PETS[petname] } : {};
+        for (petname in pets) {
+            $(`#stats_${petname}`).html(createStatsHTML(petname, false));
+        }
+    }
+    function renderNav(petname) {
+        psm_debug('Rendering nav buttons')
+        const pets = !petname ? PETS : petname in PETS ? { petname: PETS[petname] } : {};
+        for (petname in pets) {
+            $(`#nav_${petname}`).html(createNavHTML(petname));
+        }
+    }
+    function renderGlam(petname) {
+        psm_debug('Rendering pet images')
+        const pets = !petname ? PETS : petname in PETS ? { petname: PETS[petname] } : {};
+        let expression;
+        for (petname in pets) {
+            expression = DATA.trueExpression ? PETS[petname].expression : '1';
+            $(`.petGlam[petname="${petname}" img`).attr('src', `https://pets.neopets.com/cp/${PETS[petname].id}/${expression}'/4.png`);
+        }
+    }
     function buildMenus() {
-        $(IS_BETA ? '#container__2020' : '.content').first().prepend(
+        $(IS_BETA ? $CONTAINER : '.content').first().prepend(
             '<div id="sidebar_menus"> \
                 <div id="info_menu"></div> \
                 <div id="settings_menu"></div> \
             </div>');
-        $('#info_menu').append(info_HTML());
-        $('#settings_menu').append(settings_HTML());
+        $('#info_menu').html(info_HTML());
+        $('#settings_menu').html(settings_HTML());
         $('#toggle_settings_tabs>div').on('click', (e) => {
             e.preventDefault();
             if (!$(e.target).hasClass('tab-active')) {
@@ -449,7 +471,7 @@
     }
     function info_HTML() {
         const html =
-            '<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don\'t want to leave the page you\'re on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it\'s time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet is not on holiday.</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme\'s color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the arrows to raise or lower from 10.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>temporary changes</span> <table> <tr> <td>Healing Springs</td> <td>Current HP (illness is not tracked)</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP</td> </tr> </table> <h3 style="margin-top: -30px;">* Wheels haven\'t been added yet, and I don\'t bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ' + VERSION + '</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>IE/Edge</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don\'t work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>';
+            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <p class="populate" ${CUR_SHOWN ? 'style="display: none;"' : ''}>Visit <b><a href="https://www.neopets.com/quickref.phtml">Quick Ref</a></b> to populate the Pet Sidebar Module</p> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don't want to leave the page you're on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet is not on holiday.</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme's color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color 10 shades lighter than your main Color. Press the arrows to raise or lower from 10.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>temporary changes</span> <table> <tr> <td>Healing Springs</td> <td>Current HP (illness is not tracked)</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP</td> </tr> </table> <h3 style="margin-top: -30px;">* Wheels haven't been added yet, and I don't bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ${VERSION}</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>IE/Edge</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don't work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>`;
         return html;
     }
     function settings_HTML() {
@@ -458,7 +480,16 @@
             if (DATA.allAccts || PETS[DATA.hidden[i]].owner == USER)
                 removed += '<option value="' + DATA.hidden[i] + '">' + DATA.hidden[i] + '</option>';
         const html =
-            '<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Settings</h1> </div> <div class="menu_inner"> <div class="section"> <table id="color_settings"> <tr> <td> <div>Color:</div> <input class="picker" id="colorpicker"> <input class="picker_text" id="colorpicker_text"> </td> <td> <div>Accent<br>Color:</div> <input class="picker" id="subcolorpicker"> <input class="picker_text" id="subcolorpicker_text"> <div id="increment"> <i class="fas fa-caret-up"></i> <i class="fas fa-caret-down"></i> </div> </td> <td> <div>Background<br>Color:</div> <input class="picker" id="bgcolorpicker"> <input class="picker_text" id="bgcolorpicker_text"> </td> </tr> </table> </div> <div class="section" id="toggle_settings_section"> <div id="toggle_settings_tabs"> <div name="general" class="tab-active">General</div> <div name="stats">Stats Slider</div> </div> <div id="toggle_settings_bodies"> <table name="general" class="tab-active"> <tr> <td> <table> <tr> <td> <div>navigation menu</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showNav" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>pet stats slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showStats" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>keep active pet at top</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>display true expression</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="trueExpression" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>all accounts</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>neolodge reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="neolodge"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>training reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="training"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>grave danger reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="gravedanger"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>always use beta theme bg</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="betaBG"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>debug mode</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="debug"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> <table name="stats"> <tr> <td> <table> <tr> <td> <div>show pet name</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showName" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show pet gender</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showGender" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpetpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>HP display mode</div> </td> <td> <select id="hp_mode"> <option value="0">#</option> <option value="1">#/#</option> <option value="2" style="color: green;">#/# (color)</option> </select> </td> </tr> <tr> <td> <div>BD stats display mode</div> </td> <td> <select id="bd_mode"> <option value="0">#</option> <option value="1">str (#)</option> <option value="2">neo default</option> <option value="3">str</option> </select> </td> </tr> <tr> <td> <div>interactable slider</div> <h2>stats slider will not disappear on hover, and will include links to books read and petpet interraction</h2> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="interactableSlider" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> </div> </div> <div class="section"> <table id="settings_footer"> <tr> <td id="removed_pets_container" ' + (removed.length ? '' : ' style="display: none;"') + '> <div id="removed_pets_label">Removed Pets:</div> <select id="removed_pets" name="removed">' + removed + '</select> <div class="footer-btn" id="addback_button"><i class="fas fa-plus"></i></div> <div class="footer-btn" id="delete_button"><i class="fas fa-trash-alt"></i></div> </td> <td> <button id="clear_button">clear all pet data</button> </td> </tr> </table> </div> </div>';
+            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Settings</h1> </div> <div class="menu_inner"> 
+            <div class="section"> <table id="color_settings"> <tr> <td> <div>Color:</div> <input class="picker" id="colorpicker"> <input class="picker_text" id="colorpicker_text"> </td> <td> <div>Accent<br>Color:</div> <input class="picker" id="subcolorpicker"> <input class="picker_text" id="subcolorpicker_text"> <div id="increment"> <i class="fas fa-caret-up"></i> <i class="fas fa-caret-down"></i> </div> </td> <td> <div>Background<br>Color:</div> <input class="picker" id="bgcolorpicker"> <input class="picker_text" id="bgcolorpicker_text"> </td> </tr> </table> </div> 
+            <div class="section" id="toggle_settings_section"> <div id="toggle_settings_tabs"> <div name="general" class="tab-active">General</div> <div name="stats">Stats Slider</div> </div> 
+            <div id="toggle_settings_bodies"> 
+            <table name="general" class="tab-active"> <tr> <td> <table> <tr> <td> <div>navigation menu</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showNav" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>pet stats slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showStats" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>keep active pet at top</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="stickyActive" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>display true expression</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="trueExpression" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>all accounts</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="allAccts" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>neolodge reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="neolodge"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>training reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="training"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>grave danger reminder</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="gravedanger"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>always use beta theme bg</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="betaBG"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>debug mode</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="debug"> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> 
+            <table name="stats"> <tr> <td> <table> <tr> <td> <div>show pet name</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showName" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show pet gender</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showGender" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> <tr> <td> <div>show petpetpet in slider</div> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="showPetpetpet" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> <td> <table> <tr> <td> <div>HP display mode</div> </td> <td> <select id="hp_mode"> <option value="0">#</option> <option value="1">#/#</option> <option value="2" style="color: green;">#/# (color)</option> </select> </td> </tr> <tr> <td> <div>BD stats display mode</div> </td> <td> <select id="bd_mode"> <option value="0">#</option> <option value="1">str (#)</option> <option value="2">neo default</option> <option value="3">str</option> </select> </td> </tr> <tr> <td> <div>interactable slider</div> <h2>stats slider will not disappear on hover, and will include links to books read and petpet interraction</h2> </td> <td> <div class="pretty p-switch p-fill"><input type="checkbox" name="interactableSlider" /> <div class="state p-success"><label> ‏‏‎ </label></div> </div> </td> </tr> </table> </td> </tr> </table> </div> 
+            </div> <div class="section"> <table id="settings_footer"> <tr> 
+            <td id="removed_pets_container" ${(removed.length ? '' : ' style="display: none;"')}> <div id="removed_pets_label">Removed Pets:</div> <select id="removed_pets" name="removed">${removed}</select> <div class="footer-btn" id="addback_button"><i class="fas fa-plus"></i></div> <div class="footer-btn" id="delete_button"><i class="fas fa-trash-alt"></i></div> </td> 
+            <td id="settings_buttons_container"> <button id="clear_button" ${(CUR_SHOWN ? '' : ' style="display: none;"')}>clear all pet data</button> <a id="populate_button" ${(!CUR_SHOWN ? '' : ' style="display: none;"')} href="https://www.neopets.com/quickref.phtml"><button>populate pet data at quick ref</button></a> </td> 
+            </tr> </table> </div> </div>`;
         return html;
     }
     function createBackgroundCSS() {
@@ -477,7 +508,7 @@
         const h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
-            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__2020>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+ bgcolor + '; border: 4px solid ' + color + '; border-radius: 20px; z-index: 100; } .menu_header { background-color: ' + color + '; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: ' + h1color + '; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: ' + h2color + '; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: ' + color + '; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: ' + h2color + '; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: ' + color + '; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td:first-child { padding: 8px; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: ' + color + '; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: ' + subcolor + '; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: ' + bgcolor + '; border-color: ' + color + '; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: ' + color + '; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: ' + subcolor + '; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: ' + subcolor + '; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: ' + subcolor + '; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #clear_button { float: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: ' + bgcolor + '; border: 3px solid ' + color + '; padding: 20px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: ' + subcolor + '; } .inner .petpet>a, .inner .petpetpet>div>a { color: ' + textcolor + '; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: ' + textcolor + '; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
+            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; width: 150px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr#row_petsHeader.empty { border-radius: 10px; margin-bottom: 0px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__psm>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+ bgcolor + '; border: 4px solid ' + color + '; border-radius: 20px; z-index: 100; } .menu_header { background-color: ' + color + '; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: ' + h1color + '; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: ' + h2color + '; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: ' + color + '; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: ' + h2color + '; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu p { text-align: left; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: ' + color + '; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td { padding: 8px 4px; } #info_key p.populate { font-size: 18px; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: ' + color + '; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: ' + subcolor + '; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: ' + bgcolor + '; border-color: ' + color + '; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: ' + color + '; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: ' + subcolor + '; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: ' + subcolor + '; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: ' + subcolor + '; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #settings_buttons_container { text-align: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #row_petsHeader.empty #fold_button { display: none; } .sidebarModule #petsHeader > div { width: 150px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: ' + bgcolor + '; border: 3px solid ' + color + '; padding: 20.2px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: ' + subcolor + '; } .inner .petpet>a, .inner .petpetpet>div>a { color: ' + textcolor + '; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: ' + textcolor + '; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
         document.body.appendChild(CSS);
     }
 
@@ -854,7 +885,8 @@
                     default:
                         psm_debug('unknown');
                 }
-                set_items(false, true, true);
+                set_items(false, true);
+                renderStats();
             }
         }
     }
@@ -1219,7 +1251,7 @@
         const petname = $('#p1name').text();
         if (petname && petname in PETS) {
             PETS[petname].current_hp = Number($('#p1hp').text());
-            set_items(false, true, false);
+            set_items(false, true);
         }
     }
     function Snowager() {
@@ -1282,7 +1314,7 @@
                         PETS[petname].color = match[3];
                         PETS[petname].species = match[4];
                 }
-                set_items(false, true, false);
+                set_items(false, true);
             }
         }
     }
@@ -1347,7 +1379,7 @@
             }
         }
     }
-    function set_items(data = true, pets = true, build = true) {
+    function set_items(data = true, pets = true, module = false, stats = false, nav = false, glam = false) {
         if (data) {
             // psm_debug('Storing DATA');
             localStorage.setItem("NEOPET_SIDEBAR_USERDATA_" + USER, JSON.stringify(DATA));
@@ -1356,7 +1388,10 @@
             // psm_debug('Storing PETS');
             localStorage.setItem("NEOPET_SIDEBAR_PETDATA", JSON.stringify(PETS));
         }
-        if (build) buildModule();
+        if (module) buildModule();
+        if (stats) renderStats();
+        if (nav) renderNav();
+        if (glam) renderGlam();
     }
     function fill_neolodge() {
         // first pet in dropdown needing lodge, book all, cockroach towers, 28 nights
@@ -1401,7 +1436,7 @@
                     i -= 1;
                 }
         }
-        set_items(true, false, false);
+        set_items(true, false);
     }
     function clear_pets() {
         localStorage.removeItem("NEOPET_SIDEBAR_PETDATA");
@@ -1525,7 +1560,7 @@
         $('#color_settings div, #increment i').css('color', color);
         $('#sidebar_menus > div, .picker_popup, .hover').css('border-color', color);
         $('.menu_header, #info_nav span, .petnav, .petnav a').css('background-color', color);
-        set_items(true, false, false);
+        set_items(true, false);
     }
     function changeSubcolor(tinycolor) {
         let color;
@@ -1542,7 +1577,7 @@
         $('#subcolorpicker_text').val(color);
         $('#color_settings input, #removed_pets, #settings_footer td div').css('color', color);
         $('#settings_menu button').css('background-color', color);
-        set_items(true, false, false);
+        set_items(true, false);
     }
     function changeBgColor(tinycolor) {
         let color;
@@ -1556,7 +1591,7 @@
         $('#bgcolorpicker_text').val(color);
         $('#sidebar_menus > div, .hover, .picker_popup').css('background-color', color);
         $('#sidebar_menus .section td, .hover td').css('color', getTextColor(color)); // text color
-        set_items(true, false, false);
+        set_items(true, false);
     }
 
     function settings_functionality() {
@@ -1646,7 +1681,7 @@
             const petname = $('#removed_pets').val();
             DATA.hidden.splice(DATA.hidden.indexOf(petname), 1);
             delete PETS[petname];
-            set_items();
+            set_items(true, true, true);
             unremovePet(petname);
             $('.remove_button').show();
         });
@@ -1663,19 +1698,22 @@
                 if ($(e.target).prop('checked')) $('body').addClass('betaBG');
                 else $('body').removeClass('betaBG');
             }
-            set_items(true, false, false);
+            set_items(true, false);
         });
         $('#hp_mode,#bd_mode').change(function () {
             const id = $(this).attr('id');
             const val = $(this).val();
             DATA[id] = val;
-            set_items(true, false, true);
+            set_items(true, false);
+            renderStats();
             $('.remove_button').show();
         });
 
         // RESETS
         $('#clear_button').click(function () {
             clear_pets();
+            $('#info_key > .populate, #populate_button').show();
+            $('#clear_button').hide();
             set_items(true, true, true);
         });
 
