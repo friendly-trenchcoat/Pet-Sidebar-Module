@@ -571,7 +571,7 @@ div#toggle_settings_tabs>div.tab-active {
 #row_petsHeader.empty #fold_button {
     display: none;
 }
-.sidebarModule #petsHeader > div {
+.sidebarModule #row_petsHeader.empty #petsHeader > div {
     width: 150px;
 }
 #petsHeader span {
