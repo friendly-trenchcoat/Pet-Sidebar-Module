@@ -706,7 +706,7 @@ div#toggle_settings_tabs>div.tab-active {
     height: 100%;
     width: 90%;
     float: right;
-    display: inline;
+    display: flex;
 }
 
 .inner table {

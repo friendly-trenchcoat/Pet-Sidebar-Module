@@ -309,8 +309,6 @@
     function createStatsHTML(petname, outerHTML = true) {
         if (!DATA.showStats) return '';  // if stats=false return empty
         const stats = PETS[petname];
-        const o1 = outerHTML ? '<div id="stats_' + petname + '" class="hover stats" petname="' + petname + '">' : '';
-        const o2 = outerHTML ? '</div>' : '';
         let petpetTD = '', petpetStyle = '', petpetpetTD = '';
         const hasSliderLinks = DATA.interactableSlider && PETS[petname].owner === USER;
         if (DATA.showPetpet && stats.petpet_image) { // if showPetpet=true and there is a petpet
@@ -331,85 +329,71 @@
                     ${a2}</div></td>`;
             }
         }
-        const name = DATA.showName ? `<div class="petname">${petname}</div>` : '';
-        const gender = DATA.showGender ? `
-            <tr>
-                <td align="right">Gender:</td>
-                <td align="left"><b style="color: ${stats.gender === 'Female' ? '#FD9AFF' : 'blue'}">${stats.gender}</b></td>
-            </tr>
-        ` : '';
-        const hp = getHP(stats.current_hp, stats.max_hp);
-        const int = hasSliderLinks
-            ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
-            : `<b>${stats.intelligence}</b>`;
-        const statsHTML =
-            o1 +
-            '<div class="inner"' + petpetStyle + '> \
-            \
-            '+ name + '\
-            <table cellpadding="1" cellspacing="0" border="0"><tr> \
-            \
-            <td vertical-align="top"> \
-            <table cellpadding="1" cellspacing="0" border="0"> \
-            <tr> \
-            <td align="right">Species:</td> \
-            <td align="left"><b>'+ stats.species + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Color:</td> \
-            <td align="left"><b>'+ stats.color + '</b></td> \
-            </tr> \
-            '+ gender + '\
-            <tr> \
-            <td align="right">Mood:</td> \
-            <td align="left"><b>'+ stats.mood + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Hunger:</td> \
-            <td align="left"><b>'+ stats.hunger + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Age:</td> \
-            <td align="left"><b>'+ stats.age + '</b></td> \
-            </tr> \
-            </table> \
-            </td> \
-            \
-            <td> \
-            <table cellpadding="1" cellspacing="0" border="0"> \
-            <tr> \
-            <td align="right">Level:</td> \
-            <td align="left"><b>'+ stats.level + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Health:</td> \
-            <td align="left"><b>'+ hp + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Strength:</td> \
-            <td align="left"><b>'+ getBDStat(stats.strength, STR) + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Defence:</td> \
-            <td align="left"><b>'+ getBDStat(stats.defence, DEF) + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Movement:</td> \
-            <td align="left"><b>'+ getBDStat(stats.movement, MOV) + '</b></td> \
-            </tr> \
-            <tr> \
-            <td align="right">Intelligence:</td> \
-            <td align="left">'+ int + '</td> \
-            </tr> \
-            </table> \
-            </td> \
-            \
-            '+ petpetTD + ' \
-            '+ petpetpetTD + ' \
-            \
-            </tr></table> \
-            \
-            </div>' + o2;
+        const statsHTML = `
+            ${outerHTML ? `<div id="stats_${petname}" class="hover stats" petname="${petname}">` : ''}
+                <div class="inner"${petpetStyle}>
+                    ${DATA.showName ? `<div class="petname">${petname}</div>` : ''}
+                    <table cellpadding="1" cellspacing="0" border="0"><tr>
+                        <td vertical-align="top"><table cellpadding="1" cellspacing="0" border="0">
+                            <tr>
+                                <td align="right">Species:</td>
+                                <td align="left"><b>${stats.species}</b></td>
+                            </tr>
+                            ${stats.color ? `<tr>
+                                <td align="right">Color:</td>
+                                <td align="left"><b>${stats.color}</b></td>
+                            </tr>` : ''}
+                            ${DATA.showGender && stats.gender ? `<tr>
+                                <td align="right">Gender:</td>
+                                <td align="left"><b style="color: ${stats.gender === 'Female' ? '#FD9AFF' : 'blue'}">${stats.gender}</b></td>
+                            </tr>` : ''}
+                            <tr>
+                                <td align="right">Mood:</td>
+                                <td align="left"><b>${stats.mood}</b></td>
+                            </tr>
+                            <tr>
+                                <td align="right">Hunger:</td>
+                                <td align="left"><b>${stats.hunger}</b></td>
+                            </tr>
+                            <tr>
+                                <td align="right">Age:</td>
+                                <td align="left"><b>${stats.age}</b></td>
+                            </tr>
+                        </table></td>
+                        <td><table cellpadding="1" cellspacing="0" border="0">
+                            <tr>
+                                <td align="right">Level:</td>
+                                <td align="left"><b>${stats.level}</b></td>
+                            </tr>
+                            <tr>
+                                <td align="right">Health:</td>
+                                <td align="left"><b>${getHP(stats.current_hp, stats.max_hp)}</b></td>
+                            </tr>
+                            ${stats.strength ? `<tr>
+                                <td align="right">Strength:</td>
+                                <td align="left"><b>${getBDStat(stats.strength, STR)}</b></td>
+                            </tr>` : ''}
+                            ${stats.defence ? `<tr>
+                                <td align="right">Defence:</td>
+                                <td align="left"><b>${getBDStat(stats.defence, DEF)}</b></td>
+                            </tr>` : ''}
+                            ${stats.movement ? `<tr>
+                                <td align="right">Movement:</td>
+                                <td align="left"><b>${getBDStat(stats.movement, MOV)}</b></td>
+                            </tr>` : ''}
+                            ${stats.intelligence ? `<tr>
+                                <td align="right">Intelligence:</td>
+                                <td align="left">${hasSliderLinks
+                                    ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
+                                    : `<b>${stats.intelligence}</b>`}</td>
+                            </tr>` : ''}
+                        </table></td>
+                        ${petpetTD}
+                        ${petpetpetTD}
+                    </tr></table>
+                </div>
+            ${outerHTML ? '</div>' : ''}
+        `;
         return statsHTML;
     }
     function createNavHTML(petname) {
@@ -508,7 +492,7 @@
         const h2color = theme ? $('.sidebarHeader').css('color') : "#fff";
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
-            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; width: 150px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr#row_petsHeader.empty { border-radius: 10px; margin-bottom: 0px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__psm>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+ bgcolor + '; border: 4px solid ' + color + '; border-radius: 20px; z-index: 100; } .menu_header { background-color: ' + color + '; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: ' + h1color + '; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: ' + h2color + '; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: ' + color + '; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: ' + h2color + '; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu p { text-align: left; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: ' + color + '; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td { padding: 8px 4px; } #info_key p.populate { font-size: 18px; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: ' + color + '; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: ' + subcolor + '; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: ' + bgcolor + '; border-color: ' + color + '; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: ' + color + '; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: ' + subcolor + '; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: ' + subcolor + '; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: ' + subcolor + '; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #settings_buttons_container { text-align: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #row_petsHeader.empty #fold_button { display: none; } .sidebarModule #row_petsHeader.empty #petsHeader > div { width: 150px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: ' + bgcolor + '; border: 3px solid ' + color + '; padding: 20.2px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: inline; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: ' + subcolor + '; } .inner .petpet>a, .inner .petpetpet>div>a { color: ' + textcolor + '; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: ' + textcolor + '; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
+            /* BETA */ body { overflow-x: hidden; } .navsub-left__2020 { margin-left: 225px; } .navsub-left__2020 div#toggleNeggsThemeButton { padding: 5px 15px; display: inline-block; vertical-align: top; margin: auto; } .navsub-right__2020 { margin-right: 115px; } #navsub-buffer__2020 { height: 45px !important; } div#footer__2020 { z-index: 97; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 96; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; width: 150px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr#row_petsHeader.empty { border-radius: 10px; margin-bottom: 0px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__psm>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+ bgcolor + '; border: 4px solid ' + color + '; border-radius: 20px; z-index: 100; } .menu_header { background-color: ' + color + '; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: ' + h1color + '; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: ' + h2color + '; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: ' + color + '; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: ' + h2color + '; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu p { text-align: left; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: ' + color + '; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td { padding: 8px 4px; } #info_key p.populate { font-size: 18px; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; } #info_menu td:first-child i { font-size: 18px; } .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: ' + color + '; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: ' + subcolor + '; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: ' + bgcolor + '; border-color: ' + color + '; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: ' + color + '; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table > tbody > tr > td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 102; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: ' + subcolor + '; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: ' + subcolor + '; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: ' + subcolor + '; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #settings_buttons_container { text-align: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 98; background-color: #fff; } .petGlam { position: relative; z-index: 99; } .timers { position: absolute; height: 100%; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 103; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #row_petsHeader.empty #fold_button { display: none; } .sidebarModule #row_petsHeader.empty #petsHeader > div { width: 150px; } #petsHeader span { float: right; font-size: 12px; } #petsHeader span i { cursor: pointer; padding: 0px 4px; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 97; text-align: center; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; z-index: 98; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 102; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: ' + bgcolor + '; border: 3px solid ' + color + '; padding: 20.2px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 98; } .inner { height: 100%; width: 90%; float: right; display: flex; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: ' + subcolor + '; } .inner .petpet>a, .inner .petpetpet>div>a { color: ' + textcolor + '; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: ' + textcolor + '; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; }'
         document.body.appendChild(CSS);
     }
 
@@ -988,25 +972,31 @@
         }
     }
     function Sidebar() {
-        // get name and retreive data (if any)
+        // get name and retrieve data (if any)
         const petname = $("a[href='/quickref.phtml']").first().text();
-        if (petname in PETS) { // if pet isn't recorded, not worth starting here
-            const stats = PETS[petname];
+        // phrase 
+        // const phrase = $('.neopetPhrase').text();
+        // if (phrase) petPhrase(phrase.replace(/^[\s\w]+:/,'').replace(/\s+$/,''));
+        
+        const stats = PETS[petname] || {};
+        const image = $("td.activePet img").attr('src').split('/');
+        stats.owner = USER;
+        stats.id = image[4] || 0;
+        stats.expression = image[5] || 1;
+        
+        // get stats
+        const activePetStats = $("td.activePetInfo td[align='left']");
+        const health = $(activePetStats).eq(1).text().match(new RegExp(/(\d+) \/ (\d+)/));
+        stats.species = $(activePetStats).eq(0).text();
+        stats.mood = $(activePetStats).eq(2).text();
+        stats.hunger = $(activePetStats).eq(3).text();
+        stats.age = $(activePetStats).eq(4).text();
+        stats.level = $(activePetStats).eq(5).text();
+        stats.current_hp = health[1];
+        stats.max_hp = health[2];
 
-            // get stats
-            const activePetStats = $("td.activePetInfo td[align='left']");
-            const health = $(activePetStats).eq(1).text().match(new RegExp(/(\d+) \/ (\d+)/));
-            stats.expression = $("td.activePet img").attr('src').split('/')[5] || 1;
-            stats.species = $(activePetStats).eq(0).text();
-            stats.mood = $(activePetStats).eq(2).text();
-            stats.hunger = $(activePetStats).eq(3).text();
-            stats.age = $(activePetStats).eq(4).text();
-            stats.level = $(activePetStats).eq(5).text();
-            stats.current_hp = health[1];
-            stats.max_hp = health[2];
-
-            PETS[petname] = stats;
-        }
+        if (!(petname in PETS)) DATA.shown.push(petname);
+        PETS[petname] = stats;
     }
     function Random() {
         /**
