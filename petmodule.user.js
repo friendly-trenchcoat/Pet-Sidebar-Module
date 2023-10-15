@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        1.3.2.1
+// @version        2.0
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
@@ -37,7 +37,7 @@
 
     // INITIAL GLOBALS
     // I know I should have made a class but I don't feel like it now
-    const VERSION = '1.3.2.1';
+    const VERSION = '2.0';
     let SPECTRUM = false;
     let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, BG_CSS, CONTAINER_CSS, BG, IS_BETA, CUR_SHOWN;
     const [STR, U_STR, DEF, U_DEF, MOV] = setStatics();
