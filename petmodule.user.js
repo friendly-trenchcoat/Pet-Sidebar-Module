@@ -8,6 +8,7 @@
 // @exclude        https://*.neopets.com/home/* 
 // @exclude        https://*.neopets.com/index.phtml
 // @exclude        https://*.neopets.com/login/*
+// @icon           https://www.google.com/s2/favicons?sz=64&domain=neopets.com
 // @grant          none
 // ==/UserScript==
 /*jshint multistr: true */
@@ -167,7 +168,7 @@
             buildMenus();
             main_functionality();
         }
-        if (!IS_BETA && $('#header')[0] && document.URL.indexOf('lookup') == -1) createBackgroundCSS();
+        if (!IS_BETA && $('#navigation').is(":visible") && document.URL.indexOf('lookup') == -1) createBackgroundCSS();
 
         // STORE DATA
         set_items(true, true);
