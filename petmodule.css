@@ -56,10 +56,12 @@ div#footer__2020 {
     position: relative;
     display: block;
     border-radius: 15px;
+    width: 150px;
 }
 #container__psm>table#psm>tbody>tr {
     margin-bottom: -4px;
     display: block;
+    position: relative;
 }
 #container__psm>table#psm>tbody>tr#row_petsHeader {
     display: block;
@@ -69,13 +71,17 @@ div#footer__2020 {
     font-family: "Palanquin", "Arial Bold", sans-serif;
     line-height: 25px;
 }
+#container__psm>table#psm>tbody>tr#row_petsHeader.empty {
+    border-radius: 10px;
+    margin-bottom: 0px;
+}
 #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img,
 #container__psm>table#psm>tbody>tr:last-child>div.placeholder {
     border-radius: 0px 0px 10px 10px;
 }
 
 /* menus - general */
-#container__2020>#sidebar_menus>div {
+#container__psm>#sidebar_menus>div {
     left: calc(50% - 350px);
 }
 
@@ -83,7 +89,7 @@ div#footer__2020 {
     display: none;
     position: fixed;
     width: 700px;
-    height: 400px;
+    height: 462px;
     margin: 52px;
     background-color: '+bgcolor+';
     border: 4px solid '+color+';
@@ -99,7 +105,7 @@ div#footer__2020 {
 }
 
 .menu_header h1 {
-    color: '+h1color+';
+    color: '+headertextcolor+';
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-size: 35px;
     margin: 1px 5px;
@@ -111,7 +117,7 @@ div#footer__2020 {
     float: right;
     cursor: pointer;
     font-size: 30px;
-    color: '+h2color+';
+    color: '+headertextcolor+';
     margin: 5.5px 14px;
 }
 
@@ -133,11 +139,6 @@ div#footer__2020 {
     min-height: 20%;
     max-height: 100%;
     margin: 14px auto;
-}
-
-.section:nth-child(2) {
-    border: 5px dotted #0003;
-    margin-top: 20px;
 }
 
 .section>span {
@@ -169,6 +170,10 @@ div#footer__2020 {
 #info_gather {
     overflow: auto;
 }
+#info_gather {
+    border: 5px dotted #ccc;
+    margin-top: 20px;
+}
 
 #info_nav {
     display: inline;
@@ -180,7 +185,7 @@ div#footer__2020 {
     padding: 0px 25px;
     margin: 0px -5px 0px -1.5px;
     cursor: pointer;
-    color: '+h2color+';
+    color: '+headertextcolor+';
     font-size: 17px;
 }
 
@@ -195,6 +200,10 @@ div#footer__2020 {
 
 #info_menu .section {
     display: none;
+}
+
+#info_menu p {
+    text-align: left;
 }
 
 #info_menu span {
@@ -226,8 +235,14 @@ div#footer__2020 {
     font-weight: bold;
 }
 
-#info_menu td:first-child {
-    padding: 8px;
+#info_menu td {
+    padding: 8px 4px;
+}
+
+#info_key p.populate {
+    font-size: 18px;
+    text-align: center;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
 }
 
 #info_menu td:first-child i {
@@ -239,6 +254,12 @@ div#footer__2020 {
     font-weight: normal;
 }
 
+#info_menu h2 {
+    margin: 0px 60px 10px 66px;
+    font-weight: lighter;
+    font-size: 12px;
+    color: #888;
+}
 #info_menu h3 {
     margin: -3px 0px 0px 66px;
     font-weight: lighter;
@@ -304,7 +325,7 @@ div#footer__2020 {
     margin: -21px 0px 0px 153px;
 }
 
-#increment i {
+#increment>i {
     display: block;
     margin: -6px auto;
     font-size: 16px;
@@ -312,33 +333,81 @@ div#footer__2020 {
     color: '+color+';
 }
 
-/* toggles */
-#toggle_settings_section {
-    margin: 25px auto 26px;
-}
-table#toggle_settings {
-    table-layout: fixed;
-}
-#toggle_settings > tbody > tr > td {
-    vertical-align: top;
-}
-#toggle_settings table {
-    margin: auto;
-}
-#toggle_settings table td {
-    padding: 5px;
+#increment>b#incrementLabel {
+    position: absolute;
+    top: 0px;
+    left: 12px;
+    font-size: 12px;
+    line-height: 14px;
+    color: '+color+';
 }
 
-#toggle_settings table td:nth-child(odd) {
+/* toggles */
+#toggle_settings_section {
+    margin: 0px auto 30px;
+}
+div#toggle_settings_tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: -2px;
+}
+div#toggle_settings_tabs>div {
+    font-size: 16px;
+    background-color: #eee;
+    margin: 0;
+    padding: 5px 15px 4px 12px;
+    border-radius: 6px 6px 0 0;
+    color: white;
+    cursor: pointer;
+}
+div#toggle_settings_tabs>div.tab-active {
+    font-weight: 600;
+    color: white;
+    background-color: #ccc;
+}
+#toggle_settings_bodies {
+    position: relative;
+    z-index: 0;
+}
+#toggle_settings_bodies>table {
+    display: none;
+    table-layout: fixed;
+    border: 3px dotted #ccc;
+    width: 100%;
+    border-radius: 0 6px 6px 6px;
+    padding: 5px 0px;
+    height: 172px;
+}
+#toggle_settings_bodies>table.tab-active {
+    display: table;
+}
+#toggle_settings_bodies>table > tbody > tr > td {
+    vertical-align: top;
+}
+#toggle_settings_bodies>table table {
+    margin: auto;
+}
+#toggle_settings_bodies>table table td {
+    padding: 5px;
+    vertical-align: baseline;
+}
+
+#toggle_settings_bodies>table table td:nth-child(odd) {
     text-align: right;
 }
 
-#toggle_settings div {
+#toggle_settings_bodies>table div {
     font-size: 14px;
 }
 
-#toggle_settings select {
+#toggle_settings_bodies>table select {
     width: 100px;
+}
+#toggle_settings_bodies>table h2 {
+    margin: 4px 0px 0px 0px;
+    font-weight: lighter;
+    font-size: 10.5px;
+    color: #888;
 }
 
 #hp_mode option {
@@ -408,8 +477,8 @@ table#toggle_settings {
     display: inline;
 }
 
-#clear_button {
-    float: right;
+#settings_buttons_container {
+    text-align: right;
 }
 
 /* pets */
@@ -426,22 +495,34 @@ table#toggle_settings {
     z-index: 99;
 }
 
-.neolodge {
-    position: absolute;
+.timers {
+    position: absolute;   
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center; 
+}
+.timers>div {
+    position: relative; 
     z-index: 103;
     margin: 7px;
-    padding: 9px 6.5px;
+    padding: 6px;
     background-color: #0003;
     border-radius: 100px;
     cursor: pointer;
     display: none;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    font-size: 16px;
 }
-
-.neolodge i {
+.timers>div i {
     color: #fff !important;
+    display: inline;
 }
-
-.neolodge:hover {
+.timers>div:hover {
     animation: shake 0.5s;
 }
 
@@ -492,6 +573,16 @@ table#toggle_settings {
 }
 
 /* nav bar */
+#psm #petsHeader {
+    display: block;
+    padding: 6px;
+}
+#row_petsHeader.empty #fold_button {
+    display: none;
+}
+.sidebarModule #row_petsHeader.empty #petsHeader > div {
+    width: 150px;
+}
 #petsHeader span {
     float: right;
     font-size: 12px;
@@ -612,7 +703,7 @@ table#toggle_settings {
     box-shadow: 3px 2px 5px #8882;
     background-color: '+bgcolor+';
     border: 3px solid '+color+';
-    padding: 20px;
+    padding: 20.2px;
     height: 104px;
     width: 5px;
     margin-left: 95px;
@@ -624,7 +715,7 @@ table#toggle_settings {
     height: 100%;
     width: 90%;
     float: right;
-    display: inline;
+    display: flex;
 }
 
 .inner table {
@@ -642,6 +733,26 @@ table#toggle_settings {
     font: 6.5pt Verdana;
 }
 
+.inner .petname {
+    position: absolute;
+    top: 5px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    color: '+subcolor+';
+}
+
+.inner .petpet>a,
+.inner .petpetpet>div>a {
+    color: '+textcolor+';
+    font-weight: normal;
+}
+
+.inner .petpetpet>div {
+    margin-left: -30px;
+}
+
 #sidebar_menus .section td,
 .hover td {
     color: '+textcolor+';
@@ -651,5 +762,6 @@ table#toggle_settings {
 img.pa[src^="//images.neopets.com/nq2"] {
     z-index: 96 !important;
 }
-
-/* checkboxes .pretty.p-switch.p-slim input:checked~.state.p-info:before { border-color: <on slim bar>; background-color: <on slim bar>; } .pretty input:checked~.state.p-info label:after, .pretty.p-toggle .state.p-info label:after { background-color: <on slim knob> !important; } .pretty.p-switch.p-slim .state:before { background: <off slim bar> !important; } .pretty.p-switch .state label:after { background-color: <off slim knob> !important; } */
+.h5-speaker.speaker-sm {
+    display: none;
+}
