@@ -8,6 +8,7 @@
 // @exclude        https://*.neopets.com/home/* 
 // @exclude        https://*.neopets.com/index.phtml
 // @exclude        https://*.neopets.com/login/*
+// @exclude        https://*.neopets.com/~*
 // @icon           https://www.google.com/s2/favicons?sz=64&domain=neopets.com
 // @grant          none
 // ==/UserScript==
@@ -1097,7 +1098,7 @@
         psm_debug('BETA Wheel of Excitement:', blurb);
         /**
          * A Golden Light surrounds your pets... they are completely healed!                All pets full HP
-         * ?                                                                                All pets lose half of current HP floor(curr/2)
+         * A lightning bolt shoots out of a cloud and ZAPS your Neopets!                    All pets lose half of current HP floor(curr/2)
          * The Lava Ghoul flies down from a nearby cloud and breathes FIRE over your pets!  All pets lose 2/3 of current HP floor(curr/3)
          * PETNAME starts to feel slightly feverish...                                      Active contracts Chickaroo
          */
@@ -1105,8 +1106,10 @@
             psm_debug('All pets fully healed');
             for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = PETS[petname].max_hp;
         }
-        // else if (blurb.includes('?'))
-        //     for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = Math.floor(Number(PETS[petname].current_hp)/2);
+        else if (blurb.includes('ZAPS')) {
+            psm_debug('All pets lose half current HP');
+            for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = Math.floor(Number(PETS[petname].current_hp) / 2);
+        }
         else if (blurb.includes('FIRE')) {
             psm_debug('All pets lose 2/3 current HP');
             for (let petname in PETS) if (PETS[petname].owner == USER) PETS[petname].current_hp = Math.floor(Number(PETS[petname].current_hp) / 3);
