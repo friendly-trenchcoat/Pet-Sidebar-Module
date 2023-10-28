@@ -497,7 +497,7 @@ div#toggle_settings_tabs>div.tab-active {
 
 .timers {
     position: absolute;   
-    height: 100%;
+    height: 150px;
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
