@@ -5,7 +5,6 @@
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
-// @exclude        https://*.neopets.com/home/* 
 // @exclude        https://*.neopets.com/index.phtml
 // @exclude        https://*.neopets.com/login/*
 // @exclude        https://*.neopets.com/~*
@@ -25,7 +24,6 @@
  *      anything that redirects you to quick ref
  *
  *  Things I may one day gather from:
- *      apple bobbing, for "Blurred Vision" if I ever track wellness with any seriousness
  *      books, tdmbgpop, if I ever track int
  *      items with obscure effects, if I ever care that much
  *      decaying age/hunger/mood, if I ever care that much
@@ -143,8 +141,10 @@
         else if (document.URL.indexOf("dome/arena") != -1) Battle();
         else if (document.URL.indexOf("snowager") != -1) $(document).ajaxSuccess(Snowager);
         else if (document.URL.indexOf("geraptiku/process_tomb") != -1) Geraptiku();
+        else if (document.URL.indexOf("bobbing=1") != -1) AppleBobbing();
         else if (document.URL.indexOf("soupkitchen") != -1) Soup();
         else if (document.URL.indexOf("inventory") != -1) Inventory();
+        else if (document.URL.indexOf("/home/") != -1) Homepage();
         else if (document.URL.indexOf("/neolodge") != -1) Neolodge();
         else if (document.URL.indexOf("book_neolodge") != -1) BookNeolodge();
 
@@ -156,16 +156,18 @@
         Random();
 
         // ADD ELEMENTS
-        if ($(".sidebar")[0] || $("#container__2020")[0] && document.URL.indexOf('neopets.com/index.phtml') == -1) {
+        if ($(".sidebar")[0] || $("#container__2020")[0]) {
             $("head").append(
                 '<link href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" rel="stylesheet" type="text/css">' + // icon images
                 '<link href="https://cdn.jsdelivr.net/npm/pretty-checkbox@3.0/dist/pretty-checkbox.min.css" rel="stylesheet" type="text/css">' + // checkboxes
                 '<link href="https://bgrins.github.io/spectrum/spectrum.css" rel="stylesheet" type="text/css">'); // color pickers
             setGlobals();
-            buildModule();
-            createCSS();
-            buildMenus();
-            main_functionality();
+            if (document.URL.indexOf('/home/') == -1) {
+                buildModule();
+                createCSS();
+                buildMenus();
+                main_functionality();
+            }
         }
         if (!IS_BETA && $('#navigation').is(":visible") && document.URL.indexOf('lookup') == -1) createBackgroundCSS();
 
@@ -458,7 +460,7 @@
     }
     function info_HTML() {
         const html =
-            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <p class="populate" ${CUR_SHOWN ? 'style="display: none;"' : ''}>Visit <b><a href="https://www.neopets.com/quickref.phtml">Quick Ref</a></b> to populate the Pet Sidebar Module </p> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don't want to leave the page you're on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet is not on holiday.</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme's color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color X shades lighter than your main Color. Press the arrows to raise or lower X from the default of 30.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers, training timer</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>End Training</td> <td>Affected stats numbers</td> </tr> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Petpet Play</td> <td>Petpet and petpetpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>wheels</span> <table> <tr> <td>Excitement</td> <td>Current HP, illness</td> </tr> <tr> <td>Extravagance</td> <td>Affected stats numbers</td> </tr> <tr> <td>Knowledge</td> <td>Current HP</td> </tr> <tr> <td>Misfortune</td> <td>Illness</td> </tr> <tr> <td>Mediocrity</td> <td>Current HP</td> </tr> <tr> <td>Monotony</td> <td>Current HP</td> </tr> </table> <span>other temporary changes</span> <table> <tr> <td>Grave Danger</td> <td>Grave Danger timer</td> </tr> <tr> <td>End of Battle</td> <td>Current HP</td> </tr> <tr> <td>Healing Springs</td> <td>Current HP</td> </tr> <tr> <td>Neolodge</td> <td>Neolodge timer</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Garaptiku</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP, affected attributes</td> </tr> </table> <h3 style="margin-top: -30px;">* Most illness and intelligence changes are not tracked outside of quick ref, and I don't bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ${VERSION}</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>Edge</th> <th>IE</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>dunno, it works</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don't work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>`;
+            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <p class="populate" ${CUR_SHOWN ? 'style="display: none;"' : ''}>Visit <b><a href="https://www.neopets.com/quickref.phtml">Quick Ref</a></b> to populate the Pet Sidebar Module </p> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don't want to leave the page you're on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet has checked out from their stay, or is at least "very hungry".</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme's color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color X shades lighter than your main Color. Press the arrows to raise or lower X from the default of 30.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers, training timer</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>End Training</td> <td>Affected stats numbers</td> </tr> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Petpet Play</td> <td>Petpet and petpetpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>wheels</span> <table> <tr> <td>Excitement</td> <td>Current HP, illness</td> </tr> <tr> <td>Extravagance</td> <td>Affected stats numbers</td> </tr> <tr> <td>Knowledge</td> <td>Current HP</td> </tr> <tr> <td>Misfortune</td> <td>Illness</td> </tr> <tr> <td>Mediocrity</td> <td>Current HP</td> </tr> <tr> <td>Monotony</td> <td>Current HP</td> </tr> </table> <span>other temporary changes</span> <table> <tr> <td>Grave Danger</td> <td>Grave Danger timer</td> </tr> <tr> <td>End of Battle</td> <td>Current HP</td> </tr> <tr> <td>Healing Springs</td> <td>Current HP</td> </tr> <tr> <td>Neolodge</td> <td>Neolodge timer</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Garaptiku</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP, affected attributes</td> </tr> </table> <h3 style="margin-top: -30px;">* Most illness and intelligence changes are not tracked outside of quick ref, and I don't bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ${VERSION}</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>Edge</th> <th>IE</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>dunno, it works</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don't work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>`;
         return html;
     }
     function settings_HTML() {
@@ -1276,6 +1278,18 @@
         if ($('.tomb-result').css('background-image').includes('trap'))
             PETS[DATA.active].current_hp = Math.floor(Number(PETS[DATA.active].current_hp) / 2);
     }
+    function AppleBobbing() {
+        const blurb = $('#bob_middle').text();
+        psm_debug('BETA Apple Bobbing', blurb);
+        if (blurb.includes('dentures') || blurb.includes('hiccup')) {
+            psm_debug(DATA.active, 'loses half current HP');
+            PETS[DATA.active].current_hp = Math.floor(Number(PETS[DATA.active].current_hp) / 2);
+        }
+        else if (blurb.includes('Blurred Vision')) {
+            psm_debug(DATA.active, 'contracted Blurred Vision');
+            PETS[DATA.active].expression = '4';
+        }
+    }
     function Soup() {
         psm_debug('BETA Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each(function () {
@@ -1291,6 +1305,20 @@
                     useItem(result);
                 }
             });
+        });
+    }
+    function Homepage() {
+        psm_debug('BETA Homepage');
+        $('body').on('click', 'div#petCareUseItem', () => {
+            // ajaxSuccess doesn't work here
+            let result;
+            const wait = setInterval(function () {
+                result = $('#petCareResult > .popup-body__2020 > p, #petCareResult > .popup-body__2020 > pr').eq(-1).text();
+                if (result && result !== 'Loading...') {
+                    clearInterval(wait);
+                    useItem(result);
+                }
+            }, 500);
         });
     }
     function useItem(blurb) {
