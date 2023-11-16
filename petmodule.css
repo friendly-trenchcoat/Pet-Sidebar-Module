@@ -94,7 +94,7 @@ div#footer__2020 {
     background-color: '+bgcolor+';
     border: 4px solid '+color+';
     border-radius: 20px;
-    z-index: 100;
+    z-index: 103;
 }
 
 .menu_header {
