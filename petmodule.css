@@ -16,6 +16,29 @@ body {
 .navsub-right__2020 {
     margin-right: 115px;
 }
+.navsub-nps-meter__2020 {
+    min-width: 50px;    
+    background: #fff;
+    border-radius: 10px;
+    height: auto;
+    display: inline-block;
+    cursor: pointer;
+    padding: 2px 5px;
+    width: auto;
+}
+.navsub-nps-icon__2020 {
+    background: url('https://images.neopets.com/premium/portal/images/nptotal-icon.png') center center no-repeat;
+    background-size: 100% auto;
+    height: 25px;
+    width: 23px;
+    margin: auto 4px auto 4px;
+    float: left;
+    vertical-align: middle;
+}
+.navsub-add-nc__2020 {
+    height: 18px;
+    vertical-align: sub;
+}
 
 #navsub-buffer__2020 {
     height: 45px !important;
