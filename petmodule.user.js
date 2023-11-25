@@ -1435,7 +1435,16 @@
     }
     function Bank() {
         psm_debug('BETA Bank');
-        if($('#txtCurrentBalance1')) DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
+        if($('#txtCurrentBalance1')) {
+            DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
+            $('#npsanchor').text(DATA.npBank);
+        }
+        // listen for balance changes on page
+        $('#txtCurrentBalance1').on('DOMSubtreeModified', () => {
+            DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
+            $('#npsanchor').text(DATA.npBank);
+            set_items(true, false);
+        })
     }
     function danger_end(petname, end) {
         PETS[petname].petpet_danger = end;
