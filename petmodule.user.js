@@ -1251,7 +1251,7 @@
             }
             if (match == " hungry") {
                 psm_debug(petname, 'bloated');
-                PETS[petname].hunger = 'bloated';
+                set_hunger(petname, 'bloated');
             }
         }
     }
@@ -1303,7 +1303,7 @@
     function Soup() {
         psm_debug('BETA Soup Kitchen')
         $('#bxlist li:not(.bx-clone)').each(function () {
-            PETS[$(this).find('strong').eq(0).text()].hunger = $(this).find('strong').eq(1).text();
+            set_hunger($(this).find('strong').eq(0).text(), $(this).find('strong').eq(1).text());
         });
     }
     function Inventory() {
@@ -1347,7 +1347,7 @@
             if (petname in PETS) {
                 switch (match[2]) {
                     case 'was':     // food
-                        PETS[petname].hunger = match[4];
+                        set_hunger(petname, match[4]);
                         break;
                     case 'drinks':  // health potion
                         if (match[4]) PETS[petname].current_hp += Number(match[4]);
@@ -1493,6 +1493,12 @@
         DATA.shown = [];
         DATA.hidden = [];
         DATA.active = '';
+    }
+    function set_hunger(petname, hunger) {
+        PETS[petname].hunger = hunger;
+        if (PETS[petname].neolodge == 0 && !is_hungry(hunger)) {
+            PETS[petname].neolodge = -1;
+        }
     }
     function is_hungry(hunger) {
         return ['dying', 'starving', 'famished', 'very hungry', 'hungry'].includes(hunger);
