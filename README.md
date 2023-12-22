@@ -14,7 +14,7 @@ Initialize script at [Quick Ref](https://www.neopets.com/quickref.phtml).
 ---
 ## Features
 
-#### Stats Hover Slider
+### Stats Hover Slider
 Hover on the left of a pet image to expose pet Stats.
 
  ![stats](screenshots/stats.gif)
@@ -24,20 +24,20 @@ Even for inactive pets, stats are kept updated as you navigate the site.
 In interactive mode, the slider stays open as you hover over it, and Books and Petpet links are added. This is configurable in the settings panel.
 
 
-#### Pet Naviation
+### Pet Naviation
 Hover on the left of a pet image to expose pet Quick Links.
 
  ![navigation](screenshots/navigation.gif)
 
-#### Reminders
+### Reminders
 Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel.
 
  ![reminders](screenshots/reminders.gif)
 
-#### Collapse Module
+### Collapse Module
  ![reminders](screenshots/collapse.gif)
 
-#### Secondary Link to Bank
+### Secondary Link to Bank
  ![](screenshots/navsub_right.png)
 
 ---
