@@ -42,15 +42,18 @@ Reminders will display an icon over a pet linking to the relevant page when it's
 
 ### Removing Pets from the Sidebar Module
 When the settings panel is open, remove buttons appear over each pet. 
+
  ![](screenshots/remove.png)
 
 When a pet is removed, it is added to a dropdown in the settings panel. You can add the pet back to the sidebar with the +, or delete the pet's data entirely with the trashcan.
+
  ![](screenshots/removed.png)
+
 If you still own a pet, the deleted data will be re-added upon visiting Quick Ref.
 
 You can also easily clear all pet data in the settings panel, which is an easy first troubleshooting step if you encounter any issues.
- ![](screenshots/remove_all.png)
 
+ ![](screenshots/remove_all.png)
 
 ---
  
