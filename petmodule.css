@@ -4,6 +4,7 @@ body {
 }
 
 .nav-top__2020,
+.nav-profile-dropdown__2020,
 .nav-bottom__2020 {
     z-index: 106;
 }
@@ -16,33 +17,6 @@ body {
     display: inline-block;
     vertical-align: top;
     margin: auto;
-}
-.navsub-nps-meter__2020 {
-    min-width: 50px;    
-    background: #fff;
-    border-radius: 10px;
-    height: auto;
-    display: inline-block;
-    cursor: pointer;
-    padding: 2px 5px;
-    width: auto;
-}
-.navsub-nps-icon__2020 {
-    background: url("https://images.neopets.com/premium/portal/images/nptotal-icon.png") center center no-repeat;
-    background-size: 100% auto;
-    height: 25px;
-    width: 23px;
-    margin: auto 4px auto 4px;
-    float: left;
-    vertical-align: middle;
-}
-.navsub-add-nc__2020 {
-    height: 18px;
-    vertical-align: sub;
-}
-
-#navsub-buffer__2020 {
-    height: 45px !important;
 }
 
 div#footer__2020 {
@@ -607,14 +581,24 @@ div#toggle_settings_tabs>div.tab-active {
 .sidebarModule #row_petsHeader.empty #petsHeader > div {
     width: 150px;
 }
+#petsHeader > div { 
+    display: flex;
+    justify-content: space-between;
+}
+#petsHeader > div > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sidebarModule #petsHeader > div > div {
+    padding: 0 4px;
+}
 #petsHeader span {
-    float: right;
     font-size: 12px;
 }
 
 #petsHeader span i {
     cursor: pointer;
-    padding: 0px 4px;
 }
 
 .petnav:hover,
