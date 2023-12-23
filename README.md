@@ -9,7 +9,28 @@ Display or hide any number of pets, including optionally those from other accoun
 ![](screenshots/classic_before.png)  |  ![](screenshots/classic_after.png)
 
 All data is stored in the browser. Settings/configuration is account-specific.    
-Initialize script at [Quick Ref](https://www.neopets.com/quickref.phtml).
+This cosmetic script complies with Neopets site rules, and contains no automation.
+
+---
+## Installation
+This script is written and tested primarily in Chrome on desktop, but appears to be compatible with all major browsers, including Firefox, Safari, Opera, and Edge. 
+
+Please contact me on github or reddit if you encounter any issues.
+
+### Desktop
+1. Install the [Tampermonkey](https://www.tampermonkey.net/) browser extension, or other such userscript manager
+2. Click [here](https://github.com/friendly-trenchcoat/Pet-Sidebar-Module/raw/master/petmodule.user.js) to install the userscript. 
+3. Visit [Quick Ref](https://www.neopets.com/quickref.phtml) to populate the module
+
+### iOS
+1. Install the Userscripts app from the App Store, and enable it in your mobile browser in Settings
+2. Choose or create a directory in Files where you will place the script, and select this directory in the Userscripts app
+3. Go [here](https://github.com/friendly-trenchcoat/Pet-Sidebar-Module/blob/master/petmodule.user.js) and click on the download button; save the file to your chosen directory
+4. In your mobile browser, click the extensions button and enable the Userscripts extension for Neopets
+5. Visit [Quick Ref](https://www.neopets.com/quickref.phtml) to populate the module
+
+### Android
+I don't have one, but it probably works.
 
 ---
 ## Features
