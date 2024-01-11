@@ -12,14 +12,12 @@
     }
 
     .navsub-left__2020 {
-        margin-left: 225px;
+        margin-left: 210px;
+        left: '+navsub_pos+'px;
     }
 
-    .navsub-left__2020 div#toggleNeggsThemeButton {
-        padding: 5px 15px;
-        display: inline-block;
-        vertical-align: top;
-        margin: auto;
+    .navsub-right__2020 {
+        right: '+navsub_pos+'px;
     }
 
     div#footer__2020 {
