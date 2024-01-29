@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        2.0
+// @version        2.0.1
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
@@ -50,7 +50,7 @@
 
     // INITIAL GLOBALS
     // I know I should have made a class but I don't feel like it now
-    const VERSION = '2.0';
+    const VERSION = '2.0.1';
     let SPECTRUM = false;
     let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, BG_CSS, MISC_CSS, CONTAINER_CSS, BG, IS_BETA, CUR_SHOWN;
     const [STR, U_STR, DEF, U_DEF, MOV] = setStatics();
@@ -301,11 +301,11 @@
     function add_pet(petname) {
         const inactive = petname == DATA.active ? '' : 'in';
         const remove = CUR_SHOWN > 1 ? '<div class="remove_button"><i class="fas fa-sign-out-alt fa-5x" petname="' + petname + '"></i></div>' : '';
-        const neolodge = DATA.neolodge && PETS[petname].neolodge >= 0 && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].neolodge ?
+        const neolodge = PETS[petname].owner == USER && ((DATA.neolodge && PETS[petname].neolodge >= 0 && (new Date).getTime() > PETS[petname].neolodge) || (is_hungry(PETS[petname].hunger))) ?
             ' style="display: flex;"' : '';
-        const training = DATA.training && PETS[petname].training >= 0 && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].training ?
+        const training = PETS[petname].owner == USER && DATA.training && PETS[petname].training >= 0 && (new Date).getTime() > PETS[petname].training ?
             ' style="display: flex;"' : '';
-        const gravedanger = DATA.gravedanger && PETS[petname].petpet_danger >= 0 && PETS[petname].owner == USER && (new Date).getTime() > PETS[petname].petpet_danger ?
+        const gravedanger = PETS[petname].owner == USER && DATA.gravedanger && PETS[petname].petpet_danger >= 0 && (new Date).getTime() > PETS[petname].petpet_danger ?
             ' style="display: flex;"' : '';
         const expression = DATA.trueExpression ? PETS[petname].expression : '1';
 
@@ -537,10 +537,10 @@
         const bgcolor = getBgColor();
         const textcolor = getTextColor(bgcolor);
         const headertextcolor = getTextColor(color);
-        const navsub_pos = (window.innerWidth-$('#container__2020').width())/2-90; // will be overwritten natively on page resize
+        const navsub_pos = (window.innerWidth - $('#container__2020').width()) / 2 - 90; // will be overwritten natively on page resize
         CSS = CSS || document.createElement("style");
         CSS.innerHTML = '\
-            @media only screen and (min-width: 768px) { /* BETA */ body { overflow-x: hidden; } .nav-top__2020, .nav-profile-dropdown__2020, .nav-bottom__2020 { z-index: 106; } .navsub-left__2020 { margin-left: 210px; left: '+navsub_pos+'px; } .navsub-right__2020 { right: '+navsub_pos+'px; } div#footer__2020 { z-index: 100; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 99; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; width: 150px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr#row_petsHeader.empty { border-radius: 10px; margin-bottom: 0px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__psm>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: '+bgcolor+'; border: 4px solid '+color+'; border-radius: 20px; z-index: 107; } .menu_header { background-color: '+color+'; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: '+headertextcolor+'; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: '+headertextcolor+'; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: '+color+'; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: '+headertextcolor+'; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu .section#info_key { display: block; } #info_menu p { text-align: left; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: '+color+'; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td { padding: 8px 4px; } #info_key p.populate { font-size: 18px; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; } #info_menu td:first-child i { font-size: 18px; } #info_menu .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: '+color+'; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: '+subcolor+'; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: '+bgcolor+'; border-color: '+color+'; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment>i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: '+color+'; } #increment>b#incrementLabel { position: absolute; top: 0px; left: 12px; font-size: 12px; line-height: 14px; color: '+color+'; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table>tbody>tr>td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 105; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: '+subcolor+'; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: '+subcolor+'; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: '+subcolor+'; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #settings_buttons_container { text-align: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 101; background-color: #fff; } .petGlam { position: relative; z-index: 102; } .timers { position: absolute; height: 150px; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 106; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #row_petsHeader.empty #fold_button { display: none; } .sidebarModule #row_petsHeader.empty #petsHeader>div { width: 150px; } #petsHeader>div { display: flex; justify-content: space-between; } #petsHeader>div>div { display: flex; align-items: center; gap: 8px; } .sidebarModule #petsHeader>div>div { padding: 0 4px; } #petsHeader span { font-size: 12px; } #petsHeader span i { cursor: pointer; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 105; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 100; text-align: center; background-color: '+color+'; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: '+color+'; border-radius: 12px 0px 0px 12px; z-index: 101; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 105; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: '+bgcolor+'; border: 3px solid '+color+'; padding: 20.2px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 101; } .inner { height: 100%; width: 90%; float: right; display: flex; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: '+subcolor+'; } .inner .petpet>a, .inner .petpetpet>div>a { color: '+textcolor+'; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: '+textcolor+'; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; } }'
+            @media only screen and (min-width: 768px) { /* BETA */ body { overflow-x: hidden; } .nav-top__2020, .nav-profile-dropdown__2020, .nav-bottom__2020 { z-index: 106; } .navsub-left__2020 { margin-left: 210px; left: '+ navsub_pos + 'px; } .navsub-right__2020 { right: ' + navsub_pos + 'px; } div#footer__2020 { z-index: 100; } #container__2020 { width: calc(95% - 230px); opacity: 95%; border-left: 200px solid transparent; /* border-left: 225px solid transparent; border-right: 115px solid transparent; */ background-clip: padding-box; } #container__psm { position: absolute; left: calc(50% - 150px); /* left: calc(50% - 190px); */ top: 68px; width: 225px; margin-top: 0.5%; background: none; z-index: 99; overflow-x: visible; } #container__psm>table#psm { margin-left: 60px; border: 3px solid #fff; border-radius: 14px; border-spacing: 5px; } #container__psm>table#psm>tbody { position: relative; display: block; border-radius: 15px; width: 150px; } #container__psm>table#psm>tbody>tr { margin-bottom: -4px; display: block; position: relative; } #container__psm>table#psm>tbody>tr#row_petsHeader { display: block; background: #fff; border-radius: 10px 10px 0px 0px; padding: 0px 5px; font-family: "Palanquin", "Arial Bold", sans-serif; line-height: 25px; } #container__psm>table#psm>tbody>tr#row_petsHeader.empty { border-radius: 10px; margin-bottom: 0px; } #container__psm>table#psm>tbody>tr:last-child>a.petGlam>img, #container__psm>table#psm>tbody>tr:last-child>div.placeholder { border-radius: 0px 0px 10px 10px; } /* menus - general */ #container__psm>#sidebar_menus>div { left: calc(50% - 350px); } #sidebar_menus>div { display: none; position: fixed; width: 700px; height: 462px; margin: 52px; background-color: ' + bgcolor + '; border: 4px solid ' + color + '; border-radius: 20px; z-index: 107; } .menu_header { background-color: ' + color + '; padding: 1px; margin-top: -1px; border-radius: 10px 10px 0px 0px; } .menu_header h1 { color: ' + headertextcolor + '; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 35px; margin: 1px 5px; letter-spacing: -1px; display: inline-block; } .menu_close { float: right; cursor: pointer; font-size: 30px; color: ' + headertextcolor + '; margin: 5.5px 14px; } .menu_close:hover { font-size: 31px; margin: 5.25px 13.5px; } .menu_inner { width: 90%; height: 75%; margin: 20px auto; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9pt; } .section { width: 100%; min-height: 20%; max-height: 100%; margin: 14px auto; } .section>span { display: inline-block; text-align: left; padding: 5px 15px 0px; } .section>table { margin: auto; width: 100%; text-align: left; padding: 5px 10px; } .section td span { padding: 5px; display: block; } .section p { margin: 5px 0px 20px 60px; font-size: 13px; width: 80%; } /* menus - info */ #info_key, #info_gather { overflow: auto; } #info_gather { border: 5px dotted #ccc; margin-top: 20px; } #info_nav { display: inline; } #info_nav>button { background-color: ' + color + '; border: none; padding: 0px 25px; margin: 0px -5px 0px -1.5px; cursor: pointer; color: ' + headertextcolor + '; font-size: 17px; } #info_nav>button.active-section { font-weight: bold; } #info_nav>button:focus { outline: none; font-weight: bold; } #info_menu .section { display: none; } #info_menu .section#info_key { display: block; } #info_menu p { text-align: left; } #info_menu span { margin-left: 50px; font-weight: bold; font-size: 18px; letter-spacing: -0.5px; color: ' + color + '; } #info_menu table { border-collapse: collapse; width: 80%; margin-bottom: 30px; } #info_menu tr:nth-child(odd) { background-color: #f2f2f2; } #info_menu tr:nth-child(even) { background-color: #fff; } #info_menu .section:not(#info_about) td:first-child { text-align: center; width: 150px; font-size: 14px; font-weight: bold; } #info_menu td { padding: 8px 4px; } #info_key p.populate { font-size: 18px; text-align: center; font-family: Verdana, Arial, Helvetica, sans-serif; } #info_menu td:first-child i { font-size: 18px; } #info_menu .box { font-size: 18px; font-weight: normal; } #info_menu h2 { margin: 0px 60px 10px 66px; font-weight: lighter; font-size: 12px; color: #888; } #info_menu h3 { margin: -3px 0px 0px 66px; font-weight: lighter; font-size: 8px; } #info_about .fas { margin-top: 6px; } /* menus - settings */ /* color */ #color_settings { table-layout: fixed; border-spacing: 45px 0px; padding: 0px; font-family: Verdana, Arial, Helvetica, sans-serif; } #color_settings td:first-child>div:first-child { font-size: 22px; margin-bottom: 6.75px; } #color_settings div, #color_settings input { margin-bottom: 2px; letter-spacing: -1px; font-weight: 600; font-size: 14px; } #color_settings div:not(#increment) { display: inline-block !important; color: ' + color + '; } #color_settings input { width: 100%; text-align: center; font-size: 12px; letter-spacing: -1.5px; padding: 2px 0px; color: ' + subcolor + '; } .picker_button { background: none; border: none; float: right; } .picker_popup { background: ' + bgcolor + '; border-color: ' + color + '; } .sp-container { position: fixed !important; } #increment { position: absolute; margin: -21px 0px 0px 153px; } #increment>i { display: block; margin: -6px auto; font-size: 16px; cursor: pointer; color: ' + color + '; } #increment>b#incrementLabel { position: absolute; top: 0px; left: 12px; font-size: 12px; line-height: 14px; color: ' + color + '; } /* toggles */ #toggle_settings_section { margin: 0px auto 30px; } div#toggle_settings_tabs { display: flex; gap: 5px; margin-bottom: -2px; } div#toggle_settings_tabs>div { font-size: 16px; background-color: #eee; margin: 0; padding: 5px 15px 4px 12px; border-radius: 6px 6px 0 0; color: white; cursor: pointer; } div#toggle_settings_tabs>div.tab-active { font-weight: 600; color: white; background-color: #ccc; } #toggle_settings_bodies { position: relative; z-index: 0; } #toggle_settings_bodies>table { display: none; table-layout: fixed; border: 3px dotted #ccc; width: 100%; border-radius: 0 6px 6px 6px; padding: 5px 0px; height: 172px; } #toggle_settings_bodies>table.tab-active { display: table; } #toggle_settings_bodies>table>tbody>tr>td { vertical-align: top; } #toggle_settings_bodies>table table { margin: auto; } #toggle_settings_bodies>table table td { padding: 5px; vertical-align: baseline; } #toggle_settings_bodies>table table td:nth-child(odd) { text-align: right; } #toggle_settings_bodies>table div { font-size: 14px; } #toggle_settings_bodies>table select { width: 100px; } #toggle_settings_bodies>table h2 { margin: 4px 0px 0px 0px; font-weight: lighter; font-size: 10.5px; color: #888; } #hp_mode option { font-weight: bold; } /* remove */ .remove_button { background: #0006; width: 150px; height: 115px; position: absolute; text-align: center; padding-top: 35px; z-index: 105; display: none; } .remove_button i { color: #fffd; cursor: pointer; } .remove_button i:hover { color: #fff; font-size: 81px; } #removed_pets { width: 200px; font-size: 16px; color: ' + subcolor + '; border-color: #0003; margin-left: 50px; } /* buttons */ #settings_menu button { background-color: ' + subcolor + '; border: none; padding: 10px 16px; margin: 4px 2px; cursor: pointer; border-radius: 100px; color: #fff; font-weight: 300; font-size: 16px; } #settings_footer { padding: 0px; } #settings_footer td div { color: ' + subcolor + '; } #settings_footer td div#removed_pets_label { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 10pt; font-weight: bold; margin-left: 50px; margin-top: -16px; } #settings_footer td div.footer-btn { font-size: 22px; padding-left: 10px; cursor: pointer; display: inline; } #settings_buttons_container { text-align: right; } /* pets */ .placeholder { width: 150px; height: 150px; position: absolute; z-index: 101; background-color: #fff; } .petGlam { position: relative; z-index: 102; } .timers { position: absolute; height: 150px; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; } .timers>div { position: relative; z-index: 106; margin: 7px; padding: 6px; background-color: #0003; border-radius: 100px; cursor: pointer; display: none; align-items: center; justify-content: center; width: 22px; height: 22px; font-size: 16px; } .timers>div i { color: #fff !important; display: inline; } .timers>div:hover { animation: shake 0.5s; } @keyframes shake { 0% { transform: rotate(0deg); } 10% { transform: rotate(-5deg); } 20% { transform: rotate(5deg); } 30% { transform: rotate(0deg); } 40% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } 60% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(0deg); } 100% { transform: rotate(-5deg); } } /* nav bar */ #psm #petsHeader { display: block; padding: 6px; } #row_petsHeader.empty #fold_button { display: none; } .sidebarModule #row_petsHeader.empty #petsHeader>div { width: 150px; } #petsHeader>div { display: flex; justify-content: space-between; } #petsHeader>div>div { display: flex; align-items: center; gap: 8px; } .sidebarModule #petsHeader>div>div { padding: 0 4px; } #petsHeader span { font-size: 12px; } #petsHeader span i { cursor: pointer; } .petnav:hover, .leftHover:hover~.petnav, .leftSubHover:hover~.petnav { margin-left: -30px; } .petnav a:hover { cursor: pointer; margin-left: -5px; } .petnav a:hover .sub { margin-left: -25px; } .leftHover { position: absolute; z-index: 105; height: 150px; width: 50px; margin-left: 3px; } .leftSubHover { position: absolute; z-index: 80; height: 150px; width: 25px; margin-left: -22px; } .petnav { position: absolute; width: 42px; z-index: 100; text-align: center; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; box-shadow: -1.5px 1.5px 5px #8882; -webkit-transition-property: margin-left; -webkit-transition-duration: .5s; transition-property: margin-left; transition-duration: .5s; } .petnav a { position: relative; display: block; height: 25px; font-size: 18px; color: #fff; background-color: ' + color + '; border-radius: 12px 0px 0px 12px; z-index: 101; } .disabled { color: #fffa !important; cursor: default !important; } .disabled:hover { margin-left: 0px !important; } .petnav span { float: left; width: 30px; background-color: inherit; border-radius: 12px 0px 0px 12px; } .petnav i { padding: 3px; } .petnav .fa-hat-cowboy-side { font-size: 16.5px; padding-top: 4px; } .sub { position: absolute !important; width: 33px; z-index: -1 !important; -webkit-transition-property: margin-left; -webkit-transition-duration: .2s; transition-property: margin-left; transition-duration: .2s; } .sub i { padding: 5.5px; } /* stats slider */ .rightHover { position: absolute; z-index: 105; height: 150px; width: 50px; margin-left: 103px; } .hover { position: absolute; border-radius: 25px; box-shadow: 3px 2px 5px #8882; background-color: ' + bgcolor + '; border: 3px solid ' + color + '; padding: 20.2px; height: 104px; width: 5px; margin-left: 95px; overflow: hidden; z-index: 101; } .inner { height: 100%; width: 90%; float: right; display: flex; } .inner table { font: 7pt Verdana; vertical-align: top; white-space: nowrap; } .inner img { border: 2px #ccc dashed; margin: 0px 25px; } .inner i { font: 6.5pt Verdana; } .inner .petname { position: absolute; top: 5px; font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 14px; font-weight: bold; text-align: left; color: ' + subcolor + '; } .inner .petpet>a, .inner .petpetpet>div>a { color: ' + textcolor + '; font-weight: normal; } .inner .petpetpet>div { margin-left: -30px; } #sidebar_menus .section td, .hover td { color: ' + textcolor + '; } /* MISC. */ img.pa[src^="//images.neopets.com/nq2"] { z-index: 96 !important; } .h5-speaker.speaker-sm { display: none; } }'
         document.body.appendChild(CSS);
     }
 
@@ -587,7 +587,7 @@
                 stats.petpetpet_species = petpet[2];
                 stats.petpetpet_image = $lines.eq(12).find('img').eq(1).attr('src');
                 stats.isUC = $(v).find('.pet_notices:contains(converted)').length ? true : false;
-                stats.neolodge = get_checkout(v, stats.hunger);
+                stats.neolodge = get_checkout(v);
                 setStrength($lines.eq(8).text(), petname);
                 setDefence($lines.eq(9).text(), petname);
                 setMovement($lines.eq(10).text(), petname);
@@ -597,12 +597,9 @@
             }
         });
     }
-    function get_checkout(v, hunger) {
+    function get_checkout(v) {
         const notice = $(v).find('.pet_notices:contains(Neolodge)').text() || false;
-        if (!notice) {
-            // Not currently checked in; set based on hunger
-            return is_hungry(hunger) ? 0 : -1;
-        }
+        if (!notice) return -1; // Not currently checked in
         const now = (new Date).getTime();
         if (notice.includes('currently checking ')) return now + 86400000; // add a day for buffer
         const dif = new RegExp(/in (\d+) days?, (\d+) hours? and (\d+) minutes?/g).exec(notice);
@@ -1398,19 +1395,12 @@
     }
     function Neolodge() {
         psm_debug('Neolodge');
-        const now = (new Date).getTime();
-
-        // clear expired timer if pet isn't hungry
-        for (let petname in PETS) {
-            if (PETS[petname].owner == USER && now > PETS[petname].neolodge && !is_hungry(PETS[petname].hunger)) {
-                PETS[petname].neolodge = -1;
-            }
-        }
 
         // check book all, select first pet in dropdown needing lodge, cockroach towers, 28 nights
         $('#book_all').prop('checked', true);
         $('select[name="hotel_rate"]').val('5');
         $('select[name="nights"] option:last-child').prop('selected', true);
+        const now = (new Date).getTime();
         const firstPetname = Object.keys(PETS).find((petname) => {
             return PETS[petname].owner == USER && now > PETS[petname].neolodge;
         });
@@ -1424,7 +1414,10 @@
                 if (petname in PETS) {
                     const nights = $(v).parent().prev().prev().find('td[align="right"]').eq(4).text();
                     psm_debug(petname, nights, 'nights');
-                    if (nights?.length) PETS[petname].neolodge = (new Date).getTime() + nights * 86400000;
+                    if (nights?.length) {
+                        PETS[petname].neolodge = (new Date).getTime() + nights * 86400000;
+                        set_hunger(petname, 'bloated');
+                    }
                 }
             });
         }
@@ -1462,7 +1455,7 @@
     }
     function Bank() {
         psm_debug('BETA Bank');
-        if($('#txtCurrentBalance1')) {
+        if ($('#txtCurrentBalance1')) {
             DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
             $('#npsanchor').text(DATA.npBank);
         }
@@ -1479,7 +1472,7 @@
     }
     function QuestLog() {
         psm_debug('BETA Quest Log');
-        $('.ql-quest-description').each((k,v) => {
+        $('.ql-quest-description').each((k, v) => {
             // Add quick links
             $(v).html($(v).html()
                 .replace('Neopian Shop', '<a href="/objects.phtml">Neopian Shop</a>')
@@ -1561,12 +1554,22 @@
     }
     function set_hunger(petname, hunger) {
         PETS[petname].hunger = hunger;
-        if (PETS[petname].neolodge == 0 && !is_hungry(hunger)) {
-            PETS[petname].neolodge = -1;
+
+        const isVeryHungry = hunger != 'hungry' && is_hungry(hunger);
+        const isSad = is_sad(PETS[petname].mood);
+        if (PETS[petname].expression == '2' && !isVeryHungry && !isSad) {
+            // unhappy => happy
+            PETS[petname].expression = '1';
+        } else if (PETS[petname].expression == '1' && isVeryHungry) {
+            // happy => unhappy
+            PETS[petname].expression = '2';
         }
     }
     function is_hungry(hunger) {
         return ['dying', 'starving', 'famished', 'very hungry', 'hungry'].includes(hunger);
+    }
+    function is_sad(mood) {
+        return ['depressed', 'very unhappy', 'miserable', 'unhappy'].includes(mood);
     }
     function set_np_link(inv) {
         $('.navsub-np-meter__2020').parent().attr('href', inv ? '/inventory.phtml' : '/bank.phtml');
@@ -1575,7 +1578,7 @@
         if (DATA.npBank) $('.navsub-nps-meter__2020').css('display', bank ? 'inline-block' : 'none');
     }
     function set_nc_link(mall) {
-        $('.navsub-nc-meter__2020').parent().attr('href', mall ? '/mall/index.phtml' : 'https://secure.nc.neopets.com/get-nickcash' );
+        $('.navsub-nc-meter__2020').parent().attr('href', mall ? '/mall/index.phtml' : 'https://secure.nc.neopets.com/get-nickcash');
     }
 
     // STAT FUNCTIONS
@@ -1825,7 +1828,7 @@
         $('#toggle_settings_bodies input[type="checkbox"]').change(function (e) {
             DATA[$(this).attr('name')] = $(this).prop('checked');
             const name = $(e.target).attr('name');
-            switch(name) {
+            switch (name) {
                 case 'betaBG':
                     if ($(e.target).prop('checked')) $('body').addClass('betaBG');
                     else $('body').removeClass('betaBG');
