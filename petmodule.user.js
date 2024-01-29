@@ -168,6 +168,8 @@
         // utility
         else if (document.URL.indexOf("gravedanger") != -1) GraveDanger();
         else if (document.URL.indexOf("/bank") != -1) Bank();
+        else if (document.URL.indexOf("/questlog") != -1) QuestLog();
+        else if (document.URL.indexOf("/shops/wizard.phtml") != -1) $(document).ajaxSuccess(ShopWizard);
 
         // default
         else if ($(".sidebar")[0]) Sidebar();
@@ -1474,6 +1476,23 @@
     function danger_end(petname, end) {
         PETS[petname].petpet_danger = end;
         set_items(false, true, true);
+    }
+    function QuestLog() {
+        psm_debug('BETA Quest Log');
+        $('.ql-quest-description').each((k,v) => {
+            // Add quick links
+            $(v).html($(v).html()
+                .replace('Neopian Shop', '<a href="/objects.phtml">Neopian Shop</a>')
+                .replace('Games Room', '<a href="/games/">Games Room</a>')
+                .replace('Wheel of Excitement', '<a href="/faerieland/wheel.phtml">Wheel of Excitement</a>')
+                .replace('Wheel of Knowledge', '<a href="/medieval/knowledge.phtml">Wheel of Knowledge</a>')
+                .replace('Wheel of Mediocrity', '<a href="/prehistoric/mediocrity.phtml">Wheel of Mediocrity</a>')
+                .replace('Wheel of Misfortune', '<a href="/halloween/wheel/index.phtml">Wheel of Misfortune</a>'));
+        });
+    }
+    function ShopWizard() {
+        psm_debug('BETA Shop Wizard');
+        $('.button-grid2__2020').insertAfter('.wizard-results-header');
     }
 
 
