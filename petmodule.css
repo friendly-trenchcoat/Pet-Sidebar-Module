@@ -12,8 +12,12 @@
     }
 
     .navsub-left__2020 {
-        margin-left: 210px;
         left: '+navsub_pos+'px;
+        margin-left: 210px;
+    }
+
+    .navsub-left__2020.compact {
+        margin-left: 185px;
     }
 
     .navsub-right__2020 {
@@ -25,12 +29,15 @@
     }
 
     #container__2020 {
-        width: calc(95% - 230px);
         opacity: 95%;
-        border-left: 200px solid transparent;
-        /* border-left: 225px solid transparent;
-    border-right: 115px solid transparent; */
         background-clip: padding-box;
+        width: calc(95% - 230px);
+        border-left: 200px solid transparent;
+    }
+
+    #container__2020.compact {
+        width: calc(98% - 210px);
+        border-left: 175px solid transparent;
     }
 
     #container__psm {
@@ -92,6 +99,7 @@
     #sidebar_menus>div {
         display: none;
         position: fixed;
+        top: 70px;
         width: 700px;
         height: 462px;
         margin: 52px;
