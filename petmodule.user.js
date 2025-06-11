@@ -7,7 +7,9 @@
 // @match          https://www.neopets.com/*
 // @exclude        https://*.neopets.com/index.phtml
 // @exclude        https://*.neopets.com/login/*
+// @exclude        https://*.neopets.com/guilds/*
 // @exclude        https://*.neopets.com/~*
+// @exclude        https://www.neopets.com/donations.phtml*
 // @icon           https://www.google.com/s2/favicons?sz=64&domain=neopets.com
 // @grant          none
 // ==/UserScript==
