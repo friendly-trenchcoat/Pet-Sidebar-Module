@@ -17,9 +17,9 @@
 /* globals $ */
 
 /**
- *  The Pet Sidebar Module is an expansion of the active pet sidebar module on the legacy side of neo. 
+ *  The Pet Sidebar Module is an expansion of the active pet sidebar module on the legacy side of neo.
  *      This script allows displaying any number of pets, with extra information and functionality.
- *      Customize your sidebar in settings by clicking the gear icon. 
+ *      Customize your sidebar in settings by clicking the gear icon.
  *
  *  Things I will not gather data from:
  *      anything that will reflect change on the original legacy sidebar module, can just be gathered on page reload
@@ -30,7 +30,7 @@
  *      items with obscure effects, if I ever care that much
  *      decaying age/hunger/mood, if I ever care that much
  *      turmaculus, for pet str and petpet... existence, if I ever care that much
- * 
+ *
  * TODO:
  *      - Lock/unlock collapse
  *      - Adjustable module height
@@ -38,7 +38,7 @@
  *      - Redirect homepage option
  *      - Timer icons in slider, with hover for remaining time
  *      - Level in slider links to last school pet trained at?
- * 
+ *
  * Ideas:
  *      - More QOL options:
  *          - Bigger pet images (incl neoboards)
@@ -312,11 +312,11 @@
         const inactive = petname == DATA.active ? '' : 'in';
         const remove = CUR_SHOWN > 1 ? '<div class="remove_button"><i class="fas fa-sign-out-alt fa-5x" petname="' + petname + '"></i></div>' : '';
         const neolodge = PETS[petname].owner == USER && ((DATA.neolodge && PETS[petname].neolodge >= 0 && (new Date).getTime() > PETS[petname].neolodge) || (is_hungry(PETS[petname].hunger))) ?
-            ' style="display: flex;"' : '';
+              ' style="display: flex;"' : '';
         const training = PETS[petname].owner == USER && DATA.training && PETS[petname].training >= 0 && (new Date).getTime() > PETS[petname].training ?
-            ' style="display: flex;"' : '';
+              ' style="display: flex;"' : '';
         const gravedanger = PETS[petname].owner == USER && DATA.gravedanger && PETS[petname].petpet_danger >= 0 && (new Date).getTime() > PETS[petname].petpet_danger ?
-            ' style="display: flex;"' : '';
+              ' style="display: flex;"' : '';
         const expression = DATA.trueExpression ? PETS[petname].expression : '1';
 
         // for some reason children must be added seperately
@@ -324,23 +324,23 @@
         $('#' + inactive + 'active_' + petname).append(
             remove +
             '<div class="timers"> \
-                <div class="neolodge"'+ neolodge + '> \
-                    <a href="https://www.neopets.com/neolodge.phtml"><i class="fas fa-concierge-bell fa-lg"></i></a> \
-                </div> \
-                <div class="training"'+ training + '> \
-                    <a href="'+ PETS[petname].training_url + '"><i class="fas fa-dumbbell"></i></a> \
-                </div> \
-                <div class="grave-danger"'+ gravedanger + '> \
-                    <a href="https://www.neopets.com/halloween/gravedanger/index.phtml"><i class="fas fa-skull fa-lg"></i></a> \
-                </div> \
-            </div> \
-            <div class="leftHover" petname="'+ petname + '"></div> \
-            <div class="leftSubHover" petname="'+ petname + '"></div> \
-            <div class="rightHover" petname="'+ petname + '"></div> \
-            '+ createNavHTML(petname) + ' \
-            '+ createStatsHTML(petname) + ' \
-            <div class="placeholder"></div> \
-            <a class="petGlam" petname="'+ petname + '"><img src="https://pets.neopets.com/cp/' + PETS[petname].id + '/' + expression + '/4.png" width="150" height="150" border="0"></a>');
+<div class="neolodge"'+ neolodge + '> \
+<a href="https://www.neopets.com/neolodge.phtml"><i class="fas fa-concierge-bell fa-lg"></i></a> \
+</div> \
+<div class="training"'+ training + '> \
+<a href="'+ PETS[petname].training_url + '"><i class="fas fa-dumbbell"></i></a> \
+</div> \
+<div class="grave-danger"'+ gravedanger + '> \
+<a href="https://www.neopets.com/halloween/gravedanger/index.phtml"><i class="fas fa-skull fa-lg"></i></a> \
+</div> \
+</div> \
+<div class="leftHover" petname="'+ petname + '"></div> \
+<div class="leftSubHover" petname="'+ petname + '"></div> \
+<div class="rightHover" petname="'+ petname + '"></div> \
+'+ createNavHTML(petname) + ' \
+'+ createStatsHTML(petname) + ' \
+<div class="placeholder"></div> \
+<a class="petGlam" petname="'+ petname + '"><img src="https://pets.neopets.com/cp/' + PETS[petname].id + '/' + expression + '/4.png" width="150" height="150" border="0"></a>');
         $MODULE.on('auxclick', `#nav_${petname} .activate`, () => {
             psm_debug('New active:', petname);
             DATA.active = petname;
@@ -432,7 +432,7 @@
                             ${stats.intelligence ? `<tr>
                                 <td align="right">Intelligence:</td>
                                 <td align="left">${hasSliderLinks
-                    ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
+        ? `<a href="https://www.neopets.com/books_read.phtml?pet_name=${petname}"><b>${stats.intelligence}</b></a>`
                     : `<b>${stats.intelligence}</b>`}</td>
                             </tr>` : ''}
                         </table></td>
@@ -447,14 +447,14 @@
     function createNavHTML(petname) {
         if (!DATA.showNav) return ''; // if nav=false return empty
         const buttonsHTML =
-            '<div id="nav_' + petname + '" class="petnav"> \
-                <a class="move" dir="-1" petname="'+ petname + '"><span><i class="fas fa-chevron-up"></i></span></a> \
-                <a class="activate" href="https://www.neopets.com/process_changepet.phtml?new_active_pet='+ petname + '" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
-                <a class="customize" href="https://www.neopets.com/customise/?view='+ petname + '"><span><i class="fas fa-hat-cowboy-side"></i></span></a> \
-                <a class="lookup" href="https://www.neopets.com/petlookup.phtml?pet='+ petname + '"><span><i class="fas fa-id-card"></i></span></a> \
-                <a class="petpage" href="https://www.neopets.com/~'+ petname + '"><span><i class="fas fa-paw"></i></span></a> \
-                <a class="move" dir="1" petname="'+ petname + '"><span><i class="fas fa-chevron-down"></i></span></a> \
-            </div>';
+              '<div id="nav_' + petname + '" class="petnav"> \
+<a class="move" dir="-1" petname="'+ petname + '"><span><i class="fas fa-chevron-up"></i></span></a> \
+<a class="activate" href="https://www.neopets.com/process_changepet.phtml?new_active_pet='+ petname + '" target="_blank"><span><i class="fas fa-splotch"></i></span></a> \
+<a class="customize" href="https://www.neopets.com/customise/?view='+ petname + '"><span><i class="fas fa-hat-cowboy-side"></i></span></a> \
+<a class="lookup" href="https://www.neopets.com/petlookup.phtml?pet='+ petname + '"><span><i class="fas fa-id-card"></i></span></a> \
+<a class="petpage" href="https://www.neopets.com/~'+ petname + '"><span><i class="fas fa-paw"></i></span></a> \
+<a class="move" dir="1" petname="'+ petname + '"><span><i class="fas fa-chevron-down"></i></span></a> \
+</div>';
         return buttonsHTML;
     }
     function renderStats(petname) {
@@ -483,9 +483,9 @@
     function buildMenus() {
         $(IS_BETA ? $CONTAINER : '.content').first().prepend(
             '<div id="sidebar_menus"> \
-                <div id="info_menu"></div> \
-                <div id="settings_menu"></div> \
-            </div>');
+<div id="info_menu"></div> \
+<div id="settings_menu"></div> \
+</div>');
         $('#info_menu').html(info_HTML());
         $('#settings_menu').html(settings_HTML());
         $('#toggle_settings_tabs>div').on('click', (e) => {
@@ -506,7 +506,7 @@
     }
     function info_HTML() {
         const html =
-            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <p class="populate" ${CUR_SHOWN ? 'style="display: none;"' : ''}>Visit <b><a href="https://www.neopets.com/quickref.phtml">Quick Ref</a></b> to populate the Pet Sidebar Module </p> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don't want to leave the page you're on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet has checked out from their stay, or is at least "hungry".</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme's color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color X shades lighter than your main Color. Press the arrows to raise or lower X from the default of 30.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers, training timer</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>End Training</td> <td>Affected stats numbers</td> </tr> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Petpet Play</td> <td>Petpet and petpetpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>wheels</span> <table> <tr> <td>Excitement</td> <td>Current HP, illness</td> </tr> <tr> <td>Extravagance</td> <td>Affected stats numbers</td> </tr> <tr> <td>Knowledge</td> <td>Current HP</td> </tr> <tr> <td>Misfortune</td> <td>Illness</td> </tr> <tr> <td>Mediocrity</td> <td>Current HP</td> </tr> <tr> <td>Monotony</td> <td>Current HP</td> </tr> </table> <span>other temporary changes</span> <table> <tr> <td>Grave Danger</td> <td>Grave Danger timer</td> </tr> <tr> <td>End of Battle</td> <td>Current HP</td> </tr> <tr> <td>Healing Springs</td> <td>Current HP</td> </tr> <tr> <td>Neolodge</td> <td>Neolodge timer</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Garaptiku</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP, affected attributes</td> </tr> </table> <h3 style="margin-top: -30px;">* Most illness and intelligence changes are not tracked outside of quick ref, and I don't bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ${VERSION}</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>Edge</th> <th>IE</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>dunno, it works</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don't work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br><br>Most issues can be resolved by clearing your pet data in Settings, and/or checking the script for updates.<br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>`;
+              `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Info</h1> <div id="info_nav"> <button name="key" class="active-section">key</button> <button name="gather">gathering</button> <button name="about">about</button> </div> </div> <div class="menu_inner"> <div class="section" id="info_key"> <p class="populate" ${CUR_SHOWN ? 'style="display: none;"' : ''}>Visit <b><a href="https://www.neopets.com/quickref.phtml">Quick Ref</a></b> to populate the Pet Sidebar Module </p> <span>header</span> <table name="header"> <tr> <td>Pets</td> <td>Link to pets quick-ref, the main collection source for the script.</td> </tr> <tr> <td><i class="fas fa-info-circle"></i></td> <td>This panel</td> </tr> <tr> <td><i class="fas fa-cog"></i></td> <td>The Settings panel</td> </tr> <tr> <td><i class="fas fa-caret-up"></i><i class="fas fa-caret-down"></i></td> <td>Show only top or all selected pets</td> </tr> </table> <span>pet navigation</span> <table name="nav"> <tr> <td><i class="fas fa-chevron-up"></i><i class="fas fa-chevron-down"></i></td> <td>Move pet up or down one.</td> </tr> <tr> <td><i class="fas fa-splotch"></i></td> <td>Make active. Directs to quick-ref. <b>Middle click</b> or <b>ctrl+click</b> to open it in a new tab if you don't want to leave the page you're on.</td> </tr> <tr> <td><i class="fas fa-hat-cowboy-side"></i></td> <td>Customize</td> </tr> <tr> <td><i class="fas fa-id-card"></i></td> <td>Pet lookup</td> </tr> <tr> <td><i class="fas fa-paw"></i></td> <td>Petpage</td> </tr> <tr> <td><i class="fas fa-pencil-alt"></i></td> <td>Edit page</td> </tr> </table> <span>reminders</span> <h2>Reminders will display an icon over a pet linking to the relevant page when it's time to perform an action. They can be enabled or disabled in the settings panel. </h2> <table name="reminders"> <tr> <td><i class="fas fa-concierge-bell"></i></td> <td>Neolodge. Appears when your pet has checked out from their stay, or is at least "hungry".</td> </tr> <tr> <td><i class="fas fa-dumbbell"></i></td> <td>Training School. Appears when your pet has completed their lesson.</td> </tr> <tr> <td><i class="fas fa-skull"></i></td> <td>Grave Danger. Appears when your petpet has returned from the catacombs.</td> </tr> </table> <span>settings</span> <table name="settings"> <tr> <td><i class="fas fa-sign-out-alt"></i></td> <td>Remove pet from sidebar. They will be added to the dropdown in Settings.</td> </tr> <tr> <td><i class="fas fa-plus"></i></td> <td>Add pet back to sidebar.</td> </tr> <tr> <td><i class="fas fa-trash-alt"></i></td> <td>Remove pet from data. If you still have them, they will be added back upon visiting quick-ref.</td> </tr> <tr> <td>Color</td> <td>Click the <b class="box">☒</b> to use your site theme's color. </td> </tr> <tr> <td>Accent Color</td> <td>Click the <b class="box">☒</b> to use a color X shades lighter than your main Color. Press the arrows to raise or lower X from the default of 30.</td> </tr> <tr> <td>Debug Mode</td> <td>Enables console logs which can be helpful in troubleshooting.</td> </tr> </table> </div> <div class="section" id="info_gather"> <span>passive data gathering</span> <p>All data for the module is gathered from the following pages when you visit them, and stored locally on your web browser.<br><br>Your settings and pet configuration is account-specific; but pet data is shared, allowing you to display pets from other accounts in your sidebar.</p> <span>all pets, all data</span> <table> <tr> <td><a href="https://www.neopets.com/quickref.phtml">Quickref</a></td> <td>Everything except exact stats numbers</td> </tr> <tr> <td><a href="https://www.neopets.com/island/training.phtml?type=status">Training</a></td> <td>Exact stats numbers, training timer</td> </tr> <tr> <td><a href="https://www.neopets.com/dome/neopets.phtml">Battledome</a></td> <td>Exact stats numbers</td> </tr> </table> <span>permanent changes</span> <table> <tr> <td>End Training</td> <td>Affected stats numbers</td> </tr> <tr> <td>Faerie/Kitchen Quests</td> <td>Affected stats numbers</td> </tr> <tr> <td>Coincidence</td> <td>Affected stats numbers</td> </tr> <tr> <td>Lab Ray</td> <td>Affected attributes and stats numbers</td> </tr> <tr> <td>Petpet Lab Ray</td> <td>Affected petpet info</td> </tr> <tr> <td>Petpet Play</td> <td>Petpet and petpetpet info</td> </tr> <tr> <td>Coltzan</td> <td>Affected stats numbers, current HP</td> </tr> </table> <span>wheels</span> <table> <tr> <td>Excitement</td> <td>Current HP, illness</td> </tr> <tr> <td>Extravagance</td> <td>Affected stats numbers</td> </tr> <tr> <td>Knowledge</td> <td>Current HP</td> </tr> <tr> <td>Misfortune</td> <td>Illness</td> </tr> <tr> <td>Mediocrity</td> <td>Current HP</td> </tr> <tr> <td>Monotony</td> <td>Current HP</td> </tr> </table> <span>other temporary changes</span> <table> <tr> <td>Grave Danger</td> <td>Grave Danger timer</td> </tr> <tr> <td>End of Battle</td> <td>Current HP</td> </tr> <tr> <td>Healing Springs</td> <td>Current HP</td> </tr> <tr> <td>Neolodge</td> <td>Neolodge timer</td> </tr> <tr> <td>Snowager</td> <td>Current HP</td> </tr> <tr> <td>Garaptiku</td> <td>Current HP</td> </tr> <tr> <td>Food / Soup Kitchen</td> <td>Hunger</td> </tr> <tr> <td>Certain Items</td> <td>Current HP, affected attributes</td> </tr> </table> <h3 style="margin-top: -30px;">* Most illness and intelligence changes are not tracked outside of quick ref, and I don't bother with obscure things.</h3> </div> <div class="section" id="info_about"> <span>Pet Sidebar Module version ${VERSION}</span> <h3><a href="https://github.com/friendly-trenchcoat/Pet-Sidebar-Module">https://github.com/friendly-trenchcoat/Pet-Sidebar-Module</a> </h3> <p>This script is written and tested primarily in Chrome. Listed browser support is more or less theoretical. </p> <table> <tbody> <tr> <th>Chrome</th> <th>Firefox</th> <th>Safari</th> <th>Opera</th> <th>Edge</th> <th>IE</th> </tr> <tr> <td>4.0+</td> <td>3.6+</td> <td>4.0+</td> <td>11.5+</td> <td>dunno, it works</td> <td>lol no</td> </tr> </tbody> </table><br><span>Questions, concerns, bugs, requests?</span> <p>If it don't work, throw me a line. <font style="font-size: 8;">(Ideally with a screenshot and console output.)</font><br><br>Most issues can be resolved by clearing your pet data in Settings, and/or checking the script for updates.<br> Find me on reddit or github as <b>friendly-trenchcoat</b> <i class="fas fa-user-secret fa-2x"></i> <br> Your friendly neighborhood trenchcoat. </p> </div> </div>`;
         return html;
     }
     function settings_HTML() {
@@ -518,7 +518,7 @@
                 removed += '<option value="' + petname + '">' + petname + '</option>';
         }
         const html =
-            `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Settings</h1> </div> <div class="menu_inner">
+              `<div class="menu_header"> <div class="menu_close"><i class="fas fa-times"></i></div> <h1>Settings</h1> </div> <div class="menu_inner">
             <div class="section"> <table id="color_settings"> <tr> <td> <div>Color:</div> <input class="picker" id="colorpicker"> <input class="picker_text" id="colorpicker_text"> </td> <td> <div>Accent<br>Color:</div> <input class="picker" id="subcolorpicker"> <input class="picker_text" id="subcolorpicker_text"> <div id="increment"> <i class="fas fa-caret-up"></i> <i class="fas fa-caret-down"></i> <b id="incrementLabel">${DATA.i}</b> </div> </td> <td> <div>Background<br>Color:</div> <input class="picker" id="bgcolorpicker"> <input class="picker_text" id="bgcolorpicker_text"> </td> </tr> </table> </div>
             <div class="section" id="toggle_settings_section"> <div id="toggle_settings_tabs"> <div name="general" class="tab-active">General</div> <div name="stats">Stats Slider</div> <div name="misc">Misc.</div> </div>
             <div id="toggle_settings_bodies">
@@ -873,26 +873,26 @@
                 if (petname == "All")
                     for (let each_petname in PETS) if (PETS[each_petname].owner == USER)
                         PETS[each_petname].current_hp = PETS[each_petname].max_hp;
-                    else if (petname in PETS) {
-                        switch (match[4]) {
-                            case 'level':
-                                PETS[petname].level += match[3];
-                                break;
-                            case 'defence':
-                                PETS[petname].defence += match[3];
-                                break;
-                            case 'stronger':
-                                PETS[petname].strength += 1;
-                                break;
-                            case 'faster':
-                                PETS[petname].movement += 1;
-                                break;
-                            // int not currently tracked
-                            // case 'intelligent':
-                            //     PETS[petname].intelligence +=1;
-                            //     break;
+                        else if (petname in PETS) {
+                            switch (match[4]) {
+                                case 'level':
+                                    PETS[petname].level += match[3];
+                                    break;
+                                case 'defence':
+                                    PETS[petname].defence += match[3];
+                                    break;
+                                case 'stronger':
+                                    PETS[petname].strength += 1;
+                                    break;
+                                case 'faster':
+                                    PETS[petname].movement += 1;
+                                    break;
+                                    // int not currently tracked
+                                    // case 'intelligent':
+                                    //     PETS[petname].intelligence +=1;
+                                    //     break;
+                            }
                         }
-                    }
             }
             else psm_debug('No change.');
         }
@@ -1044,7 +1044,7 @@
     function Sidebar() {
         // get name and retrieve data (if any)
         const petname = $("a[href='/quickref.phtml']").first().text();
-        // phrase 
+        // phrase
         // const phrase = $('.neopetPhrase').text();
         // if (phrase) petPhrase(phrase.replace(/^[\s\w]+:/,'').replace(/\s+$/,''));
 
@@ -1196,10 +1196,10 @@
          */
         const match = blurb.match(new RegExp(/increased h\w{2} ([\w\s]+) by (\d+)\./))[1];
         const stat = !match ? null
-            : match[1] === 'move' ? 'movement'
-                : match[1] === 'max health' ? 'max_hp'
-                    : match[1] === 'intelligence' ? null
-                        : match[1];
+        : match[1] === 'move' ? 'movement'
+        : match[1] === 'max health' ? 'max_hp'
+        : match[1] === 'intelligence' ? null
+        : match[1];
         if (stat && stat in PETS[DATA.active]) {
             PETS[DATA.active][stat] += Number(match[2]);
         } else return false;
@@ -1237,8 +1237,8 @@
     function Mediocrity(blurb) {
         psm_debug('BETA Wheel of Mediocrity:', blurb);
         /**
-         * Fireballs rain down from above and singe your Neopets!               All pets lose half of current HP floor(curr/2) 
-         * A Pterodactyl swoops down and bites PETNAME!                         Active loses half of current HP floor(curr/2) 
+         * Fireballs rain down from above and singe your Neopets!               All pets lose half of current HP floor(curr/2)
+         * A Pterodactyl swoops down and bites PETNAME!                         Active loses half of current HP floor(curr/2)
          */
         if (blurb.includes('Fireballs')) {
             psm_debug('All pets lose half of current HP');
@@ -1495,15 +1495,17 @@
     }
     function QuestLog() {
         psm_debug('BETA Quest Log');
-        $('.ql-quest-description').each((k, v) => {
-            // Add quick links
-            $(v).html($(v).html()
-                .replace('Neopian Shop', '<a href="/objects.phtml">Neopian Shop</a>')
-                .replace('Games Room', '<a href="/games/">Games Room</a>')
-                .replace('Wheel of Excitement', '<a href="/faerieland/wheel.phtml">Wheel of Excitement</a>')
-                .replace('Wheel of Knowledge', '<a href="/medieval/knowledge.phtml">Wheel of Knowledge</a>')
-                .replace('Wheel of Mediocrity', '<a href="/prehistoric/mediocrity.phtml">Wheel of Mediocrity</a>')
-                .replace('Wheel of Misfortune', '<a href="/halloween/wheel/index.phtml">Wheel of Misfortune</a>'));
+        waitForElm('.ql-quest-description').then((elm) => {
+            $('.ql-quest-description').each((k, v) => {
+                // Add quick links
+                $(v).html($(v).html()
+                          .replace('Neopian Shop', '<a href="/objects.phtml">Neopian Shop</a>')
+                          .replace('Games Room', '<a href="/games/">Games Room</a>')
+                          .replace('Wheel of Excitement', '<a href="/faerieland/wheel.phtml">Wheel of Excitement</a>')
+                          .replace('Wheel of Knowledge', '<a href="/medieval/knowledge.phtml">Wheel of Knowledge</a>')
+                          .replace('Wheel of Mediocrity', '<a href="/prehistoric/mediocrity.phtml">Wheel of Mediocrity</a>')
+                          .replace('Wheel of Misfortune', '<a href="/halloween/wheel/index.phtml">Wheel of Misfortune</a>'));
+            });
         });
     }
     function ShopWizard() {
@@ -2042,6 +2044,23 @@
         jq.src = "https://bgrins.github.io/spectrum/spectrum.js";
         document.getElementsByTagName('head')[0].appendChild(jq);
         setTimeout(settings_functionality, 50);
+    }
+    function waitForElm(selector) { // thanks, yong-wang
+        return new Promise(resolve => {
+            if (document.querySelector(selector)) {
+                return resolve(document.querySelector(selector));
+            }
+            const observer = new MutationObserver(mutations => {
+                if (document.querySelector(selector)) {
+                    observer.disconnect();
+                    resolve(document.querySelector(selector));
+                }
+            });
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
     }
 
 })();
