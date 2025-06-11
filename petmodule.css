@@ -41,9 +41,9 @@
     }
 
     #container__psm {
+        display: none;
         position: absolute;
         left: calc(50% - 150px);
-        /* left: calc(50% - 190px); */
         top: 68px;
         width: 225px;
         margin-top: 0.5%;
@@ -67,7 +67,6 @@
     }
 
     #container__psm>table#psm>tbody>tr {
-        margin-bottom: -4px;
         display: block;
         position: relative;
     }
