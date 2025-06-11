@@ -61,26 +61,26 @@
     let USER, PETS, DATA, $CONTAINER, $MODULE, THEME, CSS, BG_CSS, MISC_CSS, CONTAINER_CSS, BG, IS_BETA, CUR_SHOWN;
     const [STR, U_STR, DEF, U_DEF, MOV] = setStatics();
     const DATA_DEFAULTS = {
-        betaBG: false,
+        betaBG: true,
         npLinkInv: true,
         npLinkBank: true,
         ncLinkMall: true,
         showNav: true,
         showStats: true,
-        stickyActive: false,
-        trueExpression: false,
+        stickyActive: true,
+        trueExpression: true,
         allAccts: false,
         neolodge: true,
         training: true,
         gravedanger: true,
-        debug: false,
-        showName: false,
+        debug: true,
+        showName: true,
         showGender: false,
         showPetpet: true,
-        showPetpetpet: false,
+        showPetpetpet: true,
         hp_mode: 2,      // 0: max only | 1: current / max   | 2:  plus color
         bd_mode: 0,      // 0: num only | 1: 'str (num)' all | 2: 'str (num)' high | 3: str only
-        interactableSlider: false,
+        interactableSlider: true,
         i: 30,           // increment for subcolor when it's relative to color
         color: '',
         subcolor: '',
