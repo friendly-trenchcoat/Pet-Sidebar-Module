@@ -783,18 +783,38 @@ div#toggle_settings_tabs>div.tab-active {
     margin: 0px 25px;
 }
 
-.inner i {
-    font: 6.5pt Verdana;
-}
-
-.inner .petname {
+.inner .petheader {
     position: absolute;
-    top: 5px;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    top: 6px;
     font-size: 14px;
     font-weight: bold;
     text-align: left;
     color: '+subcolor+';
+}
+
+.inner .petname {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+.inner .petreminders {
+    font-size: 12px;
+    opacity: 0.75;
+    display: inline-flex;
+    gap: 12px;
+}
+.inner .petreminders>div {
+    opacity: 0.5;
+}
+.inner .petreminders>div:hover {
+    opacity: 1;
+    transform: scale(1.1) translate(-2.5%, -2%);
+}
+
+.inner .petreminders>div>a {
+    color: '+subcolor+' !important;
 }
 
 .inner .petpet>a,
