@@ -69,6 +69,7 @@
         neolodge: true,
         training: true,
         gravedanger: true,
+        volunteer: true,
         debug: false,
         showName: false,
         showGender: false,
