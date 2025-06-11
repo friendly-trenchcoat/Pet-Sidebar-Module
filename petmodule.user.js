@@ -33,6 +33,9 @@
  *      - Lock/unlock collapse
  *      - Adjustable module height
  *      - Movable info/settings menus
+ *      - Redirect homepage option
+ *      - Timer icons in slider, with hover for remaining time
+ *      - Level in slider links to last school pet trained at?
  * 
  * Ideas:
  *      - More QOL options:
@@ -214,7 +217,7 @@
                 if (DATA.compact) $('#container__2020, .navsub-left__2020').addClass('compact');
             }
             $CONTAINER = $('div#container__psm');
-            $MODULE = $('table#psm tbody');
+            $MODULE = $('table#psm>tbody');
             THEME = String($('.nav-top__2020>a').css('color')) || "#000";
             BG = "rgba(255, 255, 255, 0.99)";
 
@@ -829,7 +832,7 @@
             if (match && match[1] in PETS) {
                 psm_debug('matches:', match[1], match[2], match[3], match[4]);
                 const stats = PETS[match[1]];
-                const n = (match == 'up') ? match[4] * 1 : match[4] * (-1);
+                const n = (match[3] == 'up') ? match[4] * 1 : match[4] * (-1);
                 if (match[2] == 'hit') {
                     stats.current_hp += n;
                     stats.max_hp += n;
@@ -1017,15 +1020,23 @@
         psm_debug("BETA Petpet Play", petname);
         if (petname && petname in PETS) {
             const blurb = $('.h5-dialogue > p').text();
-            const match = new RegExp(/I love ([^,]+), my (\w+)(?:\s*, and its (\w+))?/g).exec(blurb);
+            const match = new RegExp(/I love ([^,]+), my ([\w\s]+\w)(?:\s*, and its ([\w\s]+\w))?/g).exec(blurb);
             psm_debug(match)
             if (match) {
                 PETS[petname].petpet_name = match[1];
                 PETS[petname].petpet_species = match[2];
-                PETS[petname].petpet_image = $('.h5-grid3 > img[src^="https://images.neopets.com/items/"]').eq(0).attr('src');
+                PETS[petname].petpet_image = $('.grid-align-bottom > img[src^="https://images.neopets.com/items/"]').eq(0).attr('src');
                 PETS[petname].petpetpet_species = match[3];
                 PETS[petname].petpetpet_image = $('.h5-grid3 > img[src^="https://images.neopets.com/items/"]').eq(1).attr('src');
             }
+            $('form#rename button').click(() => {
+                // Listen for name change
+                const newName = $('form#rename div input').val();
+                if (newName && newName.length) {
+                    PETS[petname].petpet_name = newName;
+                    set_items(false, true, false, true);
+                }
+            });
         }
     }
     function Sidebar() {
@@ -1048,9 +1059,9 @@
         stats.mood = $(activePetStats).eq(2).text();
         stats.hunger = $(activePetStats).eq(3).text();
         stats.age = $(activePetStats).eq(4).text();
-        stats.level = $(activePetStats).eq(5).text();
-        stats.current_hp = health[1];
-        stats.max_hp = health[2];
+        stats.level = Number($(activePetStats).eq(5).text());
+        stats.current_hp = Number(health[1]);
+        stats.max_hp = Number(health[2]);
 
         if (!(petname in PETS)) DATA.shown.push(petname);
         PETS[petname] = stats;
@@ -1072,10 +1083,10 @@
          *  == MOOD ==
          *  PETNAME doesn't look very happy anymore.                [become depressed]
          */
-        const blurb = $('.randomEvent .copy').text().trim();
+        const blurb = $('.randomEvent:not(#randomEventDiv_31918482_414947722) .copy').text().trim(); // exclude Coincidence REs
         if (blurb) {
             psm_debug('Random Event:', blurb);
-            const match = new RegExp(/realise all|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
+            const match = new RegExp(/(realise all)|(\w+) (gets|has|is|sneezes|loses|doesn't) (\w+) (\w+)/g).exec(blurb);
             if (match) {
                 const petname = match[2];
                 if (petname && petname in PETS) {
@@ -1391,8 +1402,8 @@
                         set_hunger(petname, match[4]);
                         break;
                     case 'drinks':  // health potion
-                        if (match[4]) PETS[petname].current_hp += Number(match[4]);
-                        else if (match[4] == 'points') PETS[petname].current_hp = PETS[petname].max_hp;
+                        if (match[4] == 'points') PETS[petname].current_hp = PETS[petname].max_hp;
+                        else if (match[4]) PETS[petname].current_hp += Number(match[4]);
                         break;
                     case 'body':    // morphing potion
                         PETS[petname].color = match[3];
@@ -1476,6 +1487,7 @@
         })
     }
     function danger_end(petname, end) {
+        psm_debug('Grave Danger End', petname, end);
         PETS[petname].petpet_danger = end;
         set_items(false, true, true);
     }
@@ -1494,7 +1506,7 @@
     }
     function ShopWizard() {
         psm_debug('BETA Shop Wizard');
-        $('.button-grid2__2020').insertAfter('.wizard-results-header');
+        $('.button-grid2__2020').eq(0).insertAfter('.wizard-results-header');
     }
 
 
@@ -1891,7 +1903,7 @@
         // BETA HANDLING
         const styleResize = () => { // reposition module and recalculate container min-height based on window size
             // Module margin-left
-            $CONTAINER.css('margin-left', $('#container__2020').width() / -2);
+            $CONTAINER.css('margin-left', $('#container__2020').width() / -2).show();
 
             // Container min-height must be set in stylesheet because element attribute is overridden natively
             const winHeight = window.innerHeight - Math.round($('#footer__2020').outerHeight(false));
