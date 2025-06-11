@@ -231,9 +231,9 @@
             if (DATA.ncLinkMall) set_nc_link(true);
             $('div.navsub-add-nc__2020').replaceWith($('<a class="navsub-add-nc__2020" href="https://secure.nc.neopets.com/get-nickcash"></a>'));
             $('.navsub-np-meter__2020').parent().after($(`
-                <a href="/bank.phtml"><div class="navsub-nps-meter__2020" style="${DATA.npLinkBank && DATA.npBank ? '' : 'display: none;'}">
+                <a href="/bank.phtml"><div class="navsub-nps-meter__2020" style="${DATA.npLinkBank ? '' : 'display: none;'}">
                     <div class="navsub-nps-icon__2020"></div>
-                    <span id="npsanchor" class="np-text__2020">${DATA.npBank}</span>
+                    <span id="npsanchor" class="np-text__2020">${DATA.npBank || 'visit bank'}</span>
                 </div></a>
             `));
         } else {
@@ -1522,11 +1522,15 @@
             $('#npsanchor').text(DATA.npBank);
         }
         // listen for balance changes on page
-        $('#txtCurrentBalance1').on('DOMSubtreeModified', () => {
-            DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
-            $('#npsanchor').text(DATA.npBank);
-            set_items(true, false);
-        })
+        const observer = new MutationObserver(() => {
+            if ($('#txtCurrentBalance1')) {
+                psm_debug('BETA Bank Updated');
+                DATA.npBank = $('#txtCurrentBalance1').text().split(' ')[2];
+                $('#npsanchor').text(DATA.npBank);
+                set_items(true, false);
+            }
+        });
+        observer.observe(document.getElementsByClassName('bank-balance')[0], { attributes: true, childList: true, subtree: true});
     }
     function danger_end(petname, end) {
         psm_debug('Grave Danger End', petname, end);
