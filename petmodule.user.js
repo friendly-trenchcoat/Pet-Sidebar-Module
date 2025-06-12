@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        2.0.6
+// @version        2.0.6.1
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
@@ -1960,6 +1960,7 @@
                 case 'jumbo':
                     if ($(e.target).prop('checked')) $('.sidebar,#psm').addClass('jumbo');
                     else $('.sidebar,#psm').removeClass('jumbo');
+                    window.dispatchEvent(new Event('resize'));
                     break;
                 case 'compact':
                     if ($(e.target).prop('checked')) $('#container__2020, .navsub-left__2020').addClass('compact');
@@ -2019,7 +2020,7 @@
 
             // Container min-height must be set in stylesheet because element attribute is overridden natively
             const winHeight = window.innerHeight - Math.round($('#footer__2020').outerHeight(false));
-            const modHeight = Math.round($CONTAINER.height()) + 175;
+            const modHeight = Math.round($CONTAINER.height() * (DATA.jumbo ? 1.5 : 1)) + 175;
             const newHeight = Math.max(winHeight, modHeight);
             if (CONTAINER_CSS) {
                 CONTAINER_CSS.innerHTML = `#container__2020 { min-height: ${newHeight}px !important; }`;
