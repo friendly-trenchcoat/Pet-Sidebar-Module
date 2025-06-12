@@ -66,16 +66,14 @@
         width: 150px;
     }
 
-    #container__psm>table#psm>tbody>tr {
-        margin-bottom: -4px;
+    #container__psm>table#psm>tbody>tr:not(#row_petsHeader) {
+        height: 150px;
         display: block;
         position: relative;
         border-bottom: ' + gapwidth + 'px solid ' + bordercolor + ';
     }
-    #container__psm>table#psm>tbody>tr:first-child,
     #container__psm>table#psm>tbody>tr:last-child {
         border-bottom: 0px;
-        margin-bottom: 0px;
     }
 
     #container__psm>table#psm>tbody>tr#row_petsHeader {
@@ -351,7 +349,7 @@
 
 #increment {
     position: absolute;
-    margin: -21px 0px 0px 100px;
+    margin: -21px 0px 0px 125px;
 }
 
 #increment>i {
