@@ -54,7 +54,7 @@
 
     #container__psm>table#psm {
         margin-left: 60px;
-        border: 3px solid #fff;
+        border: ' + bdrwidth + 'px solid ' + bdrcolor + ';
         border-radius: 14px;
         border-spacing: 5px;
     }
@@ -70,11 +70,18 @@
         margin-bottom: -4px;
         display: block;
         position: relative;
+        border-bottom: ' + gapwidth + 'px solid ' + bordercolor + ';
+    }
+    #container__psm>table#psm>tbody>tr:first-child,
+    #container__psm>table#psm>tbody>tr:last-child {
+        border-bottom: 0px;
+        margin-bottom: 0px;
     }
 
     #container__psm>table#psm>tbody>tr#row_petsHeader {
         display: block;
-        background: #fff;
+        background: ' + bdrcolor + ';
+        color: ' + bdrtextcolor + ';
         border-radius: 10px 10px 0px 0px;
         padding: 0px 5px;
         font-family: "Palanquin", "Arial Bold", sans-serif;
@@ -103,7 +110,7 @@
 #sidebar_menus>div {
     display: none;
     position: absolute;
-    width: 700px;
+    width: 800px;
     height: 462px;
     margin: 25px 52px;
     background-color: '+bgcolor+';
@@ -344,7 +351,7 @@
 
 #increment {
     position: absolute;
-    margin: -21px 0px 0px 153px;
+    margin: -21px 0px 0px 100px;
 }
 
 #increment>i {
@@ -365,10 +372,6 @@
 }
 
 /* toggles */
-#toggle_settings_section {
-    margin: 0px auto 30px;
-}
-
 div#toggle_settings_tabs {
     display: flex;
     gap: 5px;
@@ -381,7 +384,7 @@ div#toggle_settings_tabs>div {
     margin: 0;
     padding: 5px 15px 4px 12px;
     border-radius: 6px 6px 0 0;
-    color: white;
+    color: #666;
     cursor: pointer;
 }
 
@@ -402,7 +405,7 @@ div#toggle_settings_tabs>div.tab-active {
     border: 3px dotted #ccc;
     width: 100%;
     border-radius: 0 6px 6px 6px;
-    padding: 5px 0px;
+    padding: 5px 20px;
     height: 172px;
 }
 
@@ -444,6 +447,18 @@ div#toggle_settings_tabs>div.tab-active {
 
 #hp_mode option {
     font-weight: bold;
+}
+
+/* sliders */
+#toggle_settings_bodies .slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  border-radius: 5px;
+  background: #d3d3d3;
+  outline: none;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
 }
 
 /* remove */
@@ -758,7 +773,7 @@ div#toggle_settings_tabs>div.tab-active {
     background-color: '+bgcolor+';
     border: 3px solid '+color+';
     padding: 20.2px;
-    height: 104px;
+    height: 103.5px;
     width: 5px;
     margin-left: 95px;
     overflow: hidden;
