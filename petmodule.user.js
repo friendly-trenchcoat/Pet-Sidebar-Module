@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           Neopets - Pets Sidebar Module
 // @namespace      https://github.com/friendly-trenchcoat
-// @version        2.0.3
+// @version        2.0.4
 // @description    Customizable module displaying any number of pets for any number of accounts. Each pet has a navbar and stats info in menus which slide out on hover.
 // @author         friendly-trenchcoat
 // @match          https://www.neopets.com/*
@@ -36,16 +36,15 @@
  *      - Adjustable module height
  *      - Movable info/settings menus
  *      - Redirect homepage option
- *      - Timer icons in slider, with hover for remaining time
- *      - Level in slider links to last school pet trained at?
+ *      - More UI customization
  *
  * Ideas:
+ *      - Default Neolodge
  *      - More QOL options:
  *          - Bigger pet images (incl neoboards)
  *          - Autofill kings
  *          - Autofill shop till
  *          - Autofill wishing well
- *          - Commas in auction house
  *          - Disable usershop code
  *          - Markers on books a pet has already read, gormet foods already eaten
  *
