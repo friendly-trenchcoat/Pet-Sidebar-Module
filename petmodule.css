@@ -816,6 +816,9 @@ div#toggle_settings_tabs>div.tab-active {
 .inner .petreminders>div>a {
     color: '+subcolor+' !important;
 }
+.inner .petreminders .inactive {
+    color: #ccc;
+}
 
 .inner .petpet>a,
 .inner .petpetpet>div>a {
